@@ -15,6 +15,7 @@ import Outreach from "./pages/Outreach";
 import Documents from "./pages/Documents";
 import CalendarPage from "./pages/CalendarPage";
 import Analytics from "./pages/Analytics";
+import CapTable from "./pages/CapTable";
 import Assistant from "./pages/Assistant";
 import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
@@ -46,6 +47,7 @@ const App = () => (
                       <Route path="/documents" element={<Documents />} />
                       <Route path="/calendar" element={<CalendarPage />} />
                       <Route path="/analytics" element={<Analytics />} />
+                      <Route path="/cap-table" element={<CapTable />} />
                       <Route path="/assistant" element={<Assistant />} />
                       <Route path="/settings" element={<Settings />} />
                       <Route path="*" element={<NotFound />} />
