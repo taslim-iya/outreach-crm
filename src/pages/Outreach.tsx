@@ -1,20 +1,17 @@
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, Send, FileText, BarChart3, Plus, Sparkles } from 'lucide-react';
-
-const templates = [
-  { id: '1', name: 'Investor Intro', subject: 'Search Fund Investment Opportunity', opens: 42, replies: 8 },
-  { id: '2', name: 'Seller Outreach', subject: 'Interested in acquiring [Company]', opens: 28, replies: 5 },
-  { id: '3', name: 'Broker Intro', subject: 'Partnership opportunity - Search Fund', opens: 35, replies: 6 },
-];
-
-const campaigns = [
-  { id: '1', name: 'Q1 Investor Push', status: 'active', sent: 150, opened: 89, replied: 23 },
-  { id: '2', name: 'Manufacturing Targets', status: 'paused', sent: 45, opened: 18, replied: 4 },
-];
+import { Mail, Send, FileText, BarChart3, Plus, Sparkles, Inbox } from 'lucide-react';
+import { useEmails } from '@/hooks/useEmails';
 
 export default function Outreach() {
+  const { data: emails = [] } = useEmails(100);
+  
+  // Calculate real stats from emails
+  const totalSent = emails.length;
+  const readEmails = emails.filter(e => e.is_read).length;
+  const openRate = totalSent > 0 ? Math.round((readEmails / totalSent) * 100) : 0;
+
   return (
     <div className="p-6">
       <PageHeader
@@ -37,8 +34,8 @@ export default function Outreach() {
                 <Send className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="text-2xl font-semibold">195</p>
-                <p className="text-sm text-muted-foreground">Emails Sent</p>
+                <p className="text-2xl font-semibold">{totalSent}</p>
+                <p className="text-sm text-muted-foreground">Emails Synced</p>
               </div>
             </div>
           </CardContent>
@@ -50,8 +47,8 @@ export default function Outreach() {
                 <Mail className="w-5 h-5 text-info" />
               </div>
               <div>
-                <p className="text-2xl font-semibold">54.9%</p>
-                <p className="text-sm text-muted-foreground">Open Rate</p>
+                <p className="text-2xl font-semibold">{openRate}%</p>
+                <p className="text-sm text-muted-foreground">Read Rate</p>
               </div>
             </div>
           </CardContent>
@@ -63,7 +60,7 @@ export default function Outreach() {
                 <BarChart3 className="w-5 h-5 text-success" />
               </div>
               <div>
-                <p className="text-2xl font-semibold">13.8%</p>
+                <p className="text-2xl font-semibold">0%</p>
                 <p className="text-sm text-muted-foreground">Reply Rate</p>
               </div>
             </div>
@@ -76,7 +73,7 @@ export default function Outreach() {
                 <FileText className="w-5 h-5 text-warning" />
               </div>
               <div>
-                <p className="text-2xl font-semibold">3</p>
+                <p className="text-2xl font-semibold">0</p>
                 <p className="text-sm text-muted-foreground">Active Templates</p>
               </div>
             </div>
@@ -94,27 +91,16 @@ export default function Outreach() {
               New Template
             </Button>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {templates.map((template) => (
-              <div
-                key={template.id}
-                className="flex items-center justify-between p-3 rounded-lg border border-border hover:border-primary/30 transition-colors cursor-pointer"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                    <FileText className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">{template.name}</p>
-                    <p className="text-xs text-muted-foreground">{template.subject}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-muted-foreground">{template.opens} opens</p>
-                  <p className="text-xs text-success">{template.replies} replies</p>
-                </div>
+          <CardContent>
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+                <FileText className="w-6 h-6 text-muted-foreground" />
               </div>
-            ))}
+              <p className="text-sm font-medium text-muted-foreground">No templates yet</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Create your first email template to get started
+              </p>
+            </div>
           </CardContent>
         </Card>
 
@@ -126,31 +112,16 @@ export default function Outreach() {
               View All
             </Button>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {campaigns.map((campaign) => (
-              <div
-                key={campaign.id}
-                className="p-3 rounded-lg border border-border hover:border-primary/30 transition-colors cursor-pointer"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-medium">{campaign.name}</p>
-                  <span
-                    className={`text-xs px-2 py-0.5 rounded-full ${
-                      campaign.status === 'active'
-                        ? 'bg-success/10 text-success'
-                        : 'bg-muted text-muted-foreground'
-                    }`}
-                  >
-                    {campaign.status}
-                  </span>
-                </div>
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span>{campaign.sent} sent</span>
-                  <span>{Math.round((campaign.opened / campaign.sent) * 100)}% opened</span>
-                  <span>{Math.round((campaign.replied / campaign.sent) * 100)}% replied</span>
-                </div>
+          <CardContent>
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+                <Inbox className="w-6 h-6 text-muted-foreground" />
               </div>
-            ))}
+              <p className="text-sm font-medium text-muted-foreground">No campaigns yet</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Launch your first campaign to track performance
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
