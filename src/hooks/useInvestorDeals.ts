@@ -110,3 +110,32 @@ export function useUpdateInvestorStage() {
     },
   });
 }
+
+export function useUpdateInvestorStageWithCommitment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      stage,
+      commitment_amount,
+    }: {
+      id: string;
+      stage: InvestorStage;
+      commitment_amount: number;
+    }) => {
+      const { data, error } = await supabase
+        .from('investor_deals')
+        .update({ stage, commitment_amount })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['investor_deals'] });
+    },
+  });
+}

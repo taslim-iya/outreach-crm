@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useInvestorDeals } from '@/hooks/useInvestorDeals';
+import { useInvestorDeals, useDeleteInvestorDeal, InvestorDeal } from '@/hooks/useInvestorDeals';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,12 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
   PieChart,
   Pie,
   Cell,
@@ -24,11 +30,12 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from 'recharts';
-import { Download, Search, TrendingUp, Users, DollarSign, PiggyBank } from 'lucide-react';
+import { Download, Search, TrendingUp, Users, DollarSign, PiggyBank, Plus, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
+import { CapTableEntryModal } from '@/components/cap-table/CapTableEntryModal';
+import { toast } from 'sonner';
 
 const COLORS = [
   'hsl(var(--primary))',
@@ -45,8 +52,10 @@ const FUNDRAISING_GOAL = 1000000; // $1M default goal
 
 export default function CapTable() {
   const { data: investors, isLoading } = useInvestorDeals();
+  const deleteDeal = useDeleteInvestorDeal();
   const [searchQuery, setSearchQuery] = useState('');
-
+  const [entryModalOpen, setEntryModalOpen] = useState(false);
+  const [editingEntry, setEditingEntry] = useState<InvestorDeal | null>(null);
   // Filter for committed/closed investors only
   const committedInvestors = useMemo(() => {
     if (!investors) return [];
@@ -132,6 +141,32 @@ export default function CapTable() {
     URL.revokeObjectURL(url);
   };
 
+  const handleEdit = (entry: InvestorDeal) => {
+    setEditingEntry(entry);
+    setEntryModalOpen(true);
+  };
+
+  const handleDelete = async (entry: InvestorDeal) => {
+    try {
+      await deleteDeal.mutateAsync(entry.id);
+      toast.success('Entry deleted');
+    } catch (error) {
+      toast.error('Failed to delete entry');
+    }
+  };
+
+  const handleAddEntry = () => {
+    setEditingEntry(null);
+    setEntryModalOpen(true);
+  };
+
+  const handleModalClose = (open: boolean) => {
+    setEntryModalOpen(open);
+    if (!open) {
+      setEditingEntry(null);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="p-4 md:p-6">
@@ -153,6 +188,12 @@ export default function CapTable() {
         <PageHeader
           title="Cap Table"
           description="Track your fundraising progress"
+          actions={
+            <Button onClick={handleAddEntry} size="sm">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Entry
+            </Button>
+          }
         />
         <Card className="goldman-card">
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
@@ -163,14 +204,25 @@ export default function CapTable() {
               No Committed Investors Yet
             </h3>
             <p className="text-muted-foreground mb-6 max-w-md">
-              Your cap table will automatically populate when you move investors to
-              "Committed" or "Closed" stages and enter their commitment amounts.
+              Add entries directly or move investors to "Committed" or "Closed" stages
+              from the Investors page.
             </p>
-            <Button asChild>
-              <Link to="/investors">Go to Investors</Link>
-            </Button>
+            <div className="flex gap-3">
+              <Button onClick={handleAddEntry}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Entry
+              </Button>
+              <Button variant="outline" asChild>
+                <Link to="/investors">Go to Investors</Link>
+              </Button>
+            </div>
           </CardContent>
         </Card>
+        <CapTableEntryModal
+          open={entryModalOpen}
+          onOpenChange={handleModalClose}
+          entry={editingEntry}
+        />
       </div>
     );
   }
@@ -181,10 +233,16 @@ export default function CapTable() {
         title="Cap Table"
         description="Track your fundraising progress"
         actions={
-          <Button onClick={handleExport} variant="outline" size="sm">
-            <Download className="w-4 h-4 mr-2" />
-            Export CSV
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={handleAddEntry} size="sm">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Entry
+            </Button>
+            <Button onClick={handleExport} variant="outline" size="sm">
+              <Download className="w-4 h-4 mr-2" />
+              Export CSV
+            </Button>
+          </div>
         }
       />
 
@@ -369,6 +427,7 @@ export default function CapTable() {
                   <TableHead className="text-right">% of Total</TableHead>
                   <TableHead>Stage</TableHead>
                   <TableHead>Date</TableHead>
+                  <TableHead className="w-10"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -400,6 +459,28 @@ export default function CapTable() {
                       <TableCell className="text-muted-foreground">
                         {format(new Date(investor.updated_at), 'MMM d, yyyy')}
                       </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEdit(investor)}>
+                              <Pencil className="w-4 h-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleDelete(investor)}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
                     </TableRow>
                   );
                 })}
@@ -408,6 +489,12 @@ export default function CapTable() {
           </div>
         </CardContent>
       </Card>
+
+      <CapTableEntryModal
+        open={entryModalOpen}
+        onOpenChange={handleModalClose}
+        entry={editingEntry}
+      />
     </div>
   );
 }

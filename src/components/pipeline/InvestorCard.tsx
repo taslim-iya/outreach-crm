@@ -1,4 +1,5 @@
-import { InvestorDeal, InvestorStage, useUpdateInvestorStage } from '@/hooks/useInvestorDeals';
+import { useState } from 'react';
+import { InvestorDeal, InvestorStage, useUpdateInvestorStage, useUpdateInvestorStageWithCommitment } from '@/hooks/useInvestorDeals';
 import { cn } from '@/lib/utils';
 import { DollarSign, MoreHorizontal, Pencil, Trash2, ArrowRight } from 'lucide-react';
 import {
@@ -13,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { CommitmentAmountModal } from './CommitmentAmountModal';
 
 interface InvestorCardProps {
   deal: InvestorDeal;
@@ -44,6 +46,10 @@ const stageOrder: InvestorStage[] = [
 
 export function InvestorCard({ deal, onEdit, onDelete }: InvestorCardProps) {
   const updateStage = useUpdateInvestorStage();
+  const updateStageWithCommitment = useUpdateInvestorStageWithCommitment();
+  
+  const [commitmentModalOpen, setCommitmentModalOpen] = useState(false);
+  const [pendingStage, setPendingStage] = useState<'committed' | 'closed' | null>(null);
 
   const formatCurrency = (amount?: number | null) => {
     if (!amount) return null;
@@ -65,9 +71,34 @@ export function InvestorCard({ deal, onEdit, onDelete }: InvestorCardProps) {
   };
 
   const handleMoveToStage = async (newStage: InvestorStage) => {
+    // For committed or closed stages, show the commitment amount modal
+    if (newStage === 'committed' || newStage === 'closed') {
+      setPendingStage(newStage);
+      setCommitmentModalOpen(true);
+      return;
+    }
+    
+    // For other stages, update directly
     try {
       await updateStage.mutateAsync({ id: deal.id, stage: newStage });
       toast.success(`Moved to ${stageLabels[newStage]}`);
+    } catch (error) {
+      toast.error('Failed to update stage');
+    }
+  };
+
+  const handleCommitmentConfirm = async (amount: number) => {
+    if (!pendingStage) return;
+    
+    try {
+      await updateStageWithCommitment.mutateAsync({
+        id: deal.id,
+        stage: pendingStage,
+        commitment_amount: amount,
+      });
+      toast.success(`Moved to ${stageLabels[pendingStage]} with ${formatCurrency(amount)} commitment`);
+      setCommitmentModalOpen(false);
+      setPendingStage(null);
     } catch (error) {
       toast.error('Failed to update stage');
     }
@@ -141,6 +172,15 @@ export function InvestorCard({ deal, onEdit, onDelete }: InvestorCardProps) {
       {deal.notes && (
         <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{deal.notes}</p>
       )}
+
+      <CommitmentAmountModal
+        open={commitmentModalOpen}
+        onOpenChange={setCommitmentModalOpen}
+        investor={deal}
+        targetStage={pendingStage || 'committed'}
+        onConfirm={handleCommitmentConfirm}
+        isLoading={updateStageWithCommitment.isPending}
+      />
     </div>
   );
 }
