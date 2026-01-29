@@ -7,6 +7,7 @@ import { Calendar, Clock, Video, Phone, MapPin, Plus, ChevronLeft, ChevronRight,
 import { cn } from '@/lib/utils';
 import { useCalendarEvents, useUpcomingEvents } from '@/hooks/useCalendarEvents';
 import { useTasks } from '@/hooks/useTasks';
+import { EventFormModal } from '@/components/calendar/EventFormModal';
 
 const typeIcons = {
   video: Video,
@@ -23,6 +24,7 @@ const priorityColors = {
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -63,7 +65,10 @@ export default function CalendarPage() {
         title="Calendar"
         description="Manage your meetings and schedule"
         actions={
-          <Button className="gradient-primary text-primary-foreground hover:opacity-90">
+          <Button 
+            className="gradient-primary text-primary-foreground hover:opacity-90"
+            onClick={() => setIsEventModalOpen(true)}
+          >
             <Plus className="w-4 h-4 mr-2" />
             New Event
           </Button>
@@ -225,6 +230,12 @@ export default function CalendarPage() {
           )}
         </CardContent>
       </Card>
+
+      <EventFormModal
+        open={isEventModalOpen}
+        onOpenChange={setIsEventModalOpen}
+        defaultDate={selectedDate}
+      />
     </div>
   );
 }
