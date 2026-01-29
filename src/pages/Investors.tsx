@@ -58,8 +58,8 @@ export default function Investors() {
   };
 
   return (
-    <div className="h-screen flex flex-col">
-      <div className="p-6 pb-4">
+    <div className="h-[calc(100vh-3.5rem)] lg:h-screen flex flex-col">
+      <div className="p-4 md:p-6 pb-4">
         <PageHeader
           title="Investor Pipeline"
           description="Track your fundraising progress"
@@ -73,7 +73,7 @@ export default function Investors() {
 
         {/* Filters */}
         <div className="flex items-center gap-3">
-          <div className="relative flex-1 max-w-sm">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Search investors..."

@@ -1,6 +1,9 @@
+import { useState, createContext, useContext, ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
 import {
   LayoutDashboard,
   Users,
@@ -14,6 +17,8 @@ import {
   Calendar,
   LogOut,
   StickyNote,
+  Menu,
+  X,
 } from 'lucide-react';
 
 const navigation = [
@@ -33,7 +38,26 @@ const bottomNav = [
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
-export function Sidebar() {
+// Context for mobile sidebar state
+const SidebarContext = createContext<{
+  open: boolean;
+  setOpen: (open: boolean) => void;
+}>({ open: false, setOpen: () => {} });
+
+export function useSidebar() {
+  return useContext(SidebarContext);
+}
+
+export function SidebarProvider({ children }: { children: ReactNode }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <SidebarContext.Provider value={{ open, setOpen }}>
+      {children}
+    </SidebarContext.Provider>
+  );
+}
+
+function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
@@ -58,8 +82,12 @@ export function Sidebar() {
     return user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
   };
 
+  const handleLinkClick = () => {
+    onNavigate?.();
+  };
+
   return (
-    <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-sidebar flex flex-col" style={{ background: 'var(--gradient-sidebar)' }}>
+    <div className="flex flex-col h-full" style={{ background: 'var(--gradient-sidebar)' }}>
       {/* Logo */}
       <div className="h-16 flex items-center px-6 border-b border-sidebar-border/50">
         <div className="flex items-center gap-3">
@@ -81,6 +109,7 @@ export function Sidebar() {
             <Link
               key={item.name}
               to={item.href}
+              onClick={handleLinkClick}
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
                 isActive
@@ -106,6 +135,7 @@ export function Sidebar() {
             <Link
               key={item.name}
               to={item.href}
+              onClick={handleLinkClick}
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
                 isActive
@@ -151,6 +181,49 @@ export function Sidebar() {
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+export function Sidebar() {
+  return (
+    <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-sidebar hidden lg:flex flex-col">
+      <SidebarContent />
     </aside>
+  );
+}
+
+export function MobileSidebar() {
+  const { open, setOpen } = useSidebar();
+
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetContent side="left" className="p-0 w-64 border-r-0">
+        <SidebarContent onNavigate={() => setOpen(false)} />
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+export function MobileHeader() {
+  const { setOpen } = useSidebar();
+
+  return (
+    <header className="lg:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-background border-b border-border flex items-center px-4">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setOpen(true)}
+        className="mr-3"
+      >
+        <Menu className="w-5 h-5" />
+      </Button>
+      <div className="flex items-center gap-2">
+        <div className="w-7 h-7 rounded-lg gradient-gold flex items-center justify-center">
+          <TrendingUp className="w-4 h-4 text-primary-foreground" />
+        </div>
+        <span className="font-semibold text-foreground">DealScope</span>
+      </div>
+    </header>
   );
 }

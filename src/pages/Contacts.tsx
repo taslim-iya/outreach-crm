@@ -60,7 +60,7 @@ export default function Contacts() {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-4 md:p-6">
       <PageHeader
         title="Contacts"
         description="Manage your relationships"
@@ -72,29 +72,32 @@ export default function Contacts() {
         }
       />
 
-      {/* Tabs */}
-      <div className="flex items-center gap-2 mb-6 border-b border-border pb-4">
-        {tabs.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={cn(
-              'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200',
-              activeTab === tab.key
-                ? 'bg-primary/10 text-primary'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-            )}
-          >
-            <tab.icon className="w-4 h-4" />
-            {tab.label}
-            <span className="ml-1 text-xs opacity-60">{getTabCount(tab.key)}</span>
-          </button>
-        ))}
+      {/* Tabs - scrollable on mobile */}
+      <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 mb-6 border-b border-border pb-4">
+        <div className="flex items-center gap-2 min-w-max">
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={cn(
+                'flex items-center gap-2 px-3 md:px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap',
+                activeTab === tab.key
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+              )}
+            >
+              <tab.icon className="w-4 h-4" />
+              <span className="hidden sm:inline">{tab.label}</span>
+              <span className="sm:hidden">{tab.label.slice(0, 3)}</span>
+              <span className="ml-1 text-xs opacity-60">{getTabCount(tab.key)}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Search & Filter */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="relative flex-1 max-w-md">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Search contacts..."
