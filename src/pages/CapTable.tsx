@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useInvestorDeals, useDeleteInvestorDeal, InvestorDeal } from '@/hooks/useInvestorDeals';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,6 +21,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import {
   PieChart,
   Pie,
   Cell,
@@ -31,11 +39,14 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { Download, Search, TrendingUp, Users, DollarSign, PiggyBank, Plus, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { Download, Search, TrendingUp, Users, DollarSign, PiggyBank, Plus, MoreHorizontal, Pencil, Trash2, Settings2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { CapTableEntryModal } from '@/components/cap-table/CapTableEntryModal';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const COLORS = [
   'hsl(var(--primary))',
@@ -48,14 +59,86 @@ const COLORS = [
   'hsl(262, 83%, 58%)',
 ];
 
-const FUNDRAISING_GOAL = 1000000; // $1M default goal
+const DEFAULT_FUNDRAISING_GOAL = 1000000; // $1M default goal
 
 export default function CapTable() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { data: investors, isLoading } = useInvestorDeals();
   const deleteDeal = useDeleteInvestorDeal();
   const [searchQuery, setSearchQuery] = useState('');
   const [entryModalOpen, setEntryModalOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<InvestorDeal | null>(null);
+  const [goalModalOpen, setGoalModalOpen] = useState(false);
+  const [goalInput, setGoalInput] = useState('');
+
+  // Fetch fundraising goal from profile
+  const { data: profile } = useQuery({
+    queryKey: ['profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('fundraising_goal')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  const fundraisingGoal = profile?.fundraising_goal ?? DEFAULT_FUNDRAISING_GOAL;
+
+  // Update fundraising goal mutation
+  const updateGoal = useMutation({
+    mutationFn: async (newGoal: number) => {
+      if (!user?.id) throw new Error('Not authenticated');
+      
+      // Check if profile exists
+      const { data: existing } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (existing) {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ fundraising_goal: newGoal })
+          .eq('user_id', user.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('profiles')
+          .insert({ user_id: user.id, fundraising_goal: newGoal });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
+      toast.success('Fundraising goal updated');
+      setGoalModalOpen(false);
+    },
+    onError: () => {
+      toast.error('Failed to update goal');
+    },
+  });
+
+  const handleOpenGoalModal = () => {
+    setGoalInput(String(fundraisingGoal));
+    setGoalModalOpen(true);
+  };
+
+  const handleSaveGoal = () => {
+    const parsedGoal = parseFloat(goalInput.replace(/[^0-9.]/g, ''));
+    if (isNaN(parsedGoal) || parsedGoal <= 0) {
+      toast.error('Please enter a valid goal amount');
+      return;
+    }
+    updateGoal.mutate(parsedGoal);
+  };
+
   // Filter for committed/closed investors only
   const committedInvestors = useMemo(() => {
     if (!investors) return [];
@@ -86,10 +169,10 @@ export default function CapTable() {
     );
     const investorCount = committedInvestors.length;
     const averageInvestment = investorCount > 0 ? totalRaised / investorCount : 0;
-    const progressPercent = Math.min((totalRaised / FUNDRAISING_GOAL) * 100, 100);
+    const progressPercent = Math.min((totalRaised / fundraisingGoal) * 100, 100);
 
     return { totalRaised, investorCount, averageInvestment, progressPercent };
-  }, [committedInvestors]);
+  }, [committedInvestors, fundraisingGoal]);
 
   // Prepare chart data
   const pieChartData = useMemo(() => {
@@ -304,9 +387,20 @@ export default function CapTable() {
             <span className="text-sm font-medium text-foreground">
               Fundraising Progress
             </span>
-            <span className="text-sm text-muted-foreground">
-              {formatCurrency(metrics.totalRaised)} of {formatCurrency(FUNDRAISING_GOAL)}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                {formatCurrency(metrics.totalRaised)} of {formatCurrency(fundraisingGoal)}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={handleOpenGoalModal}
+                title="Edit fundraising goal"
+              >
+                <Settings2 className="w-3.5 h-3.5" />
+              </Button>
+            </div>
           </div>
           <Progress value={metrics.progressPercent} className="h-3" />
           <p className="text-xs text-muted-foreground mt-2">
@@ -314,6 +408,38 @@ export default function CapTable() {
           </p>
         </CardContent>
       </Card>
+
+      {/* Goal Edit Modal */}
+      <Dialog open={goalModalOpen} onOpenChange={setGoalModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Set Fundraising Goal</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="goal">Target Amount ($)</Label>
+              <Input
+                id="goal"
+                type="text"
+                placeholder="1,000,000"
+                value={goalInput}
+                onChange={(e) => setGoalInput(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Enter your total fundraising target
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setGoalModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveGoal} disabled={updateGoal.isPending}>
+              {updateGoal.isPending ? 'Saving...' : 'Save Goal'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

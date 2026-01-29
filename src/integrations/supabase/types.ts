@@ -522,6 +522,7 @@ export type Database = {
           company_name: string | null
           created_at: string
           display_name: string | null
+          fundraising_goal: number | null
           id: string
           updated_at: string
           user_id: string
@@ -531,6 +532,7 @@ export type Database = {
           company_name?: string | null
           created_at?: string
           display_name?: string | null
+          fundraising_goal?: number | null
           id?: string
           updated_at?: string
           user_id: string
@@ -540,6 +542,7 @@ export type Database = {
           company_name?: string | null
           created_at?: string
           display_name?: string | null
+          fundraising_goal?: number | null
           id?: string
           updated_at?: string
           user_id?: string
