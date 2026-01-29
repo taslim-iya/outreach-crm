@@ -30,8 +30,8 @@ const navigation = [
   { name: 'Outreach', href: '/outreach', icon: Mail },
   { name: 'Documents', href: '/documents', icon: FileText },
   { name: 'Calendar', href: '/calendar', icon: Calendar },
-  { name: 'Analytics', href: '/analytics', icon: BarChart3 },
   { name: 'Cap Table', href: '/cap-table', icon: PieChart },
+  { name: 'Analytics', href: '/analytics', icon: BarChart3 },
 ];
 
 const bottomNav = [
