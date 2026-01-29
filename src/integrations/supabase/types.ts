@@ -72,6 +72,88 @@ export type Database = {
           },
         ]
       }
+      calendar_events: {
+        Row: {
+          all_day: boolean | null
+          company_id: string | null
+          contact_id: string | null
+          created_at: string
+          description: string | null
+          end_time: string
+          external_id: string | null
+          external_provider: string | null
+          id: string
+          investor_deal_id: string | null
+          location: string | null
+          meeting_link: string | null
+          meeting_type: string | null
+          start_time: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          all_day?: boolean | null
+          company_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          description?: string | null
+          end_time: string
+          external_id?: string | null
+          external_provider?: string | null
+          id?: string
+          investor_deal_id?: string | null
+          location?: string | null
+          meeting_link?: string | null
+          meeting_type?: string | null
+          start_time: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          all_day?: boolean | null
+          company_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          description?: string | null
+          end_time?: string
+          external_id?: string | null
+          external_provider?: string | null
+          id?: string
+          investor_deal_id?: string | null
+          location?: string | null
+          meeting_link?: string | null
+          meeting_type?: string | null
+          start_time?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_events_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_events_investor_deal_id_fkey"
+            columns: ["investor_deal_id"]
+            isOneToOne: false
+            referencedRelation: "investor_deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           attractiveness_score: number | null
@@ -196,6 +278,65 @@ export type Database = {
           warmth?: Database["public"]["Enums"]["warmth_level"] | null
         }
         Relationships: []
+      }
+      emails: {
+        Row: {
+          body_preview: string | null
+          contact_id: string | null
+          created_at: string
+          external_id: string | null
+          external_provider: string | null
+          from_email: string | null
+          from_name: string | null
+          id: string
+          is_read: boolean | null
+          received_at: string | null
+          subject: string | null
+          thread_id: string | null
+          to_emails: string[] | null
+          user_id: string
+        }
+        Insert: {
+          body_preview?: string | null
+          contact_id?: string | null
+          created_at?: string
+          external_id?: string | null
+          external_provider?: string | null
+          from_email?: string | null
+          from_name?: string | null
+          id?: string
+          is_read?: boolean | null
+          received_at?: string | null
+          subject?: string | null
+          thread_id?: string | null
+          to_emails?: string[] | null
+          user_id: string
+        }
+        Update: {
+          body_preview?: string | null
+          contact_id?: string | null
+          created_at?: string
+          external_id?: string | null
+          external_provider?: string | null
+          from_email?: string | null
+          from_name?: string | null
+          id?: string
+          is_read?: boolean | null
+          received_at?: string | null
+          subject?: string | null
+          thread_id?: string | null
+          to_emails?: string[] | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emails_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       investor_deals: {
         Row: {
@@ -327,6 +468,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_integrations: {
+        Row: {
+          access_token: string | null
+          created_at: string
+          email: string | null
+          id: string
+          is_active: boolean | null
+          provider: string
+          refresh_token: string | null
+          scope: string | null
+          token_expires_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          provider: string
+          refresh_token?: string | null
+          scope?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          provider?: string
+          refresh_token?: string | null
+          scope?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {

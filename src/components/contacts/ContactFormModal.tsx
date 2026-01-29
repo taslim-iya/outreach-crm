@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/select';
 import { Loader2, X } from 'lucide-react';
 import { Contact, ContactInsert, useCreateContact, useUpdateContact } from '@/hooks/useContacts';
+import { useCreateInvestorDeal } from '@/hooks/useInvestorDeals';
 import { toast } from 'sonner';
 import { Database } from '@/integrations/supabase/types';
 
@@ -50,6 +51,7 @@ export function ContactFormModal({ open, onOpenChange, contact }: ContactFormMod
   const isEditing = !!contact;
   const createContact = useCreateContact();
   const updateContact = useUpdateContact();
+  const createInvestorDeal = useCreateInvestorDeal();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -145,8 +147,26 @@ export function ContactFormModal({ open, onOpenChange, contact }: ContactFormMod
         await updateContact.mutateAsync({ id: contact.id, ...contactData });
         toast.success('Contact updated successfully');
       } else {
-        await createContact.mutateAsync(contactData);
-        toast.success('Contact created successfully');
+        // Create the contact first
+        const newContact = await createContact.mutateAsync(contactData);
+        
+        // If contact type is investor, also create an investor deal
+        if (contactData.contact_type === 'investor' && newContact) {
+          try {
+            await createInvestorDeal.mutateAsync({
+              name: contactData.name,
+              organization: contactData.organization || null,
+              contact_id: newContact.id,
+              stage: 'not_contacted',
+              notes: contactData.notes || null,
+            });
+            toast.success('Contact created and added to investor pipeline');
+          } catch {
+            toast.success('Contact created (failed to add to investor pipeline)');
+          }
+        } else {
+          toast.success('Contact created successfully');
+        }
       }
       onOpenChange(false);
     } catch (error) {
@@ -169,7 +189,7 @@ export function ContactFormModal({ open, onOpenChange, contact }: ContactFormMod
     }));
   };
 
-  const isLoading = createContact.isPending || updateContact.isPending;
+  const isLoading = createContact.isPending || updateContact.isPending || createInvestorDeal.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
