@@ -349,6 +349,7 @@ export function ContactFormModal({ open, onOpenChange, contact }: ContactFormMod
                   <SelectItem value="owner">Company Owner</SelectItem>
                   <SelectItem value="intermediary">Intermediary</SelectItem>
                   <SelectItem value="advisor">Advisor</SelectItem>
+                  <SelectItem value="river_guide">River Guide</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -14,7 +14,18 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['"DM Sans"', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+      },
+      fontSize: {
+        'xs': ['0.75rem', { lineHeight: '1.5', letterSpacing: '0.01em' }],
+        'sm': ['0.875rem', { lineHeight: '1.5', letterSpacing: '0em' }],
+        'base': ['1rem', { lineHeight: '1.6', letterSpacing: '-0.01em' }],
+        'lg': ['1.125rem', { lineHeight: '1.5', letterSpacing: '-0.01em' }],
+        'xl': ['1.25rem', { lineHeight: '1.4', letterSpacing: '-0.02em' }],
+        '2xl': ['1.5rem', { lineHeight: '1.35', letterSpacing: '-0.02em' }],
+        '3xl': ['1.875rem', { lineHeight: '1.3', letterSpacing: '-0.025em' }],
+        '4xl': ['2.25rem', { lineHeight: '1.2', letterSpacing: '-0.025em' }],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -84,6 +95,8 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        xl: "calc(var(--radius) + 4px)",
+        "2xl": "calc(var(--radius) + 8px)",
       },
       keyframes: {
         "accordion-down": {
@@ -98,17 +111,26 @@ export default {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.7" },
         },
+        "shimmer": {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(100%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "pulse-subtle": "pulse-subtle 2s ease-in-out infinite",
+        "shimmer": "shimmer 2s infinite",
       },
       boxShadow: {
-        'glow': '0 0 20px rgba(34, 50, 84, 0.08)',
-        'glow-lg': '0 0 40px rgba(34, 50, 84, 0.12)',
-        'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1)',
-        'card-hover': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)',
+        'xs': '0 1px 2px 0 rgba(17, 24, 39, 0.04)',
+        'glow': '0 0 20px rgba(17, 24, 39, 0.04)',
+        'glow-lg': '0 0 40px rgba(17, 24, 39, 0.08)',
+        'card': '0 1px 3px 0 rgba(17, 24, 39, 0.06), 0 1px 2px -1px rgba(17, 24, 39, 0.04)',
+        'card-hover': '0 10px 15px -3px rgba(17, 24, 39, 0.08), 0 4px 6px -4px rgba(17, 24, 39, 0.04)',
+      },
+      transitionTimingFunction: {
+        'premium': 'cubic-bezier(0.4, 0, 0.2, 1)',
       },
     },
   },

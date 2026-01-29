@@ -25,13 +25,13 @@ export function MetricCard({
   return (
     <div
       className={cn(
-        'bg-card rounded-xl border border-border p-5 transition-all duration-200 hover:shadow-card-hover shadow-card animate-fade-in',
+        'goldman-card p-5 animate-fade-in',
         className
       )}
     >
       <div className="flex items-start justify-between">
         <div className="space-y-3">
-          <p className="text-sm text-muted-foreground font-medium">{title}</p>
+          <p className="text-sm text-muted-foreground font-medium tracking-wide">{title}</p>
           <p className="text-3xl font-semibold text-foreground tracking-tight">{value}</p>
           {change !== undefined && (
             <div className="flex items-center gap-1.5">
@@ -54,7 +54,7 @@ export function MetricCard({
             </div>
           )}
         </div>
-        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+        <div className="w-11 h-11 rounded-xl bg-primary/8 flex items-center justify-center text-primary">
           {icon}
         </div>
       </div>

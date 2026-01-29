@@ -59,14 +59,17 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-sidebar border-r border-sidebar-border flex flex-col" style={{ background: 'var(--gradient-sidebar)' }}>
+    <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-sidebar flex flex-col" style={{ background: 'var(--gradient-sidebar)' }}>
       {/* Logo */}
-      <div className="h-16 flex items-center px-6 border-b border-sidebar-border">
+      <div className="h-16 flex items-center px-6 border-b border-sidebar-border/50">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
-            <TrendingUp className="w-5 h-5 text-sidebar-primary-foreground" />
+          <div className="w-9 h-9 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/10">
+            <TrendingUp className="w-5 h-5 text-white" />
           </div>
-          <span className="text-lg font-semibold text-sidebar-foreground">SearchCRM</span>
+          <div>
+            <span className="text-base font-semibold text-white tracking-tight">DealScope</span>
+            <p className="text-[10px] text-sidebar-foreground/60 uppercase tracking-wider font-medium">Search Fund CRM</p>
+          </div>
         </div>
       </div>
 
