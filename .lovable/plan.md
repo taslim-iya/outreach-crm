@@ -1,107 +1,152 @@
 
-# Cap Table Implementation Plan
+# Cap Table Enhancement Plan
 
-## Overview
-Add a dedicated "Cap Table" page below Analytics in the navigation that displays your fundraising progress with capital raised breakdowns by investor.
+## Issues Identified
 
-## What You'll Get
+### Issue 1: Investor Not Appearing on Cap Table
+The investor "Florian" was moved to "committed" stage but has no commitment amount. The Cap Table currently filters for investors where:
+- `stage` = 'committed' OR 'closed'
+- **AND** `commitment_amount > 0`
 
-### 1. New Cap Table Page
-A professional fundraising dashboard showing:
-- **Total Capital Raised** - Sum of all committed investments
-- **Number of Investors** - Count of committed/closed investors  
-- **Average Investment Size** - Calculated from commitments
-- **Fundraising Progress** - Visual progress bar toward your target
+Since commitment_amount is null, the investor doesn't appear.
 
-### 2. Investor Breakdown Table
-A detailed table with columns:
-- Investor Name
-- Organization
-- Commitment Amount
-- Percentage of Total Raised
-- Stage (Committed/Closed)
-- Commitment Date
+### Issue 2: No Commitment Amount Prompt
+When moving an investor to "committed" or "closed" via the dropdown menu, the system only updates the stage without prompting for the investment amount.
 
-### 3. Visual Charts
-- Pie chart showing capital distribution by investor
-- Bar chart comparing commitment amounts
+### Issue 3: No Manual Cap Table Editing
+Users cannot add entries directly to the Cap Table - they must first add an investor contact.
 
-### 4. Empty State
-When no commitments exist, shows a helpful prompt to add investors via the Investors page.
+---
+
+## Solution Overview
+
+### 1. Commitment Amount Modal
+Create a popup that appears when moving an investor to "committed" or "closed" stages, prompting the user to enter the commitment amount.
+
+### 2. Direct Cap Table Entry
+Add an "Add Entry" button on the Cap Table page that allows manually adding cap table entries without requiring an investor in the pipeline.
+
+### 3. Inline Editing
+Enable editing commitment amounts directly from the Cap Table view.
 
 ---
 
 ## Technical Implementation
 
-### Files to Create
+### New Files to Create
 
-**`src/pages/CapTable.tsx`**
-- New page component that fetches from `investor_deals` table
-- Filters for investors with `stage` = 'committed' or 'closed'
-- Uses `commitment_amount` field for calculations
-- Includes search/filter functionality
-- Mobile-responsive design matching existing pages
+**`src/components/pipeline/CommitmentAmountModal.tsx`**
+A modal dialog that:
+- Prompts for commitment amount when moving to committed/closed stages
+- Shows investor name and organization
+- Has a required amount field
+- Submits both stage change and commitment amount together
+
+**`src/components/cap-table/CapTableEntryModal.tsx`**
+A modal for adding/editing cap table entries directly:
+- Name field
+- Organization field
+- Commitment amount (required)
+- Stage (committed/closed)
+- Optional: link to existing investor or contact
 
 ### Files to Modify
 
-**`src/components/layout/Sidebar.tsx`**
-- Add new navigation item after Analytics:
-```typescript
-{ name: 'Cap Table', href: '/cap-table', icon: PieChart }
-```
+**`src/components/pipeline/InvestorCard.tsx`**
+- When clicking "Move to Stage" -> "Committed" or "Closed", instead of directly calling `handleMoveToStage`, open the CommitmentAmountModal
+- Pass the selected stage and investor data to the modal
 
-**`src/App.tsx`**
-- Add new route:
-```typescript
-<Route path="/cap-table" element={<CapTable />} />
-```
+**`src/hooks/useInvestorDeals.ts`**
+- Add a new hook `useUpdateInvestorStageWithCommitment` that updates both stage and commitment_amount in one call
 
-### Data Source
-The `investor_deals` table already has:
-- `commitment_amount` (number) - The investment amount
-- `stage` (enum) - Filter for 'committed' and 'closed' stages
-- `name` and `organization` - Investor identification
-- `created_at`/`updated_at` - For tracking commitment dates
-
-No database changes required - we'll use existing data.
-
-### UI Components Used
-- Existing `PageHeader` component
-- Existing `Card` components with `goldman-card` styling
-- Recharts library (already installed) for pie/bar charts
-- Existing table styling from other pages
+**`src/pages/CapTable.tsx`**
+- Add "Add Entry" button in the header
+- Add edit/delete actions to the investor table rows
+- Integrate CapTableEntryModal for adding/editing entries
 
 ---
 
-## Page Layout
+## User Flow Changes
+
+### Moving Investor to Committed/Closed
 
 ```text
-+------------------------------------------+
-|  Cap Table                    [Export]   |
-|  Track your fundraising progress         |
-+------------------------------------------+
-|  +--------+  +--------+  +--------+      |
-|  | $XXX K |  | XX     |  | $XX K  |      |
-|  | Raised |  | Invest |  | Avg    |      |
-|  +--------+  +--------+  +--------+      |
-+------------------------------------------+
-|  Progress: ████████░░░░ 65% of $1M goal  |
-+------------------------------------------+
-|  +-----------------+  +----------------+ |
-|  | Pie Chart       |  | Bar Chart      | |
-|  | (Distribution)  |  | (Commitments)  | |
-|  +-----------------+  +----------------+ |
-+------------------------------------------+
-|  Investor Table                          |
-|  Name | Org | Amount | % | Stage | Date  |
-|  ----------------------------------------|
-|  John  | ABC | $50K  | 25%| Commit| 1/29 |
-|  Jane  | XYZ | $75K  | 37%| Closed| 1/28 |
-+------------------------------------------+
+Current Flow:
+1. Click "Move to Stage" → "Committed"
+2. Stage updates immediately
+3. No commitment amount set
+4. Investor doesn't appear on Cap Table
+
+New Flow:
+1. Click "Move to Stage" → "Committed"
+2. Modal opens: "Enter Commitment Amount"
+   - Shows: "Florian - Legacy Partners"
+   - Input: $ [amount field]
+   - Buttons: Cancel | Confirm
+3. Both stage AND amount update together
+4. Investor appears on Cap Table immediately
 ```
+
+### Adding Cap Table Entry Directly
+
+```text
+1. Navigate to Cap Table
+2. Click "Add Entry" button
+3. Modal opens with fields:
+   - Investor Name *
+   - Organization
+   - Commitment Amount * ($)
+   - Stage (Committed/Closed)
+4. Entry appears in Cap Table
+```
+
+---
+
+## Component Details
+
+### CommitmentAmountModal
+
+```typescript
+interface CommitmentAmountModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  investor: InvestorDeal;
+  targetStage: 'committed' | 'closed';
+  onConfirm: (amount: number) => void;
+}
+```
+
+Features:
+- Pre-filled investor info (name, org)
+- Number input for amount with currency formatting
+- Validation: amount required and must be > 0
+- Cancel returns to previous state (no stage change)
+
+### CapTableEntryModal
+
+```typescript
+interface CapTableEntryModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  entry?: InvestorDeal | null; // For editing existing entries
+}
+```
+
+Features:
+- Add new entries not linked to investor pipeline
+- Edit existing entries inline
+- Required: name, commitment amount
+- Optional: organization, notes
+- Stage defaults to 'committed'
 
 ---
 
 ## Summary
-This implementation leverages existing investor data and UI patterns for a consistent experience. The cap table will automatically update as you move investors to "Committed" or "Closed" stages and enter their commitment amounts.
 
+This implementation:
+1. Fixes the immediate issue where committed investors don't show on Cap Table
+2. Ensures commitment amounts are always captured when moving to final stages
+3. Provides flexibility to manually manage the Cap Table directly
+4. Maintains data integrity between Investors and Cap Table
+
+No database changes required - uses existing `investor_deals` table structure.
