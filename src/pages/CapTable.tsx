@@ -74,14 +74,14 @@ export default function CapTable() {
   const [goalModalOpen, setGoalModalOpen] = useState(false);
   const [goalInput, setGoalInput] = useState('');
 
-  // Fetch profile (fundraising goal and company name)
+  // Fetch profile (fundraising goal, company name, currency)
   const { data: profile } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
       const { data, error } = await supabase
         .from('profiles')
-        .select('fundraising_goal, company_name')
+        .select('fundraising_goal, company_name, currency')
         .eq('user_id', user.id)
         .maybeSingle();
       if (error) throw error;
@@ -92,6 +92,18 @@ export default function CapTable() {
 
   const fundraisingGoal = profile?.fundraising_goal ?? DEFAULT_FUNDRAISING_GOAL;
   const companyName = profile?.company_name;
+  const currency = profile?.currency || 'USD';
+
+  // Currency formatting config
+  const getCurrencySymbol = (currencyCode: string) => {
+    const symbols: Record<string, string> = {
+      USD: '$', EUR: '€', GBP: '£', CHF: 'CHF ', JPY: '¥',
+      CAD: 'C$', AUD: 'A$', CNY: '¥', INR: '₹', SGD: 'S$'
+    };
+    return symbols[currencyCode] || '$';
+  };
+
+  const currencySymbol = getCurrencySymbol(currency);
 
   // Update fundraising goal mutation
   const updateGoal = useMutation({
@@ -202,12 +214,12 @@ export default function CapTable() {
 
   const formatCurrency = (value: number) => {
     if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(1)}M`;
+      return `${currencySymbol}${(value / 1000000).toFixed(1)}M`;
     }
     if (value >= 1000) {
-      return `$${(value / 1000).toFixed(0)}K`;
+      return `${currencySymbol}${(value / 1000).toFixed(0)}K`;
     }
-    return `$${value.toFixed(0)}`;
+    return `${currencySymbol}${value.toFixed(0)}`;
   };
 
   const handleExportCSV = () => {

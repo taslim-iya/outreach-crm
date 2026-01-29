@@ -7,13 +7,33 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { User, Mail, Bell, Shield, Database, Loader2, Link2, Check, RefreshCw } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { User, Mail, Bell, Shield, Database, Loader2, Link2, Check, RefreshCw, DollarSign } from 'lucide-react';
 import { useUserIntegrations, useDisconnectIntegration } from '@/hooks/useUserIntegrations';
 import { useSyncIntegration } from '@/hooks/useSyncIntegration';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query';
+
+const CURRENCIES = [
+  { code: 'USD', symbol: '$', name: 'US Dollar' },
+  { code: 'EUR', symbol: '€', name: 'Euro' },
+  { code: 'GBP', symbol: '£', name: 'British Pound' },
+  { code: 'CHF', symbol: 'CHF', name: 'Swiss Franc' },
+  { code: 'JPY', symbol: '¥', name: 'Japanese Yen' },
+  { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
+  { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
+  { code: 'CNY', symbol: '¥', name: 'Chinese Yuan' },
+  { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
+  { code: 'SGD', symbol: 'S$', name: 'Singapore Dollar' },
+];
 
 export default function Settings() {
   const { user } = useAuth();
@@ -23,6 +43,55 @@ export default function Settings() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isConnecting, setIsConnecting] = useState(false);
   const queryClient = useQueryClient();
+
+  // Fetch profile settings
+  const { data: profile } = useQuery({
+    queryKey: ['profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('currency, company_name, display_name')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  // Update currency mutation
+  const updateCurrency = useMutation({
+    mutationFn: async (currency: string) => {
+      if (!user?.id) throw new Error('Not authenticated');
+      
+      const { data: existing } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (existing) {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ currency })
+          .eq('user_id', user.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('profiles')
+          .insert({ user_id: user.id, currency });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      toast.success('Currency updated');
+    },
+    onError: () => {
+      toast.error('Failed to update currency');
+    },
+  });
 
   const googleIntegration = integrations.find(i => i.provider === 'google');
   const microsoftIntegration = integrations.find(i => i.provider === 'microsoft');
@@ -148,6 +217,45 @@ export default function Settings() {
               <Input defaultValue="" placeholder="Your company or fund name" className="mt-1.5" />
             </div>
             <Button className="gradient-primary text-primary-foreground">Save Changes</Button>
+          </CardContent>
+        </Card>
+
+        {/* Currency */}
+        <Card className="goldman-card">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2 font-semibold">
+              <DollarSign className="w-4 h-4 text-primary" />
+              Currency
+            </CardTitle>
+            <CardDescription>Set your preferred currency for displaying amounts</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>Display Currency</Label>
+              <Select
+                value={profile?.currency || 'USD'}
+                onValueChange={(value) => updateCurrency.mutate(value)}
+                disabled={updateCurrency.isPending}
+              >
+                <SelectTrigger className="w-full mt-1.5">
+                  <SelectValue placeholder="Select currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CURRENCIES.map((currency) => (
+                    <SelectItem key={currency.code} value={currency.code}>
+                      <span className="flex items-center gap-2">
+                        <span className="font-medium">{currency.symbol}</span>
+                        <span>{currency.name}</span>
+                        <span className="text-muted-foreground">({currency.code})</span>
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-2">
+                This will affect how amounts are displayed in Cap Table and other areas
+              </p>
+            </div>
           </CardContent>
         </Card>
 
