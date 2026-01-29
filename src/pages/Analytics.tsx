@@ -1,22 +1,42 @@
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { mockKPIs } from '@/data/mockData';
+import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
+import { useInvestorDeals } from '@/hooks/useInvestorDeals';
+import { useCompanies } from '@/hooks/useCompanies';
+import { Loader2, TrendingUp, Users, Target, BarChart3 } from 'lucide-react';
 
 export default function Analytics() {
-  const funnelData = [
-    { stage: 'Contacted', count: 47, percentage: 100 },
-    { stage: 'Responded', count: 16, percentage: 34 },
-    { stage: 'Meeting', count: 8, percentage: 17 },
-    { stage: 'Interested', count: 5, percentage: 11 },
-    { stage: 'Committed', count: 3, percentage: 6 },
-  ];
+  const { data: metrics, isLoading: metricsLoading } = useDashboardMetrics();
+  const { data: investorDeals, isLoading: investorsLoading } = useInvestorDeals();
+  const { data: companies, isLoading: companiesLoading } = useCompanies();
 
-  const weeklyData = [
-    { week: 'Week 1', outreach: 12, meetings: 2, deals: 0 },
-    { week: 'Week 2', outreach: 15, meetings: 3, deals: 1 },
-    { week: 'Week 3', outreach: 10, meetings: 2, deals: 0 },
-    { week: 'Week 4', outreach: 10, meetings: 1, deals: 1 },
-  ];
+  const isLoading = metricsLoading || investorsLoading || companiesLoading;
+
+  // Calculate funnel data from real investor deals
+  const funnelData = investorDeals ? [
+    { stage: 'Contacted', count: investorDeals.filter(d => d.stage !== 'not_contacted').length, percentage: 100 },
+    { stage: 'Responded', count: investorDeals.filter(d => ['follow_up', 'meeting_scheduled', 'interested', 'committed', 'closed'].includes(d.stage)).length },
+    { stage: 'Meeting', count: investorDeals.filter(d => ['meeting_scheduled', 'interested', 'committed', 'closed'].includes(d.stage)).length },
+    { stage: 'Interested', count: investorDeals.filter(d => ['interested', 'committed', 'closed'].includes(d.stage)).length },
+    { stage: 'Committed', count: investorDeals.filter(d => ['committed', 'closed'].includes(d.stage)).length },
+  ].map((item, _, arr) => ({
+    ...item,
+    percentage: arr[0].count > 0 ? Math.round((item.count / arr[0].count) * 100) : 0
+  })) : [];
+
+  // Calculate real metrics
+  const totalInvestors = investorDeals?.length || 0;
+  const totalCompanies = companies?.length || 0;
+  const committedAmount = investorDeals?.reduce((sum, d) => sum + (d.commitment_amount || 0), 0) || 0;
+  const activeDeals = companies?.filter(c => !['passed', 'closed'].includes(c.stage)).length || 0;
+
+  if (isLoading) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
@@ -25,89 +45,149 @@ export default function Analytics() {
         description="Track your search fund performance"
       />
 
-      {/* Funnel */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-base">Investor Funnel</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {funnelData.map((stage, index) => (
-              <div key={stage.stage} className="flex items-center gap-4">
-                <span className="text-sm text-muted-foreground w-24">{stage.stage}</span>
-                <div className="flex-1 h-8 bg-muted rounded-lg overflow-hidden">
-                  <div
-                    className="h-full gradient-gold transition-all duration-500 flex items-center justify-end pr-3"
-                    style={{ width: `${stage.percentage}%` }}
-                  >
-                    <span className="text-xs font-medium text-primary-foreground">
-                      {stage.count}
-                    </span>
-                  </div>
-                </div>
-                <span className="text-sm text-muted-foreground w-12 text-right">
-                  {stage.percentage}%
-                </span>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Weekly Activity */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-base">Weekly Activity</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-4 gap-4">
-            {weeklyData.map((week) => (
-              <div key={week.week} className="p-4 rounded-lg bg-muted/50">
-                <p className="text-xs text-muted-foreground mb-2">{week.week}</p>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Outreach</span>
-                    <span className="font-medium">{week.outreach}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Meetings</span>
-                    <span className="font-medium">{week.meetings}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Deals</span>
-                    <span className="font-medium">{week.deals}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Key Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <Card className="goldman-card">
           <CardContent className="pt-6">
-            <p className="text-3xl font-semibold text-foreground">{mockKPIs.outreachSent}</p>
-            <p className="text-sm text-muted-foreground mt-1">Total Outreach</p>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Users className="w-5 h-5 text-primary" />
+              </div>
+            </div>
+            <p className="text-3xl font-semibold tracking-tight">{totalInvestors}</p>
+            <p className="text-sm text-muted-foreground mt-1">Total Investors</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="goldman-card">
           <CardContent className="pt-6">
-            <p className="text-3xl font-semibold text-foreground">{mockKPIs.responseRate}%</p>
-            <p className="text-sm text-muted-foreground mt-1">Response Rate</p>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Target className="w-5 h-5 text-primary" />
+              </div>
+            </div>
+            <p className="text-3xl font-semibold tracking-tight">{totalCompanies}</p>
+            <p className="text-sm text-muted-foreground mt-1">Target Companies</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="goldman-card">
           <CardContent className="pt-6">
-            <p className="text-3xl font-semibold text-foreground">{mockKPIs.conversionRate}%</p>
-            <p className="text-sm text-muted-foreground mt-1">Conversion Rate</p>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 text-success" />
+              </div>
+            </div>
+            <p className="text-3xl font-semibold tracking-tight">
+              ${committedAmount > 0 ? (committedAmount / 1000).toFixed(0) + 'K' : '0'}
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">Committed Capital</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="goldman-card">
           <CardContent className="pt-6">
-            <p className="text-3xl font-semibold text-foreground">{mockKPIs.meetingsBooked}</p>
-            <p className="text-sm text-muted-foreground mt-1">Meetings This Month</p>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-lg bg-info/10 flex items-center justify-center">
+                <BarChart3 className="w-5 h-5 text-info" />
+              </div>
+            </div>
+            <p className="text-3xl font-semibold tracking-tight">{activeDeals}</p>
+            <p className="text-sm text-muted-foreground mt-1">Active Deals</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Investor Funnel */}
+      <Card className="goldman-card mb-6">
+        <CardHeader>
+          <CardTitle className="text-base font-semibold">Investor Funnel</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {funnelData.length > 0 && funnelData[0].count > 0 ? (
+            <div className="space-y-3">
+              {funnelData.map((stage) => (
+                <div key={stage.stage} className="flex items-center gap-4">
+                  <span className="text-sm text-muted-foreground w-24">{stage.stage}</span>
+                  <div className="flex-1 h-8 bg-muted rounded-lg overflow-hidden">
+                    <div
+                      className="h-full bg-primary transition-all duration-500 flex items-center justify-end pr-3"
+                      style={{ width: `${Math.max(stage.percentage, 5)}%` }}
+                    >
+                      <span className="text-xs font-medium text-primary-foreground">
+                        {stage.count}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-sm text-muted-foreground w-12 text-right">
+                    {stage.percentage}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <BarChart3 className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p>No investor data yet. Add investors to see your funnel.</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Pipeline Summary */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card className="goldman-card">
+          <CardHeader>
+            <CardTitle className="text-base font-semibold">Investor Stages</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {metrics && (
+              <div className="space-y-3">
+                {[
+                  { label: 'Not Contacted', count: metrics.investorsByStage.not_contacted, color: 'bg-muted-foreground' },
+                  { label: 'Outreach Sent', count: metrics.investorsByStage.outreach_sent, color: 'bg-stage-cold' },
+                  { label: 'Follow Up', count: metrics.investorsByStage.follow_up, color: 'bg-info' },
+                  { label: 'Meeting Scheduled', count: metrics.investorsByStage.meeting_scheduled, color: 'bg-stage-warm' },
+                  { label: 'Interested', count: metrics.investorsByStage.interested, color: 'bg-primary' },
+                  { label: 'Committed', count: metrics.investorsByStage.committed, color: 'bg-success' },
+                  { label: 'Closed', count: metrics.investorsByStage.closed, color: 'bg-success' },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${item.color}`} />
+                      <span className="text-sm">{item.label}</span>
+                    </div>
+                    <span className="text-sm font-medium">{item.count}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="goldman-card">
+          <CardHeader>
+            <CardTitle className="text-base font-semibold">Deal Stages</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {metrics && (
+              <div className="space-y-3">
+                {[
+                  { label: 'Identified', count: metrics.dealsByStage.identified, color: 'bg-muted-foreground' },
+                  { label: 'Researching', count: metrics.dealsByStage.researching, color: 'bg-stage-cold' },
+                  { label: 'Outreach Sent', count: metrics.dealsByStage.outreach_sent, color: 'bg-info' },
+                  { label: 'NDA Sent', count: metrics.dealsByStage.nda_sent, color: 'bg-stage-warm' },
+                  { label: 'In Discussion', count: metrics.dealsByStage.in_discussion, color: 'bg-primary' },
+                  { label: 'Due Diligence', count: metrics.dealsByStage.due_diligence, color: 'bg-success' },
+                  { label: 'LOI', count: metrics.dealsByStage.loi, color: 'bg-success' },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${item.color}`} />
+                      <span className="text-sm">{item.label}</span>
+                    </div>
+                    <span className="text-sm font-medium">{item.count}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

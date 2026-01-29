@@ -1,6 +1,6 @@
 import { Contact } from '@/hooks/useContacts';
 import { cn } from '@/lib/utils';
-import { Mail, Phone, MapPin, Calendar, Building2, User, Briefcase, Star, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { Mail, Phone, MapPin, Calendar, Building2, User, Briefcase, Star, MoreHorizontal, Pencil, Trash2, Compass } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +24,7 @@ const typeIcons: Record<ContactType, React.ElementType> = {
   owner: Building2,
   intermediary: Briefcase,
   advisor: User,
+  river_guide: Compass,
 };
 
 const typeLabels: Record<ContactType, string> = {
@@ -31,6 +32,7 @@ const typeLabels: Record<ContactType, string> = {
   owner: 'Company Owner',
   intermediary: 'Intermediary',
   advisor: 'Advisor',
+  river_guide: 'River Guide',
 };
 
 const warmthColors: Record<WarmthLevel, string> = {

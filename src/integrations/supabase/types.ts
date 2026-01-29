@@ -583,7 +583,12 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      contact_type: "investor" | "owner" | "intermediary" | "advisor"
+      contact_type:
+        | "investor"
+        | "owner"
+        | "intermediary"
+        | "advisor"
+        | "river_guide"
       deal_stage:
         | "identified"
         | "researching"
@@ -735,7 +740,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      contact_type: ["investor", "owner", "intermediary", "advisor"],
+      contact_type: [
+        "investor",
+        "owner",
+        "intermediary",
+        "advisor",
+        "river_guide",
+      ],
       deal_stage: [
         "identified",
         "researching",
