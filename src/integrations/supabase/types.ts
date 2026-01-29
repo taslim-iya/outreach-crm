@@ -385,6 +385,70 @@ export type Database = {
           },
         ]
       }
+      notes: {
+        Row: {
+          color: string | null
+          company_id: string | null
+          contact_id: string | null
+          content: string | null
+          created_at: string
+          id: string
+          investor_deal_id: string | null
+          is_pinned: boolean | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          company_id?: string | null
+          contact_id?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          investor_deal_id?: string | null
+          is_pinned?: boolean | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          company_id?: string | null
+          contact_id?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          investor_deal_id?: string | null
+          is_pinned?: boolean | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notes_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notes_investor_deal_id_fkey"
+            columns: ["investor_deal_id"]
+            isOneToOne: false
+            referencedRelation: "investor_deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
