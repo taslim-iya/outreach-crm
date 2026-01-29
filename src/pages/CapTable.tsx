@@ -211,7 +211,16 @@ export default function CapTable() {
   };
 
   const handleExportCSV = () => {
+    const headerRows = [];
+    if (companyName) {
+      headerRows.push([companyName]);
+      headerRows.push(['Cap Table']);
+      headerRows.push([`Generated: ${format(new Date(), 'MMMM d, yyyy')}`]);
+      headerRows.push([]);
+    }
+    
     const csvContent = [
+      ...headerRows.map(row => row.join(',')),
       ['Investor', 'Contact', 'Commitment', 'Stage', 'Date'].join(','),
       ...filteredInvestors.map((inv) =>
         [
