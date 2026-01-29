@@ -261,82 +261,64 @@ export default function CapTable() {
     
     // Navy blue color (Goldman-inspired)
     const navyBlue: [number, number, number] = [10, 37, 64];
-    const lightGray: [number, number, number] = [248, 249, 250];
+    const lightGray: [number, number, number] = [245, 247, 250];
     
     // === HEADER BAR ===
     doc.setFillColor(...navyBlue);
-    doc.rect(0, 0, pageWidth, 28, 'F');
+    doc.rect(0, 0, pageWidth, 24, 'F');
     
     // Company name in header
     const headerTitle = companyName?.toUpperCase() || 'CAP TABLE REPORT';
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(16);
+    doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text(headerTitle, pageWidth / 2, 18, { align: 'center' });
+    doc.text(headerTitle, pageWidth / 2, 15, { align: 'center' });
     
     // === TITLE SECTION ===
     doc.setTextColor(10, 37, 64);
-    doc.setFontSize(22);
+    doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
-    doc.text('Cap Table Report', pageWidth / 2, 44, { align: 'center' });
+    doc.text('Cap Table Report', pageWidth / 2, 38, { align: 'center' });
     
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(100, 100, 100);
-    doc.text(`Generated: ${format(new Date(), 'MMMM d, yyyy')}`, pageWidth / 2, 52, { align: 'center' });
+    doc.setTextColor(120, 120, 120);
+    doc.text(`Generated: ${format(new Date(), 'MMMM d, yyyy')}`, pageWidth / 2, 46, { align: 'center' });
     
     // === SUMMARY CARDS ===
-    const cardY = 62;
-    const cardHeight = 28;
-    const cardWidth = 88;
-    const gap = 10;
-    const leftCardX = 14;
-    const rightCardX = leftCardX + cardWidth + gap;
+    const cardY = 54;
+    const cardHeight = 24;
+    const cardWidth = 44;
+    const gap = 4;
+    const totalCardsWidth = (cardWidth * 4) + (gap * 3);
+    const startX = (pageWidth - totalCardsWidth) / 2;
     
-    // Left card - Total Raised & Goal
-    doc.setFillColor(...lightGray);
-    doc.roundedRect(leftCardX, cardY, cardWidth, cardHeight, 3, 3, 'F');
+    const cardData = [
+      { label: 'Total Raised', value: formatCurrency(metrics.totalRaised) },
+      { label: 'Goal', value: `${formatCurrency(fundraisingGoal)}` },
+      { label: 'Progress', value: `${metrics.progressPercent.toFixed(1)}%` },
+      { label: 'Investors', value: String(metrics.investorCount) },
+    ];
     
-    doc.setFontSize(9);
-    doc.setTextColor(100, 100, 100);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Total Raised', leftCardX + 6, cardY + 10);
-    doc.setFontSize(14);
-    doc.setTextColor(...navyBlue);
-    doc.setFont('helvetica', 'bold');
-    doc.text(formatCurrency(metrics.totalRaised), leftCardX + 6, cardY + 20);
-    
-    // Goal info on right side of left card
-    doc.setFontSize(9);
-    doc.setTextColor(100, 100, 100);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Goal', leftCardX + 50, cardY + 10);
-    doc.setFontSize(11);
-    doc.setTextColor(...navyBlue);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`${formatCurrency(fundraisingGoal)} (${metrics.progressPercent.toFixed(1)}%)`, leftCardX + 50, cardY + 20);
-    
-    // Right card - Investors & Average
-    doc.setFillColor(...lightGray);
-    doc.roundedRect(rightCardX, cardY, cardWidth, cardHeight, 3, 3, 'F');
-    
-    doc.setFontSize(9);
-    doc.setTextColor(100, 100, 100);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Investors', rightCardX + 6, cardY + 10);
-    doc.setFontSize(14);
-    doc.setTextColor(...navyBlue);
-    doc.setFont('helvetica', 'bold');
-    doc.text(String(metrics.investorCount), rightCardX + 6, cardY + 20);
-    
-    doc.setFontSize(9);
-    doc.setTextColor(100, 100, 100);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Avg. Investment', rightCardX + 40, cardY + 10);
-    doc.setFontSize(11);
-    doc.setTextColor(...navyBlue);
-    doc.setFont('helvetica', 'bold');
-    doc.text(formatCurrency(metrics.averageInvestment), rightCardX + 40, cardY + 20);
+    cardData.forEach((card, index) => {
+      const cardX = startX + (index * (cardWidth + gap));
+      
+      // Card background
+      doc.setFillColor(...lightGray);
+      doc.roundedRect(cardX, cardY, cardWidth, cardHeight, 2, 2, 'F');
+      
+      // Label
+      doc.setFontSize(8);
+      doc.setTextColor(100, 100, 100);
+      doc.setFont('helvetica', 'normal');
+      doc.text(card.label, cardX + cardWidth / 2, cardY + 9, { align: 'center' });
+      
+      // Value
+      doc.setFontSize(12);
+      doc.setTextColor(...navyBlue);
+      doc.setFont('helvetica', 'bold');
+      doc.text(card.value, cardX + cardWidth / 2, cardY + 18, { align: 'center' });
+    });
     
     // === TABLE ===
     const tableData = filteredInvestors.map((inv) => {
@@ -355,48 +337,50 @@ export default function CapTable() {
     autoTable(doc, {
       head: [['Investor', 'Contact', 'Commitment', '% of Total', 'Status']],
       body: tableData,
-      startY: cardY + cardHeight + 10,
+      startY: cardY + cardHeight + 8,
       styles: {
         fontSize: 9,
-        cellPadding: 4,
-        lineColor: [220, 220, 220],
+        cellPadding: 3,
+        lineColor: [230, 230, 230],
         lineWidth: 0.1,
       },
       headStyles: {
         fillColor: navyBlue,
         textColor: [255, 255, 255],
         fontStyle: 'bold',
+        fontSize: 9,
         halign: 'left',
+        cellPadding: 4,
       },
       columnStyles: {
-        0: { cellWidth: 50 },
-        1: { cellWidth: 40 },
+        0: { cellWidth: 55 },
+        1: { cellWidth: 45 },
         2: { cellWidth: 35, halign: 'right' },
         3: { cellWidth: 25, halign: 'right' },
-        4: { cellWidth: 30, halign: 'center' },
+        4: { cellWidth: 25, halign: 'center' },
       },
       alternateRowStyles: {
-        fillColor: [250, 250, 250],
+        fillColor: [252, 252, 252],
       },
       margin: { left: 14, right: 14 },
       didDrawPage: (data) => {
         // Footer on each page
         const pageCount = doc.getNumberOfPages();
-        doc.setFontSize(8);
+        doc.setFontSize(7);
         doc.setTextColor(150, 150, 150);
         doc.setFont('helvetica', 'normal');
         
         // Page number
-        doc.text(`Page ${data.pageNumber} of ${pageCount}`, 14, pageHeight - 10);
+        doc.text(`Page ${data.pageNumber} of ${pageCount}`, 14, pageHeight - 8);
         
         // Confidential notice
-        doc.text('Confidential', pageWidth - 14, pageHeight - 10, { align: 'right' });
+        doc.text('Confidential', pageWidth - 14, pageHeight - 8, { align: 'right' });
         
         // Generated timestamp
         doc.text(
           format(new Date(), "MMM d, yyyy 'at' h:mm a"),
           pageWidth / 2,
-          pageHeight - 10,
+          pageHeight - 8,
           { align: 'center' }
         );
       },
