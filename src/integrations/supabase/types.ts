@@ -279,6 +279,73 @@ export type Database = {
         }
         Relationships: []
       }
+      documents: {
+        Row: {
+          company_id: string | null
+          contact_id: string | null
+          created_at: string
+          document_type: string
+          file_path: string
+          file_type: string
+          id: string
+          investor_deal_id: string | null
+          name: string
+          size_bytes: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          document_type?: string
+          file_path: string
+          file_type: string
+          id?: string
+          investor_deal_id?: string | null
+          name: string
+          size_bytes: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          document_type?: string
+          file_path?: string
+          file_type?: string
+          id?: string
+          investor_deal_id?: string | null
+          name?: string
+          size_bytes?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_investor_deal_id_fkey"
+            columns: ["investor_deal_id"]
+            isOneToOne: false
+            referencedRelation: "investor_deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       emails: {
         Row: {
           body_preview: string | null
