@@ -39,7 +39,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { Download, Search, TrendingUp, Users, DollarSign, PiggyBank, Plus, MoreHorizontal, Pencil, Trash2, Settings2 } from 'lucide-react';
+import { Download, Search, TrendingUp, Users, DollarSign, PiggyBank, Plus, MoreHorizontal, Pencil, Trash2, Settings2, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { CapTableEntryModal } from '@/components/cap-table/CapTableEntryModal';
@@ -47,6 +47,8 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const COLORS = [
   'hsl(var(--primary))',
@@ -201,7 +203,7 @@ export default function CapTable() {
     return `$${value.toFixed(0)}`;
   };
 
-  const handleExport = () => {
+  const handleExportCSV = () => {
     const csvContent = [
       ['Investor', 'Organization', 'Commitment', 'Stage', 'Date'].join(','),
       ...filteredInvestors.map((inv) =>
@@ -222,6 +224,71 @@ export default function CapTable() {
     a.download = `cap-table-${format(new Date(), 'yyyy-MM-dd')}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    
+    // Title
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Cap Table', pageWidth / 2, 20, { align: 'center' });
+    
+    // Date
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Generated: ${format(new Date(), 'MMMM d, yyyy')}`, pageWidth / 2, 28, { align: 'center' });
+    
+    // Summary metrics
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Fundraising Summary', 14, 42);
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    const summaryY = 50;
+    doc.text(`Total Raised: ${formatCurrency(metrics.totalRaised)}`, 14, summaryY);
+    doc.text(`Fundraising Goal: ${formatCurrency(fundraisingGoal)}`, 14, summaryY + 6);
+    doc.text(`Progress: ${metrics.progressPercent.toFixed(1)}%`, 14, summaryY + 12);
+    doc.text(`Number of Investors: ${metrics.investorCount}`, 100, summaryY);
+    doc.text(`Average Investment: ${formatCurrency(metrics.averageInvestment)}`, 100, summaryY + 6);
+    
+    // Table
+    const tableData = filteredInvestors.map((inv) => {
+      const percentage = metrics.totalRaised > 0
+        ? ((inv.commitment_amount || 0) / metrics.totalRaised) * 100
+        : 0;
+      return [
+        inv.name,
+        inv.organization || '—',
+        formatCurrency(inv.commitment_amount || 0),
+        `${percentage.toFixed(1)}%`,
+        inv.stage === 'closed' ? 'Closed' : 'Committed',
+        format(new Date(inv.updated_at), 'MMM d, yyyy'),
+      ];
+    });
+
+    autoTable(doc, {
+      head: [['Investor', 'Organization', 'Commitment', '% of Total', 'Stage', 'Date']],
+      body: tableData,
+      startY: 72,
+      styles: {
+        fontSize: 9,
+        cellPadding: 3,
+      },
+      headStyles: {
+        fillColor: [30, 30, 30],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245],
+      },
+    });
+
+    doc.save(`cap-table-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+    toast.success('PDF exported successfully');
   };
 
   const handleEdit = (entry: InvestorDeal) => {
@@ -321,10 +388,24 @@ export default function CapTable() {
               <Plus className="w-4 h-4 mr-2" />
               Add Entry
             </Button>
-            <Button onClick={handleExport} variant="outline" size="sm">
-              <Download className="w-4 h-4 mr-2" />
-              Export CSV
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Download className="w-4 h-4 mr-2" />
+                  Export
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleExportCSV}>
+                  <Download className="w-4 h-4 mr-2" />
+                  Export as CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportPDF}>
+                  <FileText className="w-4 h-4 mr-2" />
+                  Export as PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         }
       />
