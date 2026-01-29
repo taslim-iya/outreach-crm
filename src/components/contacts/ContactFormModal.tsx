@@ -21,7 +21,8 @@ import {
 } from '@/components/ui/select';
 import { Loader2, X } from 'lucide-react';
 import { Contact, ContactInsert, useCreateContact, useUpdateContact } from '@/hooks/useContacts';
-import { useCreateInvestorDeal } from '@/hooks/useInvestorDeals';
+import { useCreateInvestorDeal, useInvestorDeals } from '@/hooks/useInvestorDeals';
+import { useCreateCompany, useCompanies } from '@/hooks/useCompanies';
 import { toast } from 'sonner';
 import { Database } from '@/integrations/supabase/types';
 
@@ -52,6 +53,11 @@ export function ContactFormModal({ open, onOpenChange, contact }: ContactFormMod
   const createContact = useCreateContact();
   const updateContact = useUpdateContact();
   const createInvestorDeal = useCreateInvestorDeal();
+  const createCompany = useCreateCompany();
+  
+  // Fetch existing pipeline entries to check for duplicates
+  const { data: investorDeals } = useInvestorDeals();
+  const { data: companies } = useCompanies();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -72,6 +78,9 @@ export function ContactFormModal({ open, onOpenChange, contact }: ContactFormMod
   const [tagInput, setTagInput] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Store original contact type for detecting type changes during edit
+  const [originalContactType, setOriginalContactType] = useState<ContactType | null>(null);
+
   useEffect(() => {
     if (contact) {
       setFormData({
@@ -89,6 +98,7 @@ export function ContactFormModal({ open, onOpenChange, contact }: ContactFormMod
         likelihood: contact.likelihood || 'medium',
         tags: contact.tags || [],
       });
+      setOriginalContactType(contact.contact_type);
     } else {
       setFormData({
         name: '',
@@ -105,10 +115,21 @@ export function ContactFormModal({ open, onOpenChange, contact }: ContactFormMod
         likelihood: 'medium',
         tags: [],
       });
+      setOriginalContactType(null);
     }
     setErrors({});
     setTagInput('');
   }, [contact, open]);
+
+  // Check if contact already has an investor deal linked
+  const hasLinkedInvestorDeal = (contactId: string) => {
+    return investorDeals?.some(deal => deal.contact_id === contactId);
+  };
+
+  // Check if contact already has a company linked
+  const hasLinkedCompany = (contactId: string) => {
+    return companies?.some(company => company.contact_id === contactId);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,7 +166,40 @@ export function ContactFormModal({ open, onOpenChange, contact }: ContactFormMod
     try {
       if (isEditing && contact) {
         await updateContact.mutateAsync({ id: contact.id, ...contactData });
-        toast.success('Contact updated successfully');
+        
+        // Check if type changed to investor and no linked deal exists
+        const typeChangedToInvestor = originalContactType !== 'investor' && formData.contact_type === 'investor';
+        if (typeChangedToInvestor && !hasLinkedInvestorDeal(contact.id)) {
+          try {
+            await createInvestorDeal.mutateAsync({
+              name: contactData.name,
+              organization: contactData.organization || null,
+              contact_id: contact.id,
+              stage: 'not_contacted',
+              notes: contactData.notes || null,
+            });
+            toast.success('Contact updated and added to investor pipeline');
+          } catch {
+            toast.success('Contact updated (failed to add to investor pipeline)');
+          }
+        }
+        // Check if type changed to owner and no linked company exists
+        else if (originalContactType !== 'owner' && formData.contact_type === 'owner' && !hasLinkedCompany(contact.id)) {
+          try {
+            await createCompany.mutateAsync({
+              name: contactData.organization || contactData.name,
+              contact_id: contact.id,
+              stage: 'identified',
+              geography: contactData.geography || null,
+              notes: contactData.notes || null,
+            });
+            toast.success('Contact updated and added to deal pipeline');
+          } catch {
+            toast.success('Contact updated (failed to add to deal pipeline)');
+          }
+        } else {
+          toast.success('Contact updated successfully');
+        }
       } else {
         // Create the contact first
         const newContact = await createContact.mutateAsync(contactData);
@@ -163,6 +217,21 @@ export function ContactFormModal({ open, onOpenChange, contact }: ContactFormMod
             toast.success('Contact created and added to investor pipeline');
           } catch {
             toast.success('Contact created (failed to add to investor pipeline)');
+          }
+        }
+        // If contact type is owner, also create a company
+        else if (contactData.contact_type === 'owner' && newContact) {
+          try {
+            await createCompany.mutateAsync({
+              name: contactData.organization || contactData.name,
+              contact_id: newContact.id,
+              stage: 'identified',
+              geography: contactData.geography || null,
+              notes: contactData.notes || null,
+            });
+            toast.success('Contact created and added to deal pipeline');
+          } catch {
+            toast.success('Contact created (failed to add to deal pipeline)');
           }
         } else {
           toast.success('Contact created successfully');
@@ -189,7 +258,7 @@ export function ContactFormModal({ open, onOpenChange, contact }: ContactFormMod
     }));
   };
 
-  const isLoading = createContact.isPending || updateContact.isPending || createInvestorDeal.isPending;
+  const isLoading = createContact.isPending || updateContact.isPending || createInvestorDeal.isPending || createCompany.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
