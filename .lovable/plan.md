@@ -1,124 +1,151 @@
 
-# Fix Company Name Display & Improve PDF Design
+# Fix Non-Functional Buttons on Outreach Page
 
-## Problem Identified
+## Problem Summary
 
-1. **Company name not saving**: The "Organization" field in Settings is not connected to the database. It has `defaultValue=""` and the "Save Changes" button doesn't actually persist the `company_name` to the profiles table.
+The Outreach page has **4 buttons** that do nothing when clicked because they have no `onClick` handlers:
 
-2. **PDF needs professional upgrade**: The current PDF is basic - needs better styling, branding, and layout.
+1. **"New Campaign"** - Header action button
+2. **"New Template"** - In Email Templates card
+3. **"View All"** - In Active Campaigns card  
+4. **"Compose with AI"** - In AI Email Composer card
 
----
+## Solution
 
-## Changes Required
+I'll implement functional behavior for each button by following the established patterns in the codebase:
 
-### 1. Fix Settings Page - Save Company Name
+### 1. Compose with AI Button
+**Action:** Navigate to the AI Assistant page with a pre-filled prompt for email drafting.
 
-**File: `src/pages/Settings.tsx`**
+This leverages the existing AI Assistant infrastructure that already supports email drafting suggestions.
 
-- Add state management for the profile form (display name, company name)
-- Connect the "Organization" input to the `company_name` profile field
-- Update the "Save Changes" button to actually persist both fields to the database
-- Add a mutation to save profile updates
-- Pre-fill the Organization field with the existing `company_name` from the profile query
+### 2. New Template Button
+**Action:** Open a modal to create a new email template.
 
-### 2. Upgrade PDF Export Design
+Since there's no `email_templates` table in the database yet, I'll need to:
+- Create the database table for email templates
+- Create a template form modal component
+- Add hooks for template CRUD operations
 
-**File: `src/pages/CapTable.tsx`**
+### 3. New Campaign Button  
+**Action:** Show a toast notification that this feature is "coming soon" (similar to Microsoft integration in Settings).
 
-Transform the PDF from basic to professional with:
+Building a full email campaign system requires significant infrastructure (sending emails, tracking opens/clicks, scheduling). For now, a placeholder is appropriate.
 
-**Header Section:**
-- Add a navy blue header bar with company name in white
-- Professional title "Cap Table Report" 
-- Subtitle with generation date
-
-**Summary Section:**
-- Clean card-style layout with key metrics
-- Two-column layout: Total Raised / Goal on left, Investors / Avg Investment on right
-- Progress indicator with percentage
-
-**Table Improvements:**
-- Navy blue header row matching branding
-- Better cell padding and spacing
-- Cleaner alternating row colors
-- Right-aligned currency columns
-- Professional typography
-
-**Footer:**
-- Page numbers
-- "Confidential" watermark
-- Generated timestamp
+### 4. View All Button
+**Action:** Currently there are no campaigns to view, so this button will be disabled or hidden when there are no campaigns.
 
 ---
 
-## Visual Preview
+## Implementation Plan
 
-```text
-┌─────────────────────────────────────────────────────────┐
-│  ██████████████████████████████████████████████████████ │ ← Navy header bar
-│  █           MUNGER LONGVIEW PARTNERS              █   │
-│  ██████████████████████████████████████████████████████ │
-│                                                         │
-│                    CAP TABLE REPORT                     │
-│               Generated: January 29, 2026               │
-│                                                         │
-├─────────────────────────────────────────────────────────┤
-│  ┌─────────────────────┐  ┌─────────────────────────┐   │
-│  │ Total Raised        │  │ Number of Investors     │   │
-│  │ £320,000            │  │ 4                       │   │
-│  ├─────────────────────┤  ├─────────────────────────┤   │
-│  │ Fundraising Goal    │  │ Average Investment      │   │
-│  │ £400,000 (80.0%)    │  │ £80,000                 │   │
-│  └─────────────────────┘  └─────────────────────────┘   │
-│                                                         │
-├─────────────────────────────────────────────────────────┤
-│  INVESTOR        CONTACT     COMMITMENT  %     STATUS   │ ← Navy header
-├─────────────────────────────────────────────────────────┤
-│  Legacy Partners Florian     £250,000    78.1% Closed   │
-│  ABC Capital     John Smith  £70,000     21.9% Committed│
-│                                                         │
-├─────────────────────────────────────────────────────────┤
-│  Page 1                              Confidential       │
-└─────────────────────────────────────────────────────────┘
+### Step 1: Add Navigation for AI Compose
+- Import `useNavigate` from react-router-dom
+- Navigate to `/assistant` with a query parameter or state to trigger the email compose flow
+
+### Step 2: Create Email Templates Infrastructure
+
+**Database Migration:**
+```sql
+CREATE TABLE email_templates (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL,
+  name TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  body TEXT NOT NULL,
+  category TEXT DEFAULT 'general',
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Enable RLS
+ALTER TABLE email_templates ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies
+CREATE POLICY "Users can view own templates" ON email_templates
+  FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can create own templates" ON email_templates
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own templates" ON email_templates
+  FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete own templates" ON email_templates
+  FOR DELETE USING (auth.uid() = user_id);
 ```
 
----
+**New Files:**
+- `src/hooks/useEmailTemplates.ts` - CRUD hooks for templates
+- `src/components/outreach/TemplateFormModal.tsx` - Modal for creating/editing templates
 
-## Technical Implementation
+**Updated Files:**
+- `src/pages/Outreach.tsx` - Add state, handlers, and modal integration
 
-### Settings.tsx Changes
-
-1. Add form state for `displayName` and `companyName`
-2. Pre-fill values from profile query
-3. Create `updateProfile` mutation that saves to profiles table
-4. Wire "Save Changes" button to the mutation
-
-### CapTable.tsx PDF Changes
-
-1. **Header bar**: Use `doc.setFillColor()` and `doc.rect()` for navy background
-2. **Typography**: Larger company name (18pt bold), proper hierarchy
-3. **Summary cards**: Use `doc.rect()` with light fill for card backgrounds
-4. **Table styling**: Update `autoTable` config with:
-   - Navy header (`fillColor: [10, 37, 64]` for Goldman-style navy)
-   - Better column widths
-   - Right-aligned number columns
-5. **Footer**: Add page numbers and confidential notice
+### Step 3: Add Toast for Campaign Button
+- Simple toast notification: "Campaigns feature coming soon"
 
 ---
+
+## Visual Changes
+
+The Outreach page will show:
+- Templates list (when templates exist) instead of empty state
+- Working "New Template" button that opens a modal
+- "Compose with AI" redirects to AI Assistant
+- "New Campaign" shows coming soon toast
+
+---
+
+## Files to Create
+
+1. `src/hooks/useEmailTemplates.ts`
+2. `src/components/outreach/TemplateFormModal.tsx`
 
 ## Files to Modify
 
-1. **`src/pages/Settings.tsx`**
-   - Add form state management
-   - Connect Organization input to save properly
-   - Update Save button functionality
+1. `src/pages/Outreach.tsx`
 
-2. **`src/pages/CapTable.tsx`**
-   - Rewrite `handleExportPDF` function with professional styling
-   - Add header bar, improved summary section, enhanced table
+## Database Changes
+
+1. Create `email_templates` table with RLS policies
+
+---
+
+## Technical Details
+
+### Template Form Modal Structure
+```text
+┌─────────────────────────────────────┐
+│  Create Email Template              │
+├─────────────────────────────────────┤
+│  Template Name: [________________]  │
+│                                     │
+│  Subject Line:  [________________]  │
+│                                     │
+│  Category:      [General      ▼ ]   │
+│                                     │
+│  Email Body:                        │
+│  ┌─────────────────────────────┐   │
+│  │                             │   │
+│  │ Write your template here... │   │
+│  │                             │   │
+│  └─────────────────────────────┘   │
+│                                     │
+│           [Cancel]  [Save Template] │
+└─────────────────────────────────────┘
+```
+
+### Template Categories
+- Investor Outreach
+- Follow-up
+- Meeting Request
+- Thank You
+- General
 
 ---
 
 ## Summary
 
-This fix addresses both issues: the company name will now properly save from Settings, and the PDF export will have a professional, branded appearance matching the Goldman Sachs-inspired visual identity of DealScope.
+This fix will make all buttons on the Outreach page functional:
+- AI compose navigates to the existing AI Assistant
+- Templates can be created and stored in the database
+- Campaigns shows a "coming soon" notification
+- The page follows the same patterns used throughout the app
