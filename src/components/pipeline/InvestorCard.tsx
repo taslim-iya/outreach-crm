@@ -61,6 +61,10 @@ export function InvestorCard({ deal, onEdit, onDelete }: InvestorCardProps) {
     }).format(amount);
   };
 
+  // Display name: prefer organization over personal name
+  const displayName = deal.organization || deal.name;
+  const showPersonalName = deal.organization && deal.name;
+
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -111,15 +115,15 @@ export function InvestorCard({ deal, onEdit, onDelete }: InvestorCardProps) {
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium text-foreground">
-            {getInitials(deal.name)}
+            {getInitials(displayName)}
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors truncate">
-              {deal.name}
+              {displayName}
             </p>
-            {deal.organization && (
+            {showPersonalName && (
               <p className="text-xs text-muted-foreground truncate max-w-[140px]">
-                {deal.organization}
+                {deal.name}
               </p>
             )}
           </div>

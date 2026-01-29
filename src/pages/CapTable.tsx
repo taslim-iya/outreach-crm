@@ -178,9 +178,12 @@ export default function CapTable() {
   }, [committedInvestors, fundraisingGoal]);
 
   // Prepare chart data
+  // Helper to get display name (prefer organization over personal name)
+  const getDisplayName = (inv: InvestorDeal) => inv.organization || inv.name;
+
   const pieChartData = useMemo(() => {
     return filteredInvestors.map((inv) => ({
-      name: inv.name,
+      name: getDisplayName(inv),
       value: inv.commitment_amount || 0,
     }));
   }, [filteredInvestors]);
@@ -188,10 +191,13 @@ export default function CapTable() {
   const barChartData = useMemo(() => {
     return filteredInvestors
       .slice(0, 10) // Top 10 for bar chart
-      .map((inv) => ({
-        name: inv.name.length > 12 ? inv.name.slice(0, 12) + '...' : inv.name,
-        amount: inv.commitment_amount || 0,
-      }));
+      .map((inv) => {
+        const displayName = getDisplayName(inv);
+        return {
+          name: displayName.length > 12 ? displayName.slice(0, 12) + '...' : displayName,
+          amount: inv.commitment_amount || 0,
+        };
+      });
   }, [filteredInvestors]);
 
   const formatCurrency = (value: number) => {
@@ -206,11 +212,11 @@ export default function CapTable() {
 
   const handleExportCSV = () => {
     const csvContent = [
-      ['Investor', 'Organization', 'Commitment', 'Stage', 'Date'].join(','),
+      ['Investor', 'Contact', 'Commitment', 'Stage', 'Date'].join(','),
       ...filteredInvestors.map((inv) =>
         [
-          inv.name,
-          inv.organization || '',
+          getDisplayName(inv),
+          inv.organization ? inv.name : '',
           inv.commitment_amount || 0,
           inv.stage,
           format(new Date(inv.updated_at), 'yyyy-MM-dd'),
@@ -269,8 +275,8 @@ export default function CapTable() {
         ? ((inv.commitment_amount || 0) / metrics.totalRaised) * 100
         : 0;
       return [
-        inv.name,
-        inv.organization || '—',
+        getDisplayName(inv),
+        inv.organization ? inv.name : '—',
         formatCurrency(inv.commitment_amount || 0),
         `${percentage.toFixed(1)}%`,
         inv.stage === 'closed' ? 'Closed' : 'Committed',
@@ -279,7 +285,7 @@ export default function CapTable() {
     });
 
     autoTable(doc, {
-      head: [['Investor', 'Organization', 'Commitment', '% of Total', 'Stage', 'Date']],
+      head: [['Investor', 'Contact', 'Commitment', '% of Total', 'Stage', 'Date']],
       body: tableData,
       startY: companyName ? 80 : 72,
       styles: {
@@ -638,7 +644,7 @@ export default function CapTable() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Investor</TableHead>
-                  <TableHead>Organization</TableHead>
+                  <TableHead>Contact</TableHead>
                   <TableHead className="text-right">Commitment</TableHead>
                   <TableHead className="text-right">% of Total</TableHead>
                   <TableHead>Stage</TableHead>
@@ -655,9 +661,9 @@ export default function CapTable() {
 
                   return (
                     <TableRow key={investor.id}>
-                      <TableCell className="font-medium">{investor.name}</TableCell>
+                      <TableCell className="font-medium">{getDisplayName(investor)}</TableCell>
                       <TableCell className="text-muted-foreground">
-                        {investor.organization || '—'}
+                        {investor.organization ? investor.name : '—'}
                       </TableCell>
                       <TableCell className="text-right font-medium">
                         {formatCurrency(investor.commitment_amount || 0)}
