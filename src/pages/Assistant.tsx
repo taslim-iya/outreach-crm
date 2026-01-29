@@ -3,19 +3,14 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Sparkles, Send, Mail, Calendar, TrendingUp, FileText, Lightbulb } from 'lucide-react';
+import { Sparkles, Send, Mail, Calendar, TrendingUp, FileText, Lightbulb, History } from 'lucide-react';
 
+// Keep useful suggestion templates
 const suggestions = [
   { icon: Mail, text: 'Draft a follow-up email to interested investors' },
   { icon: Calendar, text: 'Suggest next best meetings to schedule' },
   { icon: TrendingUp, text: 'Analyze my pipeline performance' },
   { icon: FileText, text: 'Summarize recent meeting notes' },
-];
-
-const recentActions = [
-  { type: 'email', title: 'Drafted investor follow-up', time: '2 hours ago' },
-  { type: 'analysis', title: 'Pipeline analysis completed', time: 'Yesterday' },
-  { type: 'summary', title: 'Meeting notes summarized', time: '2 days ago' },
 ];
 
 export default function Assistant() {
@@ -58,7 +53,7 @@ export default function Assistant() {
         </CardContent>
       </Card>
 
-      {/* Quick Actions */}
+      {/* Quick Actions - These are useful templates, not dummy data */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
         {suggestions.map((suggestion, index) => (
           <button
@@ -116,21 +111,21 @@ export default function Assistant() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Recent AI Actions</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2">
+              <History className="w-4 h-4 text-muted-foreground" />
+              Recent AI Actions
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {recentActions.map((action, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-3 rounded-lg border border-border"
-              >
-                <div className="flex items-center gap-3">
-                  <Sparkles className="w-4 h-4 text-primary" />
-                  <span className="text-sm">{action.title}</span>
-                </div>
-                <span className="text-xs text-muted-foreground">{action.time}</span>
+          <CardContent>
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+                <Sparkles className="w-6 h-6 text-muted-foreground" />
               </div>
-            ))}
+              <p className="text-sm font-medium text-muted-foreground">No actions yet</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Your AI-assisted actions will appear here
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
