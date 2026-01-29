@@ -1,1 +1,13 @@
 project_id = "ygreplqxqazgxkudonso"
+
+[functions.google-oauth-init]
+verify_jwt = false
+
+[functions.google-oauth-callback]
+verify_jwt = false
+
+[functions.sync-google-emails]
+verify_jwt = false
+
+[functions.sync-google-calendar]
+verify_jwt = false

@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -5,26 +7,86 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { User, Mail, Bell, Shield, Calendar, Database, Loader2, Link2, Check } from 'lucide-react';
+import { User, Mail, Bell, Shield, Database, Loader2, Link2, Check, RefreshCw } from 'lucide-react';
 import { useUserIntegrations, useDisconnectIntegration } from '@/hooks/useUserIntegrations';
+import { useSyncIntegration } from '@/hooks/useSyncIntegration';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function Settings() {
   const { user } = useAuth();
   const { data: integrations = [], isLoading } = useUserIntegrations();
   const disconnectIntegration = useDisconnectIntegration();
+  const { isSyncing, syncAll } = useSyncIntegration();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [isConnecting, setIsConnecting] = useState(false);
+  const queryClient = useQueryClient();
 
   const googleIntegration = integrations.find(i => i.provider === 'google');
   const microsoftIntegration = integrations.find(i => i.provider === 'microsoft');
 
-  const handleConnectGoogle = () => {
-    // TODO: Implement Google OAuth flow
-    toast.info('Google integration coming soon');
+  // Handle OAuth callback query params
+  useEffect(() => {
+    const googleAuth = searchParams.get('google_auth');
+    const email = searchParams.get('email');
+    const message = searchParams.get('message');
+
+    if (googleAuth === 'success') {
+      toast.success('Google connected successfully', {
+        description: email ? `Connected as ${email}` : undefined,
+      });
+      queryClient.invalidateQueries({ queryKey: ['user_integrations'] });
+      // Clean up URL params
+      setSearchParams({});
+    } else if (googleAuth === 'error') {
+      toast.error('Failed to connect Google', {
+        description: message || 'Please try again',
+      });
+      setSearchParams({});
+    }
+  }, [searchParams, setSearchParams, queryClient]);
+
+  const handleConnectGoogle = async () => {
+    setIsConnecting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error('Please sign in first');
+        return;
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/google-oauth-init`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to start OAuth');
+      }
+
+      // Redirect to Google OAuth
+      window.location.href = data.url;
+    } catch (error) {
+      console.error('OAuth init error:', error);
+      toast.error('Failed to connect Google', {
+        description: error instanceof Error ? error.message : 'Please try again',
+      });
+    } finally {
+      setIsConnecting(false);
+    }
   };
 
   const handleConnectMicrosoft = () => {
-    // TODO: Implement Microsoft OAuth flow
     toast.info('Microsoft integration coming soon');
   };
 
@@ -34,6 +96,14 @@ export default function Settings() {
       toast.success(`${provider === 'google' ? 'Google' : 'Microsoft'} disconnected`);
     } catch {
       toast.error('Failed to disconnect integration');
+    }
+  };
+
+  const handleSync = async () => {
+    try {
+      await syncAll();
+    } catch {
+      // Error toast already shown by hook
     }
   };
 
@@ -84,11 +154,30 @@ export default function Settings() {
         {/* Email & Calendar Integration */}
         <Card className="goldman-card">
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2 font-semibold">
-              <Mail className="w-4 h-4 text-primary" />
-              Email & Calendar Integration
-            </CardTitle>
-            <CardDescription>Connect your email and calendar to sync meetings and communications</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-base flex items-center gap-2 font-semibold">
+                  <Mail className="w-4 h-4 text-primary" />
+                  Email & Calendar Integration
+                </CardTitle>
+                <CardDescription>Connect your email and calendar to sync meetings and communications</CardDescription>
+              </div>
+              {googleIntegration && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleSync}
+                  disabled={isSyncing}
+                >
+                  {isSyncing ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                  )}
+                  Sync Now
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             {isLoading ? (
@@ -133,8 +222,17 @@ export default function Settings() {
                       </Button>
                     </div>
                   ) : (
-                    <Button variant="outline" size="sm" onClick={handleConnectGoogle}>
-                      <Link2 className="w-4 h-4 mr-2" />
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleConnectGoogle}
+                      disabled={isConnecting}
+                    >
+                      {isConnecting ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Link2 className="w-4 h-4 mr-2" />
+                      )}
                       Connect
                     </Button>
                   )}
