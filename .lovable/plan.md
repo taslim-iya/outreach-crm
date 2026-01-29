@@ -1,136 +1,90 @@
 
-
-# Google OAuth Integration Plan
+# Auto-Sync Contacts with Pipeline Tabs
 
 ## Overview
-This plan implements a complete Google OAuth flow that will allow users to connect their Gmail and Google Calendar accounts. Once connected, the app will sync emails and calendar events automatically.
+This plan implements automatic synchronization between contacts and their relevant pipeline tabs. When you add a contact with a specific type (e.g., investor, company owner), they will automatically appear in the corresponding pipeline.
 
-## Prerequisites (Action Required)
+## Current Behavior
+- Creating an **investor** contact already creates an investor pipeline entry (this is working)
+- Creating an **owner** contact does NOT create a deal pipeline entry
+- The Deals page uses mock data instead of the database
+- Changing a contact's type doesn't update the pipelines
 
-Before implementation, you'll need to set up Google Cloud credentials:
+## What Will Change
 
-1. **Go to** [Google Cloud Console](https://console.cloud.google.com)
-2. **Create a new project** (or select existing)
-3. **Enable APIs**: Gmail API and Google Calendar API
-4. **Configure OAuth Consent Screen**:
-   - Add authorized domains including `lovable.app`
-   - Add scopes: `email`, `profile`, `gmail.readonly`, `calendar.readonly`
-5. **Create OAuth Credentials**:
-   - Application type: Web application
-   - Authorized redirect URI: `https://ygreplqxqazgxkudonso.supabase.co/functions/v1/google-oauth-callback`
-6. **Save your Client ID and Client Secret**
+### 1. Owner Contacts Auto-Create Deal Entries
+When you create a contact with type "Company Owner", a corresponding entry will be automatically created in the Deal Pipeline (Deals tab) with:
+- Company name = Contact's organization (or name if no organization)
+- Stage = "Identified" (starting stage)
+- Linked contact = The contact you just created
 
----
+### 2. Real Data for Deals Page
+The Deals page will be connected to the database instead of mock data, showing real companies you've added.
 
-## Implementation Steps
+### 3. Contact Type Changes Trigger Updates
+If you edit a contact and change their type:
+- **To Investor**: Creates an investor pipeline entry (if not already exists)
+- **To Owner**: Creates a deal pipeline entry (if not already exists)
 
-### Step 1: Add Required Secrets
-
-I'll prompt you to add two secrets via a secure form:
-- `GOOGLE_CLIENT_ID` - Your OAuth client ID
-- `GOOGLE_CLIENT_SECRET` - Your OAuth client secret
-
-### Step 2: Create OAuth Initiation Edge Function
-
-**File**: `supabase/functions/google-oauth-init/index.ts`
-
-This function generates the Google OAuth URL and redirects users to Google's consent screen. It will:
-- Build the OAuth URL with required scopes (Gmail read, Calendar read)
-- Include a state parameter containing the user's ID for security
-- Redirect to Google's authorization endpoint
-
-### Step 3: Create OAuth Callback Edge Function
-
-**File**: `supabase/functions/google-oauth-callback/index.ts`
-
-This function handles the callback from Google after user consent. It will:
-- Exchange the authorization code for access/refresh tokens
-- Fetch the user's Google email address
-- Store tokens securely in the `user_integrations` table
-- Redirect back to the Settings page with success/error status
-
-### Step 4: Create Email Sync Edge Function
-
-**File**: `supabase/functions/sync-google-emails/index.ts`
-
-This function fetches recent emails from Gmail and stores them. It will:
-- Retrieve stored access token (refresh if expired)
-- Call Gmail API to fetch recent messages
-- Parse email metadata (subject, from, date, preview)
-- Upsert into the `emails` table with `external_id` to prevent duplicates
-
-### Step 5: Create Calendar Sync Edge Function
-
-**File**: `supabase/functions/sync-google-calendar/index.ts`
-
-This function fetches calendar events from Google Calendar. It will:
-- Retrieve stored access token (refresh if expired)
-- Call Calendar API for upcoming events
-- Parse event details (title, time, location, attendees)
-- Upsert into the `calendar_events` table with `external_id`
-
-### Step 6: Update Frontend Settings Page
-
-**File**: `src/pages/Settings.tsx`
-
-Modify the "Connect" button to:
-- Call the OAuth initiation edge function
-- Open the OAuth flow in the current window
-- Handle success/error query parameters on return
-- Show toast notifications for connection status
-
-### Step 7: Create Manual Sync Hook
-
-**File**: `src/hooks/useSyncIntegration.ts`
-
-A hook that triggers manual sync for connected integrations:
-- Calls the sync edge functions
-- Shows loading state during sync
-- Displays success/error feedback
+### 4. Reverse Sync from Pipeline Forms
+When adding an investor or company directly from the pipeline tabs, if no contact is linked, one can optionally be created.
 
 ---
 
-## Technical Details
+## Technical Implementation
 
-### OAuth Scopes Requested
-```text
-https://www.googleapis.com/auth/gmail.readonly
-https://www.googleapis.com/auth/calendar.readonly
-https://www.googleapis.com/auth/userinfo.email
-https://www.googleapis.com/auth/userinfo.profile
-```
+### Step 1: Create Companies Hook
+Create `src/hooks/useCompanies.ts` with CRUD operations for the companies table, following the same pattern as `useInvestorDeals.ts`.
 
-### Token Storage
-Tokens will be encrypted and stored in the existing `user_integrations` table:
-- `access_token`: Short-lived API access
-- `refresh_token`: Long-lived token for renewal
-- `token_expires_at`: Expiration timestamp
-- `scope`: Granted permissions
-- `email`: Connected Google account email
+### Step 2: Update Contact Form Modal
+Modify `src/components/contacts/ContactFormModal.tsx` to:
+- Auto-create a company when `contact_type === 'owner'`
+- Handle type changes during edits (create pipeline entries if type changes to investor/owner)
 
-### Edge Function Configuration
-Each function will have `verify_jwt = false` in config.toml with manual authentication validation where needed.
+### Step 3: Update Deals Page
+Modify `src/pages/Deals.tsx` to:
+- Use the new `useCompanies` hook instead of mock data
+- Add loading, empty, and error states
+- Connect the "Add Company" button to a form modal
 
----
+### Step 4: Create Company Form Modal
+Create `src/components/deals/CompanyFormModal.tsx` for adding/editing companies in the Deal pipeline.
 
-## Files to Create/Modify
+### Step 5: Create Delete Company Dialog
+Create `src/components/deals/DeleteCompanyDialog.tsx` for removing companies.
 
-| File | Action | Description |
-|------|--------|-------------|
-| `supabase/functions/google-oauth-init/index.ts` | Create | OAuth flow initiation |
-| `supabase/functions/google-oauth-callback/index.ts` | Create | Token exchange handler |
-| `supabase/functions/sync-google-emails/index.ts` | Create | Gmail sync logic |
-| `supabase/functions/sync-google-calendar/index.ts` | Create | Calendar sync logic |
-| `supabase/config.toml` | Modify | Add function JWT settings |
-| `src/pages/Settings.tsx` | Modify | Connect button integration |
-| `src/hooks/useSyncIntegration.ts` | Create | Manual sync trigger |
+### Step 6: Create Deal Card Component Update
+Update `src/components/pipeline/DealCard.tsx` to work with real database data and include edit/delete actions.
 
 ---
 
-## Security Considerations
+## Files to Create
+| File | Description |
+|------|-------------|
+| `src/hooks/useCompanies.ts` | CRUD hooks for companies table |
+| `src/components/deals/CompanyFormModal.tsx` | Form for adding/editing companies |
+| `src/components/deals/DeleteCompanyDialog.tsx` | Confirmation dialog for deletion |
 
-- Tokens stored server-side only (never exposed to frontend)
-- State parameter prevents CSRF attacks
-- RLS policies ensure users only access their own integrations
-- Refresh tokens allow long-term access without re-authentication
+## Files to Modify
+| File | Changes |
+|------|---------|
+| `src/components/contacts/ContactFormModal.tsx` | Add auto-create company for owner type, handle type changes |
+| `src/pages/Deals.tsx` | Replace mock data with real database queries |
+| `src/components/pipeline/DealCard.tsx` | Add edit/delete handlers, use database types |
 
+---
+
+## Sync Logic Summary
+
+| Contact Type | Auto-Creates Entry In | Pipeline Entry Fields |
+|--------------|----------------------|----------------------|
+| Investor | Investor Pipeline | name, organization, stage=not_contacted |
+| Owner | Deal Pipeline | company name=organization, stage=identified |
+| Intermediary | None | - |
+| Advisor | None | - |
+
+## Edge Cases Handled
+- Duplicate prevention: Check if pipeline entry already exists before creating
+- Missing organization: Use contact name as fallback for company name
+- Type change: Only create if no existing pipeline entry is linked
+- Error handling: If pipeline creation fails, contact is still saved with a warning toast
