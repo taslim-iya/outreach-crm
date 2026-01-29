@@ -44,6 +44,10 @@ export default function Settings() {
   const [isConnecting, setIsConnecting] = useState(false);
   const queryClient = useQueryClient();
 
+  // Profile form state
+  const [displayName, setDisplayName] = useState('');
+  const [companyName, setCompanyName] = useState('');
+
   // Fetch profile settings
   const { data: profile } = useQuery({
     queryKey: ['profile', user?.id],
@@ -58,6 +62,49 @@ export default function Settings() {
       return data;
     },
     enabled: !!user?.id,
+  });
+
+  // Sync form state when profile loads
+  useEffect(() => {
+    if (profile) {
+      setDisplayName(profile.display_name || user?.user_metadata?.full_name || '');
+      setCompanyName(profile.company_name || '');
+    } else if (user) {
+      setDisplayName(user.user_metadata?.full_name || '');
+    }
+  }, [profile, user]);
+
+  // Update profile mutation (display name + company name)
+  const updateProfile = useMutation({
+    mutationFn: async ({ displayName, companyName }: { displayName: string; companyName: string }) => {
+      if (!user?.id) throw new Error('Not authenticated');
+      
+      const { data: existing } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (existing) {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ display_name: displayName, company_name: companyName })
+          .eq('user_id', user.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('profiles')
+          .insert({ user_id: user.id, display_name: displayName, company_name: companyName });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      toast.success('Profile updated');
+    },
+    onError: () => {
+      toast.error('Failed to update profile');
+    },
   });
 
   // Update currency mutation
@@ -92,6 +139,10 @@ export default function Settings() {
       toast.error('Failed to update currency');
     },
   });
+
+  const handleSaveProfile = () => {
+    updateProfile.mutate({ displayName, companyName });
+  };
 
   const googleIntegration = integrations.find(i => i.provider === 'google');
   const microsoftIntegration = integrations.find(i => i.provider === 'microsoft');
@@ -198,7 +249,8 @@ export default function Settings() {
               <div>
                 <Label>Display Name</Label>
                 <Input 
-                  defaultValue={user?.user_metadata?.full_name || ''} 
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
                   className="mt-1.5" 
                   placeholder="Your name"
                 />
@@ -214,9 +266,20 @@ export default function Settings() {
             </div>
             <div>
               <Label>Organization</Label>
-              <Input defaultValue="" placeholder="Your company or fund name" className="mt-1.5" />
+              <Input 
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                placeholder="Your company or fund name" 
+                className="mt-1.5" 
+              />
             </div>
-            <Button className="gradient-primary text-primary-foreground">Save Changes</Button>
+            <Button 
+              className="gradient-primary text-primary-foreground"
+              onClick={handleSaveProfile}
+              disabled={updateProfile.isPending}
+            >
+              {updateProfile.isPending ? 'Saving...' : 'Save Changes'}
+            </Button>
           </CardContent>
         </Card>
 
