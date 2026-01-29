@@ -105,8 +105,10 @@ export default {
         "pulse-subtle": "pulse-subtle 2s ease-in-out infinite",
       },
       boxShadow: {
-        'glow': '0 0 20px rgba(217, 158, 43, 0.15)',
-        'glow-lg': '0 0 40px rgba(217, 158, 43, 0.2)',
+        'glow': '0 0 20px rgba(34, 50, 84, 0.08)',
+        'glow-lg': '0 0 40px rgba(34, 50, 84, 0.12)',
+        'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1)',
+        'card-hover': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)',
       },
     },
   },

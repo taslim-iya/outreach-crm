@@ -33,14 +33,14 @@ export function Sidebar() {
   const location = useLocation();
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
+    <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-sidebar border-r border-sidebar-border flex flex-col" style={{ background: 'var(--gradient-sidebar)' }}>
       {/* Logo */}
       <div className="h-16 flex items-center px-6 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg gradient-gold flex items-center justify-center">
-            <TrendingUp className="w-5 h-5 text-primary-foreground" />
+          <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
+            <TrendingUp className="w-5 h-5 text-sidebar-primary-foreground" />
           </div>
-          <span className="text-lg font-semibold text-foreground">SearchCRM</span>
+          <span className="text-lg font-semibold text-sidebar-foreground">SearchCRM</span>
         </div>
       </div>
 
@@ -59,10 +59,10 @@ export function Sidebar() {
                   : 'text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground'
               )}
             >
-              <item.icon className={cn('w-5 h-5', isActive && 'text-primary')} />
+              <item.icon className={cn('w-5 h-5', isActive && 'text-sidebar-primary')} />
               {item.name}
               {isActive && (
-                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
+                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-sidebar-primary" />
               )}
             </Link>
           );
@@ -88,13 +88,13 @@ export function Sidebar() {
               <item.icon
                 className={cn(
                   'w-5 h-5',
-                  isActive && 'text-primary',
-                  item.name === 'AI Assistant' && 'group-hover:text-primary transition-colors'
+                  isActive && 'text-sidebar-primary',
+                  item.name === 'AI Assistant' && 'group-hover:text-sidebar-primary transition-colors'
                 )}
               />
               {item.name}
               {item.name === 'AI Assistant' && (
-                <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-primary/20 text-primary font-medium">
+                <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-sidebar-primary/20 text-sidebar-primary font-medium">
                   NEW
                 </span>
               )}
@@ -106,12 +106,12 @@ export function Sidebar() {
       {/* User Profile */}
       <div className="px-3 py-4 border-t border-sidebar-border">
         <div className="flex items-center gap-3 px-3 py-2">
-          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-sm font-medium">
+          <div className="w-8 h-8 rounded-full bg-sidebar-accent flex items-center justify-center text-sm font-medium text-sidebar-accent-foreground">
             JD
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground truncate">John Doe</p>
-            <p className="text-xs text-muted-foreground truncate">Solo Searcher</p>
+            <p className="text-sm font-medium text-sidebar-foreground truncate">John Doe</p>
+            <p className="text-xs text-sidebar-foreground/60 truncate">Solo Searcher</p>
           </div>
         </div>
       </div>

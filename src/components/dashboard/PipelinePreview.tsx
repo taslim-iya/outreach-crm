@@ -17,7 +17,7 @@ interface PipelinePreviewProps {
 
 export function PipelinePreview({ title, stages, href, total }: PipelinePreviewProps) {
   return (
-    <div className="bg-card rounded-xl border border-border p-5 animate-fade-in">
+    <div className="bg-card rounded-xl border border-border p-5 animate-fade-in shadow-card hover:shadow-card-hover transition-shadow">
       <div className="flex items-center justify-between mb-5">
         <h3 className="text-base font-semibold text-foreground">{title}</h3>
         <Link

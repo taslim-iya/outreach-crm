@@ -55,7 +55,7 @@ const priorityColors = {
 
 export function TaskList() {
   return (
-    <div className="bg-card rounded-xl border border-border p-5 animate-fade-in">
+    <div className="bg-card rounded-xl border border-border p-5 animate-fade-in shadow-card">
       <div className="flex items-center justify-between mb-5">
         <h3 className="text-base font-semibold text-foreground">Upcoming Tasks</h3>
         <span className="text-xs text-muted-foreground">

@@ -60,7 +60,7 @@ const colorMap = {
 
 export function ActivityFeed() {
   return (
-    <div className="bg-card rounded-xl border border-border p-5 animate-fade-in">
+    <div className="bg-card rounded-xl border border-border p-5 animate-fade-in shadow-card">
       <div className="flex items-center justify-between mb-5">
         <h3 className="text-base font-semibold text-foreground">Recent Activity</h3>
         <button className="flex items-center gap-1 text-sm text-primary hover:text-primary/80 transition-colors font-medium">
