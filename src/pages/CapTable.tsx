@@ -39,7 +39,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { Download, Search, TrendingUp, Users, DollarSign, PiggyBank, Plus, MoreHorizontal, Pencil, Trash2, Settings2, FileText } from 'lucide-react';
+import { Download, Search, TrendingUp, Users, Banknote, PiggyBank, Plus, MoreHorizontal, Pencil, Trash2, Settings2, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { CapTableEntryModal } from '@/components/cap-table/CapTableEntryModal';
@@ -531,7 +531,7 @@ export default function CapTable() {
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-primary/10">
-                <DollarSign className="w-5 h-5 text-primary" />
+                <Banknote className="w-5 h-5 text-primary" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Raised</p>
