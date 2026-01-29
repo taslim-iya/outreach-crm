@@ -177,14 +177,14 @@ export function InvestorFormModal({ open, onOpenChange, investor, defaultStage =
             <div className="space-y-2">
               <Label>Link to Contact (Optional)</Label>
               <Select
-                value={formData.contact_id}
-                onValueChange={handleContactChange}
+                value={formData.contact_id || '__none__'}
+                onValueChange={(value) => handleContactChange(value === '__none__' ? '' : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a contact to link..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="__none__">None</SelectItem>
                   {investorContacts.map((contact) => (
                     <SelectItem key={contact.id} value={contact.id}>
                       {contact.name} {contact.organization ? `- ${contact.organization}` : ''}
