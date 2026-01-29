@@ -13,6 +13,7 @@ import {
   Sparkles,
   Calendar,
   LogOut,
+  StickyNote,
 } from 'lucide-react';
 
 const navigation = [
@@ -20,6 +21,7 @@ const navigation = [
   { name: 'Contacts', href: '/contacts', icon: Users },
   { name: 'Investors', href: '/investors', icon: TrendingUp },
   { name: 'Deals', href: '/deals', icon: Building2 },
+  { name: 'Notes', href: '/notes', icon: StickyNote },
   { name: 'Outreach', href: '/outreach', icon: Mail },
   { name: 'Documents', href: '/documents', icon: FileText },
   { name: 'Calendar', href: '/calendar', icon: Calendar },

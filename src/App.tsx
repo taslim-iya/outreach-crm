@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Contacts from "./pages/Contacts";
 import Investors from "./pages/Investors";
 import Deals from "./pages/Deals";
+import NotesPage from "./pages/NotesPage";
 import Outreach from "./pages/Outreach";
 import Documents from "./pages/Documents";
 import CalendarPage from "./pages/CalendarPage";
@@ -40,6 +41,7 @@ const App = () => (
                       <Route path="/contacts" element={<Contacts />} />
                       <Route path="/investors" element={<Investors />} />
                       <Route path="/deals" element={<Deals />} />
+                      <Route path="/notes" element={<NotesPage />} />
                       <Route path="/outreach" element={<Outreach />} />
                       <Route path="/documents" element={<Documents />} />
                       <Route path="/calendar" element={<CalendarPage />} />
