@@ -355,8 +355,8 @@ export default function CapTable() {
       columnStyles: {
         0: { cellWidth: 55 },
         1: { cellWidth: 45 },
-        2: { cellWidth: 35, halign: 'right' },
-        3: { cellWidth: 25, halign: 'right' },
+        2: { cellWidth: 35, halign: 'center' },
+        3: { cellWidth: 25, halign: 'center' },
         4: { cellWidth: 25, halign: 'center' },
       },
       alternateRowStyles: {
