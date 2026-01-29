@@ -1,16 +1,61 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, Send, FileText, BarChart3, Plus, Sparkles, Inbox } from 'lucide-react';
+import { Mail, Send, FileText, BarChart3, Plus, Sparkles, Inbox, Pencil, Trash2 } from 'lucide-react';
 import { useEmails } from '@/hooks/useEmails';
+import { useEmailTemplates, useDeleteEmailTemplate, EmailTemplate } from '@/hooks/useEmailTemplates';
+import { TemplateFormModal } from '@/components/outreach/TemplateFormModal';
+import { toast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
+
+const CATEGORY_LABELS: Record<string, string> = {
+  investor_outreach: 'Investor Outreach',
+  follow_up: 'Follow-up',
+  meeting_request: 'Meeting Request',
+  thank_you: 'Thank You',
+  general: 'General',
+};
 
 export default function Outreach() {
+  const navigate = useNavigate();
   const { data: emails = [] } = useEmails(100);
+  const { data: templates = [] } = useEmailTemplates();
+  const deleteTemplate = useDeleteEmailTemplate();
   
+  const [templateModalOpen, setTemplateModalOpen] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<EmailTemplate | null>(null);
+
   // Calculate real stats from emails
   const totalSent = emails.length;
   const readEmails = emails.filter(e => e.is_read).length;
   const openRate = totalSent > 0 ? Math.round((readEmails / totalSent) * 100) : 0;
+
+  const handleNewCampaign = () => {
+    toast({
+      title: 'Coming Soon',
+      description: 'Email campaigns feature is coming soon!',
+    });
+  };
+
+  const handleComposeWithAI = () => {
+    navigate('/assistant', { state: { initialPrompt: 'Help me draft an outreach email to an investor' } });
+  };
+
+  const handleNewTemplate = () => {
+    setEditingTemplate(null);
+    setTemplateModalOpen(true);
+  };
+
+  const handleEditTemplate = (template: EmailTemplate) => {
+    setEditingTemplate(template);
+    setTemplateModalOpen(true);
+  };
+
+  const handleDeleteTemplate = async (id: string) => {
+    await deleteTemplate.mutateAsync(id);
+  };
 
   return (
     <div className="p-6">
@@ -18,7 +63,10 @@ export default function Outreach() {
         title="Outreach"
         description="Manage email campaigns and templates"
         actions={
-          <Button className="gradient-gold text-primary-foreground hover:opacity-90">
+          <Button 
+            className="gradient-gold text-primary-foreground hover:opacity-90"
+            onClick={handleNewCampaign}
+          >
             <Plus className="w-4 h-4 mr-2" />
             New Campaign
           </Button>
@@ -73,7 +121,7 @@ export default function Outreach() {
                 <FileText className="w-5 h-5 text-warning" />
               </div>
               <div>
-                <p className="text-2xl font-semibold">0</p>
+                <p className="text-2xl font-semibold">{templates.length}</p>
                 <p className="text-sm text-muted-foreground">Active Templates</p>
               </div>
             </div>
@@ -86,21 +134,58 @@ export default function Outreach() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base">Email Templates</CardTitle>
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" onClick={handleNewTemplate}>
               <Plus className="w-4 h-4 mr-2" />
               New Template
             </Button>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
-                <FileText className="w-6 h-6 text-muted-foreground" />
+            {templates.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+                  <FileText className="w-6 h-6 text-muted-foreground" />
+                </div>
+                <p className="text-sm font-medium text-muted-foreground">No templates yet</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Create your first email template to get started
+                </p>
               </div>
-              <p className="text-sm font-medium text-muted-foreground">No templates yet</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Create your first email template to get started
-              </p>
-            </div>
+            ) : (
+              <div className="space-y-3">
+                {templates.map((template) => (
+                  <div
+                    key={template.id}
+                    className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{template.name}</p>
+                      <p className="text-sm text-muted-foreground truncate">{template.subject}</p>
+                      <Badge variant="secondary" className="mt-1 text-xs">
+                        {CATEGORY_LABELS[template.category] || template.category}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-1 ml-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => handleEditTemplate(template)}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                        onClick={() => handleDeleteTemplate(template.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -108,7 +193,12 @@ export default function Outreach() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base">Active Campaigns</CardTitle>
-            <Button variant="ghost" size="sm">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              disabled
+              className="opacity-50"
+            >
               View All
             </Button>
           </CardHeader>
@@ -139,13 +229,19 @@ export default function Outreach() {
             <p className="text-sm text-muted-foreground flex-1">
               Let AI help you draft personalized outreach emails based on your contact's profile and your goals.
             </p>
-            <Button>
+            <Button onClick={handleComposeWithAI}>
               <Sparkles className="w-4 h-4 mr-2" />
               Compose with AI
             </Button>
           </div>
         </CardContent>
       </Card>
+
+      <TemplateFormModal
+        open={templateModalOpen}
+        onOpenChange={setTemplateModalOpen}
+        template={editingTemplate}
+      />
     </div>
   );
 }
