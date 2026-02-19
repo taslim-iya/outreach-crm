@@ -18,6 +18,7 @@ import Analytics from "./pages/Analytics";
 import CapTable from "./pages/CapTable";
 import Assistant from "./pages/Assistant";
 import Settings from "./pages/Settings";
+import Inbox from "./pages/Inbox";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -39,6 +40,7 @@ const App = () => (
                   <MainLayout>
                     <Routes>
                       <Route path="/" element={<Dashboard />} />
+                      <Route path="/inbox" element={<Inbox />} />
                       <Route path="/contacts" element={<Contacts />} />
                       <Route path="/investors" element={<Investors />} />
                       <Route path="/deals" element={<Deals />} />

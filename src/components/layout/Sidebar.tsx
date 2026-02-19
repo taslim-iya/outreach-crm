@@ -10,6 +10,7 @@ import {
   TrendingUp,
   Building2,
   Mail,
+  Inbox,
   FileText,
   BarChart3,
   Settings,
@@ -21,9 +22,11 @@ import {
   X,
   PieChart,
 } from 'lucide-react';
+import { useUnreadEmailCount } from '@/hooks/useEmails';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { name: 'Inbox', href: '/inbox', icon: Inbox },
   { name: 'Contacts', href: '/contacts', icon: Users },
   { name: 'Investors', href: '/investors', icon: TrendingUp },
   { name: 'Deals', href: '/deals', icon: Building2 },
@@ -63,6 +66,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { data: unreadCount } = useUnreadEmailCount();
 
   const handleSignOut = async () => {
     await signOut();
@@ -121,9 +125,13 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             >
               <item.icon className={cn('w-5 h-5', isActive && 'text-sidebar-primary')} />
               {item.name}
-              {isActive && (
+              {item.name === 'Inbox' && unreadCount ? (
+                <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-destructive text-destructive-foreground font-medium min-w-[18px] text-center">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              ) : isActive ? (
                 <div className="ml-auto w-1.5 h-1.5 rounded-full bg-sidebar-primary" />
-              )}
+              ) : null}
             </Link>
           );
         })}
