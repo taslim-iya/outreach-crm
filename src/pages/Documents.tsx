@@ -28,9 +28,11 @@ import {
   Download,
   Trash2,
   Loader2,
+  Send,
 } from 'lucide-react';
 import { useDocuments, Document } from '@/hooks/useDocuments';
 import { DeleteDocumentDialog } from '@/components/documents/DeleteDocumentDialog';
+import { SmartComposeModal } from '@/components/email/SmartComposeModal';
 
 const typeIcons: Record<string, React.ElementType> = {
   pitch_deck: FileText,
@@ -80,6 +82,8 @@ export default function Documents() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const [emailAttachDocId, setEmailAttachDocId] = useState<string | undefined>();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = useCallback(async (files: FileList | null) => {
@@ -232,6 +236,13 @@ export default function Documents() {
                           <Download className="w-4 h-4 mr-2" />
                           Download
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {
+                          setEmailAttachDocId(doc.id);
+                          setEmailModalOpen(true);
+                        }}>
+                          <Send className="w-4 h-4 mr-2" />
+                          Send via Email
+                        </DropdownMenuItem>
                         <DropdownMenuItem 
                           onClick={() => handleDeleteClick(doc)}
                           className="text-destructive"
@@ -284,6 +295,13 @@ export default function Documents() {
         onOpenChange={setDeleteDialogOpen}
         onConfirm={handleDeleteConfirm}
         documentName={selectedDocument?.name || ''}
+      />
+
+      {/* Email Compose Modal */}
+      <SmartComposeModal
+        open={emailModalOpen}
+        onOpenChange={setEmailModalOpen}
+        preAttachedDocIds={emailAttachDocId ? [emailAttachDocId] : undefined}
       />
     </div>
   );
