@@ -120,6 +120,17 @@ Deno.serve(async (req) => {
       ? `**Available Documents (user can attach these):**\n${documents.map(d => `- [${d.id}] ${d.name} (${d.document_type})`).join("\n")}`
       : "";
 
+    // Fetch ALL user templates for writing style learning
+    const { data: allTemplates } = await supabase
+      .from("email_templates")
+      .select("name, subject, body, category")
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    const styleContext = allTemplates && allTemplates.length > 0
+      ? `**User's Saved Email Templates (learn the writing style, tone, and patterns from these):**\n${allTemplates.map((t, i) => `Template ${i + 1} - "${t.name}" (${t.category}):\nSubject: ${t.subject}\nBody: ${t.body}`).join("\n\n")}`
+      : "";
+
     const systemPrompt = `You are an AI email composer for DealScope, a Search Fund CRM. Generate a professional, personalized email for investor outreach.
 
 ${profileContext}
@@ -127,6 +138,8 @@ ${profileContext}
 ${investorContext}
 
 ${templateContext}
+
+${styleContext}
 
 ${docsContext}
 
@@ -140,7 +153,11 @@ IMPORTANT: You MUST respond with a valid JSON object (no markdown code fences) w
   "reasoning": "Brief explanation of why you chose this approach and these documents"
 }
 
-CRITICAL: The body must be plain text only — NO HTML tags whatsoever. Use the investor's actual name directly in the email greeting and body. Do not use placeholders like {{name}}.
+CRITICAL STYLE INSTRUCTIONS:
+- The body must be plain text only — NO HTML tags whatsoever.
+- Use the investor's actual name directly in the email greeting and body. Do not use placeholders like {{name}}.
+- Study the user's saved templates above carefully. Match their writing tone, vocabulary, greeting style, sign-off style, and overall communication approach.
+- If the user tends to be formal, be formal. If casual, be casual. Mirror their voice.
 
 For suggested_documents, analyze the email content and suggest relevant documents from the available documents list. For example:
 - If discussing a deal, suggest the relevant pitch deck or CIM
