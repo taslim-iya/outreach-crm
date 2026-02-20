@@ -135,10 +135,12 @@ ${customInstructions ? `**User Instructions:** ${customInstructions}` : ""}
 IMPORTANT: You MUST respond with a valid JSON object (no markdown code fences) with these fields:
 {
   "subject": "Email subject line",
-  "body": "Full email body in HTML format. Use <p>, <br>, <strong> tags for formatting.",
+  "body": "Full email body in PLAIN TEXT only. No HTML tags like <p>, <br>, <strong>, <em>, etc. Use line breaks for paragraphs. Address the investor by their first name naturally.",
   "suggested_documents": ["document_id_1", "document_id_2"],
   "reasoning": "Brief explanation of why you chose this approach and these documents"
 }
+
+CRITICAL: The body must be plain text only — NO HTML tags whatsoever. Use the investor's actual name directly in the email greeting and body. Do not use placeholders like {{name}}.
 
 For suggested_documents, analyze the email content and suggest relevant documents from the available documents list. For example:
 - If discussing a deal, suggest the relevant pitch deck or CIM

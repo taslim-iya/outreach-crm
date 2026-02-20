@@ -78,6 +78,14 @@ export function SmartComposeModal({
     }
   }, [open, investorEmail]);
 
+  const stripHtml = (text: string) =>
+    text
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/p>/gi, '\n\n')
+      .replace(/<[^>]+>/g, '')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+
   const replacePlaceholders = (text: string) => {
     const firstName = investorName?.split(' ')[0] || '';
     return text
@@ -87,12 +95,14 @@ export function SmartComposeModal({
       .replace(/\{\{email\}\}/gi, investorEmail || '');
   };
 
+  const cleanText = (text: string) => replacePlaceholders(stripHtml(text));
+
   const handleTemplateSelect = (templateId: string) => {
     setSelectedTemplateId(templateId);
     const template = templates?.find((t) => t.id === templateId);
     if (template) {
       setSubject(replacePlaceholders(template.subject));
-      setBody(replacePlaceholders(template.body));
+      setBody(cleanText(template.body));
     }
   };
 
@@ -111,7 +121,7 @@ export function SmartComposeModal({
       if (data?.error) throw new Error(data.error);
 
       setSubject(replacePlaceholders(data.subject || subject));
-      setBody(replacePlaceholders(data.body || body));
+      setBody(cleanText(data.body || body));
       setAiReasoning(data.reasoning || '');
 
       // Auto-attach suggested documents
