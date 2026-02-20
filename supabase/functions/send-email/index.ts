@@ -130,9 +130,8 @@ ${htmlBody}
     // Send via Resend
     const toList = Array.isArray(to) ? to : [to];
     const resendPayload: Record<string, unknown> = {
-      from: `${senderName} <onboarding@resend.dev>`,
+      from: "onboarding@resend.dev",
       to: toList,
-      bcc: undefined, // BCC disabled in sandbox mode; enable after verifying domain on Resend
       subject,
       html,
       reply_to: reply_to || userEmail,
