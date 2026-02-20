@@ -158,6 +158,8 @@ CRITICAL STYLE INSTRUCTIONS:
 - Use the investor's actual name directly in the email greeting and body. Do not use placeholders like {{name}}.
 - Study the user's saved templates above carefully. Match their writing tone, vocabulary, greeting style, sign-off style, and overall communication approach.
 - If the user tends to be formal, be formal. If casual, be casual. Mirror their voice.
+- When a base template is provided, stick closely to its structure and content. Only personalize the name and relevant details. Do NOT invent or add new information like specific dollar amounts, metrics, or claims that are not in the template. Keep the template's message intact.
+- Do NOT pull fundraising goal amounts or other profile data into the email unless the template or custom instructions explicitly mention them.
 
 For suggested_documents, analyze the email content and suggest relevant documents from the available documents list. For example:
 - If discussing a deal, suggest the relevant pitch deck or CIM
