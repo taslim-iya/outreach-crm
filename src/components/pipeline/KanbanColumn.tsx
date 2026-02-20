@@ -1,14 +1,38 @@
 import { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
+import { Droppable } from '@hello-pangea/dnd';
 
 interface KanbanColumnProps {
   title: string;
   count: number;
   color: string;
+  droppableId?: string;
   children: ReactNode;
 }
 
-export function KanbanColumn({ title, count, color, children }: KanbanColumnProps) {
+export function KanbanColumn({ title, count, color, droppableId, children }: KanbanColumnProps) {
+  const content = droppableId ? (
+    <Droppable droppableId={droppableId}>
+      {(provided, snapshot) => (
+        <div
+          ref={provided.innerRef}
+          {...provided.droppableProps}
+          className={cn(
+            'flex-1 space-y-2.5 overflow-y-auto px-0.5 pb-4 rounded-lg transition-colors duration-200',
+            snapshot.isDraggingOver && 'bg-primary/5 ring-1 ring-primary/20'
+          )}
+        >
+          {children}
+          {provided.placeholder}
+        </div>
+      )}
+    </Droppable>
+  ) : (
+    <div className="flex-1 space-y-2.5 overflow-y-auto px-0.5 pb-4">
+      {children}
+    </div>
+  );
+
   return (
     <div className="flex flex-col min-w-[290px] max-w-[290px] h-full">
       {/* Column Header */}
@@ -20,10 +44,7 @@ export function KanbanColumn({ title, count, color, children }: KanbanColumnProp
         </span>
       </div>
 
-      {/* Column Content */}
-      <div className="flex-1 space-y-2.5 overflow-y-auto px-0.5 pb-4 scrollbar-thin">
-        {children}
-      </div>
+      {content}
     </div>
   );
 }
