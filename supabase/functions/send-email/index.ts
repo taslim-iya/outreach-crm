@@ -128,9 +128,11 @@ ${htmlBody}
 </html>`;
 
     // Send via Resend
+    const toList = Array.isArray(to) ? to : [to];
     const resendPayload: Record<string, unknown> = {
       from: `${senderName} <onboarding@resend.dev>`,
-      to: Array.isArray(to) ? to : [to],
+      to: toList,
+      cc: toList.includes(userEmail) ? undefined : [userEmail],
       subject,
       html,
       reply_to: reply_to || userEmail,
