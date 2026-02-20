@@ -75,7 +75,10 @@ Deno.serve(async (req) => {
           : "DealScope <onboarding@resend.dev>",
         to: Array.isArray(to) ? to : [to],
         subject,
-        html: body,
+        html: body
+          .split("\n\n")
+          .map((p: string) => `<p>${p.replace(/\n/g, "<br>")}</p>`)
+          .join(""),
         reply_to: reply_to || userEmail,
       }),
     });

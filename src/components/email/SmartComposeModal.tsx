@@ -42,6 +42,7 @@ interface SmartComposeModalProps {
   investorId?: string;
   investorName?: string;
   investorEmail?: string;
+  preAttachedDocIds?: string[];
 }
 
 export function SmartComposeModal({
@@ -50,6 +51,7 @@ export function SmartComposeModal({
   investorId,
   investorName,
   investorEmail,
+  preAttachedDocIds,
 }: SmartComposeModalProps) {
   const [to, setTo] = useState('');
   const [subject, setSubject] = useState('');
@@ -76,7 +78,7 @@ export function SmartComposeModal({
       setCustomInstructions('');
       setSelectedTemplateId('');
       setScheduledTime('');
-      setAttachedDocIds([]);
+      setAttachedDocIds(preAttachedDocIds || []);
       setManualFiles([]);
       setAiReasoning('');
     }
