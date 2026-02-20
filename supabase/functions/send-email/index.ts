@@ -82,10 +82,10 @@ Deno.serve(async (req) => {
         from: `${senderName} <onboarding@resend.dev>`,
         to: Array.isArray(to) ? to : [to],
         subject,
-        html: `<div style="font-family: Arial, sans-serif; color: #000000; font-size: 14px; line-height: 1.6;">${body
+        html: `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head><body style="margin:0;padding:0;"><div style="font-family: Arial, Helvetica, sans-serif; color: #222222; font-size: 14px; line-height: 1.5; padding: 0; margin: 0;">${body
           .split("\n\n")
-          .map((p: string) => `<p style="margin: 0 0 12px 0; color: #000000;">${p.replace(/\n/g, "<br>")}</p>`)
-          .join("")}</div>`,
+          .map((p: string) => `<div style="margin: 0 0 1em 0; color: #222222;">${p.replace(/\n/g, "<br>")}</div>`)
+          .join("")}</div></body></html>`,
         reply_to: reply_to || userEmail,
       }),
     });
