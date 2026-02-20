@@ -130,17 +130,16 @@ ${htmlBody}
     // Send via Resend
     const toList = Array.isArray(to) ? to : [to];
     const resendPayload: Record<string, unknown> = {
-      from: "onboarding@resend.dev",
+      from: `${senderName} <onboarding@resend.dev>`,
       to: toList,
       subject,
       html,
+      reply_to: reply_to || userEmail,
     };
 
     if (attachments.length > 0) {
       resendPayload.attachments = attachments;
     }
-
-    console.log("Resend payload:", JSON.stringify({ from: resendPayload.from, to: resendPayload.to, subject: resendPayload.subject, hasAttachments: attachments.length > 0 }));
 
     const resendResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
