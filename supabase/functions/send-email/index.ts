@@ -132,7 +132,7 @@ ${htmlBody}
     const resendPayload: Record<string, unknown> = {
       from: `${senderName} <onboarding@resend.dev>`,
       to: toList,
-      cc: toList.includes(userEmail) ? undefined : [userEmail],
+      bcc: toList.includes(userEmail) ? undefined : [userEmail],
       subject,
       html,
       reply_to: reply_to || userEmail,
