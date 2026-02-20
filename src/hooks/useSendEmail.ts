@@ -8,6 +8,7 @@ interface SendEmailData {
   body: string;
   reply_to?: string;
   from_name?: string;
+  attachment_doc_ids?: string[];
 }
 
 export function useSendEmail() {

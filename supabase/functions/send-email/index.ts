@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -39,7 +40,7 @@ Deno.serve(async (req) => {
     const userId = claimsData.claims.sub;
     const userEmail = claimsData.claims.email as string;
 
-    const { to, subject, body, reply_to, from_name } = await req.json();
+    const { to, subject, body, reply_to, from_name, attachment_doc_ids } = await req.json();
 
     if (!to || !subject || !body) {
       return new Response(
@@ -71,23 +72,81 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Build attachments from document IDs
+    const attachments: { filename: string; content: string }[] = [];
+    if (attachment_doc_ids && attachment_doc_ids.length > 0) {
+      // Fetch document metadata
+      const { data: docs } = await supabase
+        .from("documents")
+        .select("id, name, file_path, file_type")
+        .in("id", attachment_doc_ids);
+
+      if (docs) {
+        for (const doc of docs) {
+          try {
+            const { data: fileData, error: downloadError } = await supabase
+              .storage
+              .from("documents")
+              .download(doc.file_path);
+
+            if (downloadError || !fileData) {
+              console.error(`Failed to download ${doc.name}:`, downloadError);
+              continue;
+            }
+
+            const arrayBuffer = await fileData.arrayBuffer();
+            const base64Content = base64Encode(new Uint8Array(arrayBuffer));
+
+            attachments.push({
+              filename: doc.name,
+              content: base64Content,
+            });
+          } catch (err) {
+            console.error(`Error processing attachment ${doc.name}:`, err);
+          }
+        }
+      }
+    }
+
+    // Build HTML that matches Gmail/Outlook default styling
+    const htmlBody = body
+      .split("\n\n")
+      .map((p: string) => `<p style="margin:0 0 1em 0;">${p.replace(/\n/g, "<br>")}</p>`)
+      .join("");
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0; padding:0; width:100%; -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%;">
+<div style="font-family:Arial, Helvetica, sans-serif; font-size:14px; line-height:1.5; color:#222222; max-width:600px;">
+${htmlBody}
+</div>
+</body>
+</html>`;
+
     // Send via Resend
+    const resendPayload: Record<string, unknown> = {
+      from: `${senderName} <onboarding@resend.dev>`,
+      to: Array.isArray(to) ? to : [to],
+      subject,
+      html,
+      reply_to: reply_to || userEmail,
+    };
+
+    if (attachments.length > 0) {
+      resendPayload.attachments = attachments;
+    }
+
     const resendResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${resendApiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        from: `${senderName} <onboarding@resend.dev>`,
-        to: Array.isArray(to) ? to : [to],
-        subject,
-        html: `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head><body style="margin:0;padding:0;"><div style="font-family: Arial, Helvetica, sans-serif; color: #222222; font-size: 14px; line-height: 1.5; padding: 0; margin: 0;">${body
-          .split("\n\n")
-          .map((p: string) => `<div style="margin: 0 0 1em 0; color: #222222;">${p.replace(/\n/g, "<br>")}</div>`)
-          .join("")}</div></body></html>`,
-        reply_to: reply_to || userEmail,
-      }),
+      body: JSON.stringify(resendPayload),
     });
 
     const resendData = await resendResponse.json();
@@ -106,7 +165,7 @@ Deno.serve(async (req) => {
     }
 
     // Save sent email to database
-    const { error: dbError } = await supabase.from("emails").insert({
+    const { data: emailRecord, error: dbError } = await supabase.from("emails").insert({
       user_id: userId,
       subject,
       body_preview: body.substring(0, 500),
@@ -118,10 +177,24 @@ Deno.serve(async (req) => {
       direction: "outbound",
       external_id: resendData.id,
       external_provider: "resend",
-    });
+    }).select("id").single();
 
     if (dbError) {
       console.error("DB save error:", dbError);
+    }
+
+    // Save attachment references
+    if (emailRecord && attachment_doc_ids && attachment_doc_ids.length > 0) {
+      const attachmentRecords = attachment_doc_ids.map((docId: string) => ({
+        email_id: emailRecord.id,
+        document_id: docId,
+      }));
+      const { error: attachError } = await supabase
+        .from("email_attachments")
+        .insert(attachmentRecords);
+      if (attachError) {
+        console.error("Attachment save error:", attachError);
+      }
     }
 
     return new Response(
