@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -31,6 +31,7 @@ import {
   X,
   FileText,
   CalendarClock,
+  Upload,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -58,7 +59,9 @@ export function SmartComposeModal({
   const [isGenerating, setIsGenerating] = useState(false);
   const [scheduledTime, setScheduledTime] = useState('');
   const [attachedDocIds, setAttachedDocIds] = useState<string[]>([]);
+  const [manualFiles, setManualFiles] = useState<File[]>([]);
   const [aiReasoning, setAiReasoning] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: templates } = useEmailTemplates();
   const sendEmail = useSendEmail();
@@ -74,6 +77,7 @@ export function SmartComposeModal({
       setSelectedTemplateId('');
       setScheduledTime('');
       setAttachedDocIds([]);
+      setManualFiles([]);
       setAiReasoning('');
     }
   }, [open, investorEmail]);
@@ -315,7 +319,7 @@ export function SmartComposeModal({
                 Attachments
               </Label>
 
-              {attachedDocs.length > 0 && (
+              {(attachedDocs.length > 0 || manualFiles.length > 0) && (
                 <div className="flex flex-wrap gap-2 mt-2">
                   {attachedDocs.map((doc) => (
                     <Badge
@@ -335,8 +339,51 @@ export function SmartComposeModal({
                       </Button>
                     </Badge>
                   ))}
+                  {manualFiles.map((file, idx) => (
+                    <Badge
+                      key={`manual-${idx}`}
+                      variant="secondary"
+                      className="flex items-center gap-1 pr-1"
+                    >
+                      <Upload className="w-3 h-3" />
+                      <span className="text-xs max-w-[150px] truncate">{file.name}</span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-4 w-4 ml-1 hover:bg-destructive/20"
+                        onClick={() => setManualFiles((prev) => prev.filter((_, i) => i !== idx))}
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </Badge>
+                  ))}
                 </div>
               )}
+
+              <div className="flex gap-2 mt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="gap-1"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  Upload File
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      setManualFiles((prev) => [...prev, ...Array.from(e.target.files!)]);
+                    }
+                    e.target.value = '';
+                  }}
+                />
+              </div>
 
               {documents.length > 0 && (
                 <div className="mt-2 max-h-[120px] overflow-y-auto border rounded-md">
