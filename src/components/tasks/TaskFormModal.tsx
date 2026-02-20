@@ -79,10 +79,10 @@ export function TaskFormModal({ open, onOpenChange, onSubmit, task }: TaskFormMo
       description: data.description || null,
       priority: data.priority,
       due_date: data.due_date || null,
-      contact_id: data.contact_id || null,
-      company_id: data.company_id || null,
-      investor_deal_id: data.investor_deal_id || null,
-      recurrence: data.recurrence || null,
+      contact_id: data.contact_id === 'none' ? null : data.contact_id || null,
+      company_id: data.company_id === 'none' ? null : data.company_id || null,
+      investor_deal_id: data.investor_deal_id === 'none' ? null : data.investor_deal_id || null,
+      recurrence: data.recurrence === 'none' ? null : data.recurrence || null,
     };
     onSubmit(task ? { ...cleaned, id: task.id } : cleaned);
     onOpenChange(false);
@@ -129,7 +129,7 @@ export function TaskFormModal({ open, onOpenChange, onSubmit, task }: TaskFormMo
               <Select value={watch('recurrence')} onValueChange={(v) => setValue('recurrence', v)}>
                 <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   <SelectItem value="daily">Daily</SelectItem>
                   <SelectItem value="weekly">Weekly</SelectItem>
                   <SelectItem value="monthly">Monthly</SelectItem>
@@ -141,7 +141,7 @@ export function TaskFormModal({ open, onOpenChange, onSubmit, task }: TaskFormMo
               <Select value={watch('contact_id')} onValueChange={(v) => setValue('contact_id', v)}>
                 <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {contacts.map((c) => (
                     <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                   ))}
@@ -156,7 +156,7 @@ export function TaskFormModal({ open, onOpenChange, onSubmit, task }: TaskFormMo
               <Select value={watch('company_id')} onValueChange={(v) => setValue('company_id', v)}>
                 <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {companies.map((c) => (
                     <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                   ))}
@@ -168,7 +168,7 @@ export function TaskFormModal({ open, onOpenChange, onSubmit, task }: TaskFormMo
               <Select value={watch('investor_deal_id')} onValueChange={(v) => setValue('investor_deal_id', v)}>
                 <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {investors.map((i) => (
                     <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>
                   ))}
