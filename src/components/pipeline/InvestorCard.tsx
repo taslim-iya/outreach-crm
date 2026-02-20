@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { InvestorDeal, InvestorStage, useUpdateInvestorStage, useUpdateInvestorStageWithCommitment } from '@/hooks/useInvestorDeals';
 import { cn } from '@/lib/utils';
-import { DollarSign, MoreHorizontal, Pencil, Trash2, ArrowRight, Mail } from 'lucide-react';
+import { DollarSign, MoreHorizontal, Pencil, Trash2, ArrowRight, Mail, Building2, User } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -55,7 +55,6 @@ export function InvestorCard({ deal, onEdit, onDelete }: InvestorCardProps) {
   const [composeOpen, setComposeOpen] = useState(false);
   const [pendingStage, setPendingStage] = useState<'committed' | 'closed' | null>(null);
 
-  // Fetch contact email for this investor
   const { data: contactData } = useQuery({
     queryKey: ['investor_contact', deal.contact_id],
     queryFn: async () => {
@@ -80,7 +79,6 @@ export function InvestorCard({ deal, onEdit, onDelete }: InvestorCardProps) {
     }).format(amount);
   };
 
-  // Display name: prefer organization over personal name
   const displayName = deal.organization || deal.name;
   const showPersonalName = deal.organization && deal.name;
 
@@ -94,14 +92,12 @@ export function InvestorCard({ deal, onEdit, onDelete }: InvestorCardProps) {
   };
 
   const handleMoveToStage = async (newStage: InvestorStage) => {
-    // For committed or closed stages, show the commitment amount modal
     if (newStage === 'committed' || newStage === 'closed') {
       setPendingStage(newStage);
       setCommitmentModalOpen(true);
       return;
     }
     
-    // For other stages, update directly
     try {
       await updateStage.mutateAsync({ id: deal.id, stage: newStage });
       toast.success(`Moved to ${stageLabels[newStage]}`);
@@ -130,26 +126,30 @@ export function InvestorCard({ deal, onEdit, onDelete }: InvestorCardProps) {
   const commitmentDisplay = formatCurrency(deal.commitment_amount);
 
   return (
-    <div className="bg-card rounded-lg border border-border p-4 hover:shadow-card-hover transition-all duration-200 cursor-pointer group shadow-card animate-slide-up">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium text-foreground">
+    <div className="goldman-card p-4 group cursor-pointer animate-slide-up">
+      {/* Header row */}
+      <div className="flex items-start justify-between mb-2.5">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div className="w-9 h-9 rounded-lg gradient-primary flex items-center justify-center text-xs font-semibold text-primary-foreground shrink-0 shadow-xs">
             {getInitials(displayName)}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors truncate">
+            <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors truncate leading-tight">
               {displayName}
             </p>
             {showPersonalName && (
-              <p className="text-xs text-muted-foreground truncate max-w-[140px]">
-                {deal.name}
-              </p>
+              <div className="flex items-center gap-1 mt-0.5">
+                <User className="w-3 h-3 text-muted-foreground shrink-0" />
+                <p className="text-xs text-muted-foreground truncate">
+                  {deal.name}
+                </p>
+              </div>
             )}
           </div>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
               <MoreHorizontal className="w-4 h-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -189,15 +189,17 @@ export function InvestorCard({ deal, onEdit, onDelete }: InvestorCardProps) {
         </DropdownMenu>
       </div>
 
+      {/* Commitment badge */}
       {commitmentDisplay && (
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <div className="inline-flex items-center gap-1.5 text-xs font-medium text-success bg-success/10 px-2.5 py-1 rounded-md mt-1">
           <DollarSign className="w-3.5 h-3.5" />
           <span>{commitmentDisplay}</span>
         </div>
       )}
 
+      {/* Notes */}
       {deal.notes && (
-        <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{deal.notes}</p>
+        <p className="text-xs text-muted-foreground mt-2.5 line-clamp-2 leading-relaxed border-t border-border/50 pt-2.5">{deal.notes}</p>
       )}
 
       <CommitmentAmountModal

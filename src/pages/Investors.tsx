@@ -80,20 +80,30 @@ export default function Investors() {
   };
 
   return (
-    <div className="h-[calc(100vh-3.5rem)] lg:h-screen flex flex-col">
+    <div className="h-[calc(100vh-3.5rem)] lg:h-screen flex flex-col bg-background">
       <div className="p-4 md:p-6 pb-4">
-        <PageHeader
-          title={companyName ? `${companyName} Investor Pipeline` : 'Investor Pipeline'}
-          description="Track your fundraising progress"
-          actions={
-            <Button onClick={() => handleAddInvestor()}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Investor
-            </Button>
-          }
-        />
+        {/* Premium Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-md">
+                <TrendingUp className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="text-xl md:text-2xl font-semibold text-foreground tracking-tight">
+                  {companyName ? `${companyName} Investor Pipeline` : 'Investor Pipeline'}
+                </h1>
+                <p className="text-sm text-muted-foreground">Track your fundraising progress</p>
+              </div>
+            </div>
+          </div>
+          <Button onClick={() => handleAddInvestor()} className="gradient-primary shadow-md hover:shadow-lg transition-shadow">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Investor
+          </Button>
+        </div>
 
-        {/* Filters */}
+        {/* Search Bar */}
         <div className="flex items-center gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -101,10 +111,10 @@ export default function Investors() {
               placeholder="Search investors..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-card border-border"
+              className="pl-9 bg-card border-border shadow-xs focus:shadow-sm transition-shadow"
             />
           </div>
-          <Button variant="outline" size="icon">
+          <Button variant="outline" size="icon" className="shadow-xs">
             <Filter className="w-4 h-4" />
           </Button>
         </div>

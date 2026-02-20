@@ -10,18 +10,18 @@ interface KanbanColumnProps {
 
 export function KanbanColumn({ title, count, color, children }: KanbanColumnProps) {
   return (
-    <div className="flex flex-col min-w-[280px] max-w-[280px] h-full">
+    <div className="flex flex-col min-w-[290px] max-w-[290px] h-full">
       {/* Column Header */}
-      <div className="flex items-center gap-2 px-3 py-3 mb-3">
-        <div className={cn('w-2 h-2 rounded-full', color)} />
-        <h3 className="text-sm font-medium text-foreground">{title}</h3>
-        <span className="ml-auto text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+      <div className="flex items-center gap-2.5 px-3 py-3 mb-2 rounded-lg bg-muted/40">
+        <div className={cn('w-2.5 h-2.5 rounded-full ring-2 ring-background', color)} />
+        <h3 className="text-sm font-semibold text-foreground tracking-tight">{title}</h3>
+        <span className="ml-auto text-xs font-medium text-primary bg-primary/10 px-2.5 py-0.5 rounded-full">
           {count}
         </span>
       </div>
 
       {/* Column Content */}
-      <div className="flex-1 space-y-2 overflow-y-auto px-1 pb-4">
+      <div className="flex-1 space-y-2.5 overflow-y-auto px-0.5 pb-4 scrollbar-thin">
         {children}
       </div>
     </div>
