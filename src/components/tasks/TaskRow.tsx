@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { CheckCircle2, Circle, Trash2, Pencil, RotateCw } from 'lucide-react';
+import { CheckCircle2, Circle, Trash2, Pencil, RotateCw, User, Building2, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,18 @@ const priorityColors: Record<string, string> = {
 
 export function TaskRow({ task, selected, onToggleSelect, onToggleComplete, onEdit, onDelete }: TaskRowProps) {
   const isOverdue = task.due_date && !task.completed && new Date(task.due_date) < new Date();
+
+  const linkedEntities = [
+    task.contacts && { icon: User, label: task.contacts.name, color: 'text-blue-600 bg-blue-500/10 border-blue-500/20' },
+    task.companies && { icon: Building2, label: task.companies.name, color: 'text-emerald-600 bg-emerald-500/10 border-emerald-500/20' },
+    task.investor_deals && {
+      icon: TrendingUp,
+      label: task.investor_deals.organization
+        ? `${task.investor_deals.name} · ${task.investor_deals.organization}`
+        : task.investor_deals.name,
+      color: 'text-purple-600 bg-purple-500/10 border-purple-500/20',
+    },
+  ].filter(Boolean) as { icon: typeof User; label: string; color: string }[];
 
   return (
     <div
@@ -48,13 +60,29 @@ export function TaskRow({ task, selected, onToggleSelect, onToggleComplete, onEd
         <p className={cn('text-sm font-medium text-foreground truncate', task.completed && 'line-through')}>
           {task.title}
         </p>
-        {(task as any).description && (
-          <p className="text-xs text-muted-foreground truncate mt-0.5">{(task as any).description}</p>
+        {task.description && (
+          <p className="text-xs text-muted-foreground truncate mt-0.5">{task.description}</p>
+        )}
+        {linkedEntities.length > 0 && (
+          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+            {linkedEntities.map((entity) => {
+              const Icon = entity.icon;
+              return (
+                <span
+                  key={entity.label}
+                  className={cn('inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-md border', entity.color)}
+                >
+                  <Icon className="h-3 w-3" />
+                  {entity.label}
+                </span>
+              );
+            })}
+          </div>
         )}
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
-        {(task as any).recurrence && (
+        {task.recurrence && (
           <RotateCw className="h-3.5 w-3.5 text-muted-foreground" />
         )}
         {task.priority && (

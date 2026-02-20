@@ -4,9 +4,9 @@ import { useAuth } from './useAuth';
 import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
 export type Task = Tables<'tasks'> & {
-  description?: string | null;
-  recurrence?: string | null;
-  investor_deal_id?: string | null;
+  contacts: { name: string } | null;
+  companies: { name: string } | null;
+  investor_deals: { name: string; organization: string | null } | null;
 };
 export type TaskInsert = TablesInsert<'tasks'>;
 export type TaskUpdate = TablesUpdate<'tasks'>;
@@ -21,7 +21,7 @@ export function useTasks() {
       
       const { data, error } = await supabase
         .from('tasks')
-        .select('*')
+        .select('*, contacts(name), companies(name), investor_deals(name, organization)')
         .order('due_date', { ascending: true });
 
       if (error) throw error;

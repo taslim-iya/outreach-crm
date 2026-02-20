@@ -29,7 +29,7 @@ export function useNotifications() {
       const [tasksRes, contactsRes, investorsRes] = await Promise.all([
         supabase
           .from('tasks')
-          .select('id, title, due_date, priority')
+          .select('id, title, due_date, priority, contacts(name), companies(name), investor_deals(name)')
           .eq('completed', false)
           .lt('due_date', today)
           .order('due_date', { ascending: true }),
@@ -46,12 +46,20 @@ export function useNotifications() {
 
       const notifications: Notification[] = [];
 
-      (tasksRes.data ?? []).forEach((t) => {
+      (tasksRes.data ?? []).forEach((t: any) => {
+        const linked = [
+          t.contacts?.name,
+          t.companies?.name,
+          t.investor_deals?.name,
+        ].filter(Boolean);
+        const subtitleParts = [`Due ${t.due_date}`];
+        if (linked.length) subtitleParts.push(linked.join(' · '));
+
         notifications.push({
           id: `task-${t.id}`,
           type: 'overdue_task',
           title: t.title,
-          subtitle: `Due ${t.due_date}`,
+          subtitle: subtitleParts.join(' — '),
           entityId: t.id,
           urgency: t.priority === 'high' ? 3 : t.priority === 'medium' ? 2 : 1,
         });

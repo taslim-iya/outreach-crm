@@ -61,8 +61,8 @@ export default function Tasks() {
     await toggleComplete.mutateAsync({ id, completed });
 
     // Handle recurring task
-    if (completed && task && (task as any).recurrence) {
-      const recurrence = (task as any).recurrence as string;
+    if (completed && task && task.recurrence) {
+      const recurrence = task.recurrence;
       const baseDue = task.due_date ? new Date(task.due_date) : new Date();
       let nextDue: Date;
       if (recurrence === 'daily') nextDue = addDays(baseDue, 1);
@@ -71,12 +71,12 @@ export default function Tasks() {
 
       await createTask.mutateAsync({
         title: task.title,
-        description: (task as any).description,
+        description: task.description,
         priority: task.priority,
         due_date: nextDue.toISOString().split('T')[0],
         contact_id: task.contact_id,
         company_id: task.company_id,
-        investor_deal_id: (task as any).investor_deal_id,
+        investor_deal_id: task.investor_deal_id,
         recurrence,
       } as any);
       toast({ title: 'Recurring task created', description: `Next due ${nextDue.toLocaleDateString()}` });
