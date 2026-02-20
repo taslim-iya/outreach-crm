@@ -179,6 +179,61 @@ export default function Settings() {
     }
   }, [searchParams, setSearchParams, queryClient]);
 
+  const openOAuthPopup = (url: string, provider: string) => {
+    const width = 500;
+    const height = 600;
+    const left = window.screenX + (window.outerWidth - width) / 2;
+    const top = window.screenY + (window.outerHeight - height) / 2;
+    const popup = window.open(
+      url,
+      `${provider}OAuthPopup`,
+      `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no`
+    );
+
+    if (!popup) {
+      toast.error('Please allow popups for this site to connect your account');
+      return;
+    }
+
+    // Poll for popup close & check for success via query params
+    const interval = setInterval(() => {
+      try {
+        if (popup.closed) {
+          clearInterval(interval);
+          setIsConnecting(false);
+          // Refresh integrations in case the callback completed
+          queryClient.invalidateQueries({ queryKey: ['user_integrations'] });
+          return;
+        }
+        // Check if popup redirected back to our app
+        const popupUrl = popup.location.href;
+        if (popupUrl && popupUrl.includes('/settings?')) {
+          const url = new URL(popupUrl);
+          const authParam = url.searchParams.get(`${provider}_auth`);
+          const email = url.searchParams.get('email');
+          const message = url.searchParams.get('message');
+          
+          if (authParam === 'success') {
+            toast.success(`${provider === 'google' ? 'Google' : 'Microsoft'} connected successfully`, {
+              description: email ? `Connected as ${email}` : undefined,
+            });
+            queryClient.invalidateQueries({ queryKey: ['user_integrations'] });
+          } else if (authParam === 'error') {
+            toast.error(`Failed to connect ${provider === 'google' ? 'Google' : 'Microsoft'}`, {
+              description: message || 'Please try again',
+            });
+          }
+          
+          popup.close();
+          clearInterval(interval);
+          setIsConnecting(false);
+        }
+      } catch {
+        // Cross-origin error is expected while on Microsoft/Google domain
+      }
+    }, 500);
+  };
+
   const handleConnectGoogle = async () => {
     setIsConnecting(true);
     try {
@@ -205,14 +260,12 @@ export default function Settings() {
         throw new Error(data.error || 'Failed to start OAuth');
       }
 
-      // Redirect to Google OAuth
-      window.location.href = data.url;
+      openOAuthPopup(data.url, 'google');
     } catch (error) {
       console.error('OAuth init error:', error);
       toast.error('Failed to connect Google', {
         description: error instanceof Error ? error.message : 'Please try again',
       });
-    } finally {
       setIsConnecting(false);
     }
   };
@@ -243,13 +296,12 @@ export default function Settings() {
         throw new Error(data.error || 'Failed to start Microsoft OAuth');
       }
 
-      window.location.href = data.url;
+      openOAuthPopup(data.url, 'microsoft');
     } catch (error) {
       console.error('Microsoft OAuth init error:', error);
       toast.error('Failed to connect Microsoft', {
         description: error instanceof Error ? error.message : 'Please try again',
       });
-    } finally {
       setIsConnecting(false);
     }
   };
