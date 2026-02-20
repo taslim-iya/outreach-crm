@@ -174,7 +174,12 @@ export function SmartComposeModal({
       });
     }
 
-    await sendEmail.mutateAsync({ to, subject, body });
+    await sendEmail.mutateAsync({
+      to,
+      subject,
+      body,
+      attachment_doc_ids: attachedDocIds.length > 0 ? attachedDocIds : undefined,
+    });
     onOpenChange(false);
   };
 
