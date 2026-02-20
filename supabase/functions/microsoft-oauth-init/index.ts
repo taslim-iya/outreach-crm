@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
 
     const state = btoa(JSON.stringify({ userId }));
 
-    const authUrl = new URL('https://login.microsoftonline.com/common/oauth2/v2.0/authorize');
+    const authUrl = new URL('https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize');
     authUrl.searchParams.set('client_id', clientId);
     authUrl.searchParams.set('redirect_uri', redirectUri);
     authUrl.searchParams.set('response_type', 'code');
