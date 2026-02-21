@@ -130,7 +130,7 @@ ${htmlBody}
     // Send via Resend
     const toList = Array.isArray(to) ? to : [to];
     const resendPayload: Record<string, unknown> = {
-      from: `${senderName} <onboarding@resend.dev>`,
+      from: `${senderName} <taslim@mungerlongview.com>`,
       to: toList,
       subject,
       html,
