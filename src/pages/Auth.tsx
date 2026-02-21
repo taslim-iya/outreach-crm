@@ -65,7 +65,7 @@ export default function Auth() {
             <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/20">
               <TrendingUp className="w-5 h-5" />
             </div>
-            <span className="text-xl font-semibold tracking-tight">DealScope</span>
+            <span className="text-xl font-semibold tracking-tight">Acquirer CRM</span>
           </div>
           
           <div className="space-y-6">
@@ -89,7 +89,7 @@ export default function Auth() {
             </div>
           </div>
 
-          <p className="text-sm text-white/40">© 2024 DealScope. Built for searchers, by searchers.</p>
+          <p className="text-sm text-white/40">© 2025 Acquirer CRM. Built for searchers, by searchers.</p>
         </div>
       </div>
 
@@ -102,7 +102,7 @@ export default function Auth() {
               <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
                 <TrendingUp className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="text-xl font-semibold tracking-tight">DealScope</span>
+              <span className="text-xl font-semibold tracking-tight">Acquirer CRM</span>
             </div>
           </div>
 

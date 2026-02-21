@@ -2,7 +2,8 @@ import { useState, createContext, useContext, ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { useAppMode } from '@/hooks/useAppMode';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import {
   LayoutDashboard,
@@ -19,9 +20,9 @@ import {
   LogOut,
   StickyNote,
   Menu,
-  X,
   PieChart,
   CheckSquare,
+  ArrowLeftRight,
 } from 'lucide-react';
 import { useUnreadEmailCount } from '@/hooks/useEmails';
 
@@ -64,6 +65,39 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
   );
 }
 
+function ModeToggle() {
+  const { mode, setMode } = useAppMode();
+
+  return (
+    <div className="px-3 py-3">
+      <div className="flex items-center gap-1 p-1 rounded-lg bg-sidebar-accent/40 border border-sidebar-border/50">
+        <button
+          onClick={() => setMode('fundraising')}
+          className={cn(
+            'flex-1 text-[11px] font-medium py-1.5 px-2 rounded-md transition-all duration-200 text-center',
+            mode === 'fundraising'
+              ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-sm'
+              : 'text-sidebar-foreground/60 hover:text-sidebar-foreground'
+          )}
+        >
+          Fundraising
+        </button>
+        <button
+          onClick={() => setMode('deal-sourcing')}
+          className={cn(
+            'flex-1 text-[11px] font-medium py-1.5 px-2 rounded-md transition-all duration-200 text-center',
+            mode === 'deal-sourcing'
+              ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-sm'
+              : 'text-sidebar-foreground/60 hover:text-sidebar-foreground'
+          )}
+        >
+          Deal Sourcing
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -100,17 +134,20 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       <div className="h-16 flex items-center px-6 border-b border-sidebar-border/50">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/10">
-            <TrendingUp className="w-5 h-5 text-white" />
+            <Building2 className="w-5 h-5 text-white" />
           </div>
           <div>
-            <span className="text-base font-semibold text-white tracking-tight">DealScope</span>
-            <p className="text-[10px] text-sidebar-foreground/60 uppercase tracking-wider font-medium">Search Fund CRM</p>
+            <span className="text-base font-semibold text-white tracking-tight">Acquirer CRM</span>
+            <p className="text-[10px] text-sidebar-foreground/60 uppercase tracking-wider font-medium">Search Fund Platform</p>
           </div>
         </div>
       </div>
 
+      {/* Mode Toggle */}
+      <ModeToggle />
+
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
         {navigation.map((item) => {
           const isActive = location.pathname === item.href;
           return (
@@ -231,10 +268,10 @@ export function MobileHeader() {
         <Menu className="w-5 h-5" />
       </Button>
       <div className="flex items-center gap-2">
-        <div className="w-7 h-7 rounded-lg gradient-gold flex items-center justify-center">
-          <TrendingUp className="w-4 h-4 text-primary-foreground" />
+        <div className="w-7 h-7 rounded-lg gradient-primary flex items-center justify-center">
+          <Building2 className="w-4 h-4 text-primary-foreground" />
         </div>
-        <span className="font-semibold text-foreground">DealScope</span>
+        <span className="font-semibold text-foreground">Acquirer CRM</span>
       </div>
     </header>
   );

@@ -47,7 +47,7 @@ export default function Dashboard() {
     <div className="p-4 md:p-6">
       <PageHeader
         title="Dashboard"
-        description="Your search fund command center"
+        description="Your acquisition command center"
       />
 
       {/* KPI Grid */}

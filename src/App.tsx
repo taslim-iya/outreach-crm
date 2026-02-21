@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { AppModeProvider } from "@/hooks/useAppMode";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { MainLayout } from "@/components/layout/MainLayout";
 import Dashboard from "./pages/Dashboard";
@@ -29,39 +30,41 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route
-              path="/*"
-              element={
-                <ProtectedRoute>
-                  <MainLayout>
-                    <Routes>
-                      <Route path="/" element={<Dashboard />} />
-                      <Route path="/inbox" element={<Inbox />} />
-                      <Route path="/contacts" element={<Contacts />} />
-                      <Route path="/investors" element={<Investors />} />
-                      <Route path="/deals" element={<Deals />} />
-                      <Route path="/notes" element={<NotesPage />} />
-                      <Route path="/outreach" element={<Outreach />} />
-                      <Route path="/documents" element={<Documents />} />
-                      <Route path="/calendar" element={<CalendarPage />} />
-                      <Route path="/analytics" element={<Analytics />} />
-                      <Route path="/tasks" element={<Tasks />} />
-                      <Route path="/cap-table" element={<CapTable />} />
-                      <Route path="/assistant" element={<Assistant />} />
-                      <Route path="/settings" element={<Settings />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </BrowserRouter>
+        <AppModeProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route
+                path="/*"
+                element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <Routes>
+                        <Route path="/" element={<Dashboard />} />
+                        <Route path="/inbox" element={<Inbox />} />
+                        <Route path="/contacts" element={<Contacts />} />
+                        <Route path="/investors" element={<Investors />} />
+                        <Route path="/deals" element={<Deals />} />
+                        <Route path="/notes" element={<NotesPage />} />
+                        <Route path="/outreach" element={<Outreach />} />
+                        <Route path="/documents" element={<Documents />} />
+                        <Route path="/calendar" element={<CalendarPage />} />
+                        <Route path="/analytics" element={<Analytics />} />
+                        <Route path="/tasks" element={<Tasks />} />
+                        <Route path="/cap-table" element={<CapTable />} />
+                        <Route path="/assistant" element={<Assistant />} />
+                        <Route path="/settings" element={<Settings />} />
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                    </MainLayout>
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </BrowserRouter>
+        </AppModeProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
