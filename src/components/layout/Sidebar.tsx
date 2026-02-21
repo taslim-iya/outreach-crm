@@ -2,7 +2,7 @@ import { useState, createContext, useContext, ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
-import { useAppMode } from '@/hooks/useAppMode';
+import { useAppMode, AppMode } from '@/hooks/useAppMode';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,21 +22,27 @@ import {
   Menu,
   PieChart,
   CheckSquare,
-  ArrowLeftRight,
 } from 'lucide-react';
 import { useUnreadEmailCount } from '@/hooks/useEmails';
 
-const navigation = [
+interface NavItem {
+  name: string;
+  href: string;
+  icon: typeof LayoutDashboard;
+  modes?: AppMode[]; // if undefined, shown in all modes
+}
+
+const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Inbox', href: '/inbox', icon: Inbox },
   { name: 'Contacts', href: '/contacts', icon: Users },
-  { name: 'Investors', href: '/investors', icon: TrendingUp },
-  { name: 'Deals', href: '/deals', icon: Building2 },
+  { name: 'Investors', href: '/investors', icon: TrendingUp, modes: ['fundraising'] },
+  { name: 'Cap Table', href: '/cap-table', icon: PieChart, modes: ['fundraising'] },
+  { name: 'Deals', href: '/deals', icon: Building2, modes: ['deal-sourcing'] },
   { name: 'Outreach', href: '/outreach', icon: Mail },
   { name: 'Documents', href: '/documents', icon: FileText },
   { name: 'Calendar', href: '/calendar', icon: Calendar },
   { name: 'Tasks', href: '/tasks', icon: CheckSquare },
-  { name: 'Cap Table', href: '/cap-table', icon: PieChart },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
 ];
 
@@ -102,7 +108,12 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { mode } = useAppMode();
   const { data: unreadCount } = useUnreadEmailCount();
+
+  const filteredNav = navigation.filter(
+    (item) => !item.modes || item.modes.includes(mode)
+  );
 
   const handleSignOut = async () => {
     await signOut();
@@ -148,7 +159,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
-        {navigation.map((item) => {
+        {filteredNav.map((item) => {
           const isActive = location.pathname === item.href;
           return (
             <Link

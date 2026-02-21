@@ -4,17 +4,21 @@ import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
 import { TaskList } from '@/components/dashboard/TaskList';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
+import { useAppMode } from '@/hooks/useAppMode';
 import {
   Users,
   Calendar,
   FileCheck,
   Percent,
   Loader2,
+  Building2,
   TrendingUp,
+  Search,
 } from 'lucide-react';
 
 export default function Dashboard() {
   const { data: metrics, isLoading } = useDashboardMetrics();
+  const { mode, modeLabel } = useAppMode();
 
   const investorStages = metrics ? [
     { name: 'Outreach', count: metrics.investorsByStage.outreach_sent, color: 'bg-stage-cold' },
@@ -47,52 +51,83 @@ export default function Dashboard() {
     <div className="p-4 md:p-6">
       <PageHeader
         title="Dashboard"
-        description="Your acquisition command center"
+        description={mode === 'fundraising' ? 'Your fundraising command center' : 'Your deal sourcing command center'}
       />
 
-      {/* KPI Grid */}
+      {/* KPI Grid - Mode Specific */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <MetricCard
-          title="Investors Contacted"
-          value={metrics?.investorsContacted || 0}
-          icon={<Users className="w-5 h-5" />}
-        />
-        <MetricCard
-          title="Response Rate"
-          value={`${metrics?.responseRate || 0}%`}
-          icon={<Percent className="w-5 h-5" />}
-        />
-        <MetricCard
-          title="Meetings Booked"
-          value={metrics?.meetingsBooked || 0}
-          icon={<Calendar className="w-5 h-5" />}
-        />
-        <MetricCard
-          title="NDAs Signed"
-          value={metrics?.ndasSigned || 0}
-          icon={<FileCheck className="w-5 h-5" />}
-        />
+        {mode === 'fundraising' ? (
+          <>
+            <MetricCard
+              title="Investors Contacted"
+              value={metrics?.investorsContacted || 0}
+              icon={<Users className="w-5 h-5" />}
+            />
+            <MetricCard
+              title="Response Rate"
+              value={`${metrics?.responseRate || 0}%`}
+              icon={<Percent className="w-5 h-5" />}
+            />
+            <MetricCard
+              title="Meetings Booked"
+              value={metrics?.meetingsBooked || 0}
+              icon={<Calendar className="w-5 h-5" />}
+            />
+            <MetricCard
+              title="Commitments"
+              value={metrics?.commitments || 0}
+              icon={<TrendingUp className="w-5 h-5" />}
+            />
+          </>
+        ) : (
+          <>
+            <MetricCard
+              title="Total Targets"
+              value={metrics?.totalDeals || 0}
+              icon={<Building2 className="w-5 h-5" />}
+            />
+            <MetricCard
+              title="NDAs Signed"
+              value={metrics?.ndasSigned || 0}
+              icon={<FileCheck className="w-5 h-5" />}
+            />
+            <MetricCard
+              title="Meetings Booked"
+              value={metrics?.meetingsBooked || 0}
+              icon={<Calendar className="w-5 h-5" />}
+            />
+            <MetricCard
+              title="Pending Tasks"
+              value={metrics?.pendingTasks || 0}
+              icon={<Search className="w-5 h-5" />}
+            />
+          </>
+        )}
       </div>
 
-      {/* Pipeline Previews */}
+      {/* Pipeline Preview - Mode Specific */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-        <PipelinePreview
-          title="Investor Pipeline"
-          stages={investorStages}
-          href="/investors"
-          total={investorTotal}
-        />
-        <PipelinePreview
-          title="Deal Pipeline"
-          stages={dealStages}
-          href="/deals"
-          total={dealTotal}
-        />
+        {mode === 'fundraising' ? (
+          <PipelinePreview
+            title="Investor Pipeline"
+            stages={investorStages}
+            href="/investors"
+            total={investorTotal}
+          />
+        ) : (
+          <PipelinePreview
+            title="Deal Pipeline"
+            stages={dealStages}
+            href="/deals"
+            total={dealTotal}
+          />
+        )}
+        {/* Always show activity feed alongside pipeline */}
+        <ActivityFeed />
       </div>
 
-      {/* Activity & Tasks */}
+      {/* Tasks */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <ActivityFeed />
         <TaskList />
       </div>
     </div>
