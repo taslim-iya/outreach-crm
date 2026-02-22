@@ -775,6 +775,86 @@ export type Database = {
           },
         ]
       }
+      follow_up_sequences: {
+        Row: {
+          company_id: string | null
+          contact_id: string | null
+          created_at: string
+          follow_up_number: number
+          id: string
+          interval_days: number
+          investor_deal_id: string | null
+          last_sent_at: string | null
+          max_follow_ups: number
+          next_send_at: string | null
+          status: string
+          template_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          follow_up_number?: number
+          id?: string
+          interval_days?: number
+          investor_deal_id?: string | null
+          last_sent_at?: string | null
+          max_follow_ups?: number
+          next_send_at?: string | null
+          status?: string
+          template_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          follow_up_number?: number
+          id?: string
+          interval_days?: number
+          investor_deal_id?: string | null
+          last_sent_at?: string | null
+          max_follow_ups?: number
+          next_send_at?: string | null
+          status?: string
+          template_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follow_up_sequences_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follow_up_sequences_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follow_up_sequences_investor_deal_id_fkey"
+            columns: ["investor_deal_id"]
+            isOneToOne: false
+            referencedRelation: "investor_deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follow_up_sequences_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "email_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ic_memos: {
         Row: {
           business_overview: string | null

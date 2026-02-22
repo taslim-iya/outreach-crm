@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { InvestorDeal, InvestorStage, useUpdateInvestorStage, useUpdateInvestorStageWithCommitment } from '@/hooks/useInvestorDeals';
 import { cn } from '@/lib/utils';
-import { DollarSign, MoreHorizontal, Pencil, Trash2, ArrowRight, Mail, Building2, User } from 'lucide-react';
+import { DollarSign, MoreHorizontal, Pencil, Trash2, ArrowRight, Mail, Building2, User, Repeat, MessageSquare } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +16,8 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { CommitmentAmountModal } from './CommitmentAmountModal';
 import { SmartComposeModal } from '@/components/email/SmartComposeModal';
+import { FollowUpSetupModal } from './FollowUpSetupModal';
+import { InvestorMessagesModal } from './InvestorMessagesModal';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -53,6 +55,8 @@ export function InvestorCard({ deal, onEdit, onDelete }: InvestorCardProps) {
   
   const [commitmentModalOpen, setCommitmentModalOpen] = useState(false);
   const [composeOpen, setComposeOpen] = useState(false);
+  const [followUpOpen, setFollowUpOpen] = useState(false);
+  const [messagesOpen, setMessagesOpen] = useState(false);
   const [pendingStage, setPendingStage] = useState<'committed' | 'closed' | null>(null);
 
   const { data: contactData } = useQuery({
@@ -126,7 +130,7 @@ export function InvestorCard({ deal, onEdit, onDelete }: InvestorCardProps) {
   const commitmentDisplay = formatCurrency(deal.commitment_amount);
 
   return (
-    <div className="goldman-card p-4 group cursor-pointer animate-slide-up">
+    <div className="goldman-card p-4 group cursor-pointer animate-slide-up" onClick={() => setMessagesOpen(true)}>
       {/* Header row */}
       <div className="flex items-start justify-between mb-2.5">
         <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -153,39 +157,48 @@ export function InvestorCard({ deal, onEdit, onDelete }: InvestorCardProps) {
               <MoreHorizontal className="w-4 h-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setComposeOpen(true)}>
-              <Mail className="w-4 h-4 mr-2" />
-              Send Email
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onEdit}>
-              <Pencil className="w-4 h-4 mr-2" />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>
-                <ArrowRight className="w-4 h-4 mr-2" />
-                Move to Stage
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent>
-                {stageOrder.map((stage) => (
-                  <DropdownMenuItem
-                    key={stage}
-                    disabled={stage === deal.stage}
-                    onClick={() => handleMoveToStage(stage)}
-                  >
-                    {stageLabels[stage]}
-                    {stage === deal.stage && ' (current)'}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
-              <Trash2 className="w-4 h-4 mr-2" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
+           <DropdownMenuContent align="end">
+             <DropdownMenuItem onClick={() => setComposeOpen(true)}>
+               <Mail className="w-4 h-4 mr-2" />
+               Send Email
+             </DropdownMenuItem>
+             <DropdownMenuItem onClick={() => setMessagesOpen(true)}>
+               <MessageSquare className="w-4 h-4 mr-2" />
+               View Messages
+             </DropdownMenuItem>
+             <DropdownMenuItem onClick={() => setFollowUpOpen(true)}>
+               <Repeat className="w-4 h-4 mr-2" />
+               Set Up Follow-ups
+             </DropdownMenuItem>
+             <DropdownMenuSeparator />
+             <DropdownMenuItem onClick={onEdit}>
+               <Pencil className="w-4 h-4 mr-2" />
+               Edit
+             </DropdownMenuItem>
+             <DropdownMenuSub>
+               <DropdownMenuSubTrigger>
+                 <ArrowRight className="w-4 h-4 mr-2" />
+                 Move to Stage
+               </DropdownMenuSubTrigger>
+               <DropdownMenuSubContent>
+                 {stageOrder.map((stage) => (
+                   <DropdownMenuItem
+                     key={stage}
+                     disabled={stage === deal.stage}
+                     onClick={() => handleMoveToStage(stage)}
+                   >
+                     {stageLabels[stage]}
+                     {stage === deal.stage && ' (current)'}
+                   </DropdownMenuItem>
+                 ))}
+               </DropdownMenuSubContent>
+             </DropdownMenuSub>
+             <DropdownMenuSeparator />
+             <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
+               <Trash2 className="w-4 h-4 mr-2" />
+               Delete
+             </DropdownMenuItem>
+           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
@@ -216,6 +229,31 @@ export function InvestorCard({ deal, onEdit, onDelete }: InvestorCardProps) {
         investorId={deal.id}
         investorName={deal.organization || deal.name}
         investorEmail={contactData?.email || ''}
+        onEmailSent={async () => {
+          // Auto-move to outreach_sent if currently not_contacted
+          if (deal.stage === 'not_contacted') {
+            try {
+              await updateStage.mutateAsync({ id: deal.id, stage: 'outreach_sent' });
+              toast.success(`${deal.organization || deal.name} moved to Outreach Sent`);
+            } catch {
+              // silently fail stage update
+            }
+          }
+        }}
+      />
+      <FollowUpSetupModal
+        open={followUpOpen}
+        onOpenChange={setFollowUpOpen}
+        investorDealId={deal.id}
+        investorName={deal.organization || deal.name}
+        contactId={deal.contact_id || undefined}
+      />
+      <InvestorMessagesModal
+        open={messagesOpen}
+        onOpenChange={setMessagesOpen}
+        investorName={deal.organization || deal.name}
+        contactId={deal.contact_id}
+        investorDealId={deal.id}
       />
     </div>
   );

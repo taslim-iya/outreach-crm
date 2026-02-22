@@ -49,6 +49,7 @@ interface SmartComposeModalProps {
   investorName?: string;
   investorEmail?: string;
   preAttachedDocIds?: string[];
+  onEmailSent?: () => void;
 }
 
 export function SmartComposeModal({
@@ -58,6 +59,7 @@ export function SmartComposeModal({
   investorName,
   investorEmail,
   preAttachedDocIds,
+  onEmailSent,
 }: SmartComposeModalProps) {
   const [to, setTo] = useState('');
   const [subject, setSubject] = useState('');
@@ -180,6 +182,7 @@ export function SmartComposeModal({
       body,
       attachment_doc_ids: attachedDocIds.length > 0 ? attachedDocIds : undefined,
     });
+    onEmailSent?.();
     onOpenChange(false);
   };
 
