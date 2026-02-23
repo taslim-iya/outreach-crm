@@ -13,7 +13,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDeals, useCreateDeal, useUpdateDealStage, useDeleteDeal, DEAL_STAGES, DEAL_STAGE_LABELS } from '@/hooks/useDeals';
 import { useCompanies } from '@/hooks/useCompanies';
 import { useBrokers } from '@/hooks/useBrokers';
-import { Plus, Search, Loader2, LayoutGrid, List, Trash2, ArrowRight } from 'lucide-react';
+import { Plus, Search, Loader2, LayoutGrid, List, Trash2, ArrowRight, Upload } from 'lucide-react';
+import { ImportModal } from '@/components/import/ImportModal';
+import { useCreateCompany } from '@/hooks/useCompanies';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
@@ -42,7 +44,30 @@ export default function DealSourcingDeals() {
   const [view, setView] = useState<'kanban' | 'table'>('kanban');
   const [search, setSearch] = useState('');
   const [showAdd, setShowAdd] = useState(false);
+  const [showImport, setShowImport] = useState(false);
+  const createCompany = useCreateCompany();
   const [form, setForm] = useState({ name: '', company_id: '', broker_id: '', source: 'proprietary', stage: 'screening' });
+
+  const handleImportCompanies = async (records: any[]) => {
+    for (const record of records) {
+      await createCompany.mutateAsync({
+        name: record.name,
+        industry: record.industry || null,
+        geography: record.geography || null,
+        website: record.website || null,
+        description: record.description || null,
+        sic_code: record.sic_code || null,
+        naics_code: record.naics_code || null,
+        ownership_type: record.ownership_type || null,
+        revenue_band: record.revenue_band || null,
+        ebitda_band: record.ebitda_band || null,
+        employee_count: record.employee_count || null,
+        company_status: record.company_status || null,
+        company_source: record.company_source || null,
+        company_tags: record.company_tags || [],
+      });
+    }
+  };
 
   const filtered = useMemo(() => {
     if (!search) return deals;
@@ -98,6 +123,9 @@ export default function DealSourcingDeals() {
                 <List className="w-4 h-4" />
               </Button>
             </div>
+            <Button size="sm" variant="outline" onClick={() => setShowImport(true)}>
+              <Upload className="w-4 h-4 mr-1" /> Import
+            </Button>
             <Button size="sm" onClick={() => setShowAdd(true)}>
               <Plus className="w-4 h-4 mr-1" /> New Deal
             </Button>
@@ -255,6 +283,13 @@ export default function DealSourcingDeals() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ImportModal
+        open={showImport}
+        onOpenChange={setShowImport}
+        entityType="companies"
+        onImport={handleImportCompanies}
+      />
     </div>
   );
 }

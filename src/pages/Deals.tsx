@@ -4,10 +4,11 @@ import { KanbanColumn } from '@/components/pipeline/KanbanColumn';
 import { DealCard } from '@/components/pipeline/DealCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useCompanies, Company, DealStage } from '@/hooks/useCompanies';
+import { useCompanies, useCreateCompany, Company, DealStage } from '@/hooks/useCompanies';
 import { CompanyFormModal } from '@/components/deals/CompanyFormModal';
 import { DeleteCompanyDialog } from '@/components/deals/DeleteCompanyDialog';
-import { Plus, Search, Filter, Loader2 } from 'lucide-react';
+import { ImportModal } from '@/components/import/ImportModal';
+import { Plus, Search, Filter, Loader2, Upload } from 'lucide-react';
 
 const stages: { key: DealStage; label: string; color: string }[] = [
   { key: 'identified', label: 'Identified', color: 'bg-stage-cold' },
@@ -27,9 +28,32 @@ export default function Deals() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
 
   const { data: companies, isLoading, error } = useCompanies();
+  const createCompany = useCreateCompany();
+
+  const handleImportCompanies = async (records: any[]) => {
+    for (const record of records) {
+      await createCompany.mutateAsync({
+        name: record.name,
+        industry: record.industry || null,
+        geography: record.geography || null,
+        website: record.website || null,
+        description: record.description || null,
+        sic_code: record.sic_code || null,
+        naics_code: record.naics_code || null,
+        ownership_type: record.ownership_type || null,
+        revenue_band: record.revenue_band || null,
+        ebitda_band: record.ebitda_band || null,
+        employee_count: record.employee_count || null,
+        company_status: record.company_status || null,
+        company_source: record.company_source || null,
+        company_tags: record.company_tags || [],
+      });
+    }
+  };
 
   const getCompaniesForStage = (stage: DealStage) => {
     if (!companies) return [];
@@ -77,13 +101,19 @@ export default function Deals() {
           title="Deal Pipeline"
           description="Track your acquisition targets"
           actions={
-            <Button 
-              className="gradient-gold text-primary-foreground hover:opacity-90"
-              onClick={handleAddCompany}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Company
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setIsImportOpen(true)}>
+                <Upload className="w-4 h-4 mr-2" />
+                Import
+              </Button>
+              <Button 
+                className="gradient-gold text-primary-foreground hover:opacity-90"
+                onClick={handleAddCompany}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Company
+              </Button>
+            </div>
           }
         />
 
@@ -146,6 +176,12 @@ export default function Deals() {
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
         company={selectedCompany}
+      />
+      <ImportModal
+        open={isImportOpen}
+        onOpenChange={setIsImportOpen}
+        entityType="companies"
+        onImport={handleImportCompanies}
       />
     </div>
   );
