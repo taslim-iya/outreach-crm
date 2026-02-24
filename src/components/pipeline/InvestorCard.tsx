@@ -130,7 +130,7 @@ export function InvestorCard({ deal, onEdit, onDelete }: InvestorCardProps) {
   const commitmentDisplay = formatCurrency(deal.commitment_amount);
 
   return (
-    <div className="goldman-card p-4 group cursor-pointer animate-slide-up" onClick={(e) => { e.stopPropagation(); setMessagesOpen(true); }}>
+    <div className="goldman-card p-4 group animate-slide-up">
       {/* Header row */}
       <div className="flex items-start justify-between mb-2.5">
         <div className="flex items-center gap-3 min-w-0 flex-1">
