@@ -53,6 +53,7 @@ Deno.serve(async (req) => {
       'offline_access',
       'User.Read',
       'Mail.Read',
+      'Mail.Send',
       'Calendars.Read',
     ].join(' ');
 
