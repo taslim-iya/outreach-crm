@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useDemoMode } from '@/hooks/useDemoMode';
 import { useAppMode } from '@/hooks/useAppMode';
+import { useUserRole } from '@/hooks/useUserRole';
 import { BrandLogo } from '@/components/brand/BrandLogo';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -210,6 +211,7 @@ function SidebarContentInner({ onNavigate }: { onNavigate?: () => void }) {
   const { data: unreadCount } = useUnreadEmailCount();
   const { isDemoMode, exitDemoMode } = useDemoMode();
   const { mode } = useAppMode();
+  const { isAdmin } = useUserRole();
 
   const [fundraisingNav, setFundraisingNav] = usePersistedNav('sidebar-fundraising-order', DEFAULT_FUNDRAISING_NAV);
   const [dealSourcingNav, setDealSourcingNav] = usePersistedNav('sidebar-dealsourcing-order', DEFAULT_DEAL_SOURCING_NAV);
@@ -342,7 +344,8 @@ function SidebarContentInner({ onNavigate }: { onNavigate?: () => void }) {
             )}
           </Droppable>
 
-          {/* Admin section */}
+          {/* Admin section - only visible to admins */}
+          {isAdmin && (
           <div className="pt-2 mt-2 border-t border-sidebar-border/50">
             <p className="px-3 py-1 text-[10px] uppercase tracking-wider font-semibold text-sidebar-foreground/40">Admin</p>
             {adminNav.map((item) => {
@@ -365,6 +368,7 @@ function SidebarContentInner({ onNavigate }: { onNavigate?: () => void }) {
               );
             })}
           </div>
+          )}
         </div>
       </DragDropContext>
 

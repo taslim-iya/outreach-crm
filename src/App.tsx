@@ -9,6 +9,7 @@ import { DemoModeProvider } from "@/hooks/useDemoMode";
 import { AppModeProvider } from "@/hooks/useAppMode";
 import { BrandHeadTags } from "@/components/brand/BrandHeadTags";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
+import { AdminRoute } from "@/components/layout/AdminRoute";
 import { MainLayout } from "@/components/layout/MainLayout";
 import Dashboard from "./pages/Dashboard";
 import Contacts from "./pages/Contacts";
@@ -78,8 +79,8 @@ const App = () => (
                           <Route path="/support" element={<Support />} />
                           <Route path="/assistant" element={<Assistant />} />
                           <Route path="/settings" element={<Settings />} />
-                          <Route path="/admin-analytics" element={<AdminAnalytics />} />
-                          <Route path="/admin" element={<Admin />} />
+                          <Route path="/admin-analytics" element={<AdminRoute><AdminAnalytics /></AdminRoute>} />
+                          <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </MainLayout>
