@@ -39,10 +39,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { investorId, templateId, customInstructions } = await req.json();
+    const { investorId, companyId, dealId, templateId, customInstructions } = await req.json();
+
+    // Build context based on entity type
+    let entityContext = "";
+    let emailPurpose = "investor outreach";
 
     // Fetch investor details
-    let investorContext = "";
     if (investorId) {
       const { data: investor } = await supabase
         .from("investor_deals")
@@ -51,8 +54,7 @@ Deno.serve(async (req) => {
         .single();
 
       if (investor) {
-        // Try to get contact email
-        let contactEmail = "";
+        let contactInfo = "";
         if (investor.contact_id) {
           const { data: contact } = await supabase
             .from("contacts")
@@ -60,20 +62,123 @@ Deno.serve(async (req) => {
             .eq("id", investor.contact_id)
             .single();
           if (contact) {
-            contactEmail = contact.email || "";
-            investorContext += `\n- Contact Name: ${contact.name}`;
-            investorContext += `\n- Contact Role: ${contact.role || "N/A"}`;
-            investorContext += `\n- Contact Organization: ${contact.organization || "N/A"}`;
+            contactInfo += `\n- Contact Name: ${contact.name}`;
+            contactInfo += `\n- Contact Role: ${contact.role || "N/A"}`;
+            contactInfo += `\n- Contact Organization: ${contact.organization || "N/A"}`;
+            contactInfo += `\n- Email: ${contact.email || "Not available"}`;
           }
         }
 
-        investorContext = `**Investor Details:**
+        entityContext = `**Investor Details:**
 - Name: ${investor.name}
 - Organization: ${investor.organization || "N/A"}
 - Current Stage: ${investor.stage}
 - Notes: ${investor.notes || "None"}
-- Commitment: ${investor.commitment_amount ? `$${investor.commitment_amount.toLocaleString()}` : "None yet"}${investorContext}
-- Email: ${contactEmail || "Not available"}`;
+- Commitment: ${investor.commitment_amount ? `$${investor.commitment_amount.toLocaleString()}` : "None yet"}${contactInfo}`;
+        emailPurpose = "investor outreach / fundraising";
+      }
+    }
+
+    // Fetch company details (Target Universe)
+    if (companyId) {
+      const { data: company } = await supabase
+        .from("companies")
+        .select("name, industry, geography, website, description, ownership_type, revenue_band, ebitda_band, employee_count, company_status, company_source, stage, notes, contact_id")
+        .eq("id", companyId)
+        .single();
+
+      if (company) {
+        let contactInfo = "";
+        if (company.contact_id) {
+          const { data: contact } = await supabase
+            .from("contacts")
+            .select("email, name, role, organization")
+            .eq("id", company.contact_id)
+            .single();
+          if (contact) {
+            contactInfo += `\n- Primary Contact: ${contact.name}`;
+            contactInfo += `\n- Contact Role: ${contact.role || "N/A"}`;
+            contactInfo += `\n- Contact Email: ${contact.email || "Not available"}`;
+          }
+        }
+
+        entityContext = `**Target Company Details:**
+- Company Name: ${company.name}
+- Industry: ${company.industry || "N/A"}
+- Geography: ${company.geography || "N/A"}
+- Website: ${company.website || "N/A"}
+- Description: ${company.description || "N/A"}
+- Ownership: ${company.ownership_type || "N/A"}
+- Revenue Band: ${company.revenue_band || "N/A"}
+- EBITDA Band: ${company.ebitda_band || "N/A"}
+- Employee Count: ${company.employee_count || "N/A"}
+- Status: ${company.company_status || "N/A"}
+- Source: ${company.company_source || "N/A"}
+- Stage: ${company.stage}
+- Notes: ${company.notes || "None"}${contactInfo}`;
+        emailPurpose = "acquisition outreach / deal sourcing";
+      }
+    }
+
+    // Fetch deal details (Deal Pipeline)
+    if (dealId) {
+      const { data: deal } = await supabase
+        .from("deals")
+        .select("name, stage, source, probability, expected_close_date, deal_revenue, deal_ebitda, notes, next_step, company_id, broker_id")
+        .eq("id", dealId)
+        .single();
+
+      if (deal) {
+        let companyInfo = "";
+        if (deal.company_id) {
+          const { data: linkedCompany } = await supabase
+            .from("companies")
+            .select("name, industry, geography, website, description, contact_id")
+            .eq("id", deal.company_id)
+            .single();
+          if (linkedCompany) {
+            companyInfo += `\n- Linked Company: ${linkedCompany.name}`;
+            companyInfo += `\n- Industry: ${linkedCompany.industry || "N/A"}`;
+            companyInfo += `\n- Geography: ${linkedCompany.geography || "N/A"}`;
+            companyInfo += `\n- Website: ${linkedCompany.website || "N/A"}`;
+            if (linkedCompany.contact_id) {
+              const { data: contact } = await supabase
+                .from("contacts")
+                .select("email, name, role")
+                .eq("id", linkedCompany.contact_id)
+                .single();
+              if (contact) {
+                companyInfo += `\n- Company Contact: ${contact.name} (${contact.role || "N/A"})`;
+                companyInfo += `\n- Contact Email: ${contact.email || "Not available"}`;
+              }
+            }
+          }
+        }
+
+        let brokerInfo = "";
+        if (deal.broker_id) {
+          const { data: broker } = await supabase
+            .from("brokers")
+            .select("firm, contact_name, email")
+            .eq("id", deal.broker_id)
+            .single();
+          if (broker) {
+            brokerInfo = `\n- Broker: ${broker.contact_name} at ${broker.firm}`;
+            brokerInfo += `\n- Broker Email: ${broker.email || "Not available"}`;
+          }
+        }
+
+        entityContext = `**Deal Pipeline Details:**
+- Deal Name: ${deal.name}
+- Stage: ${deal.stage}
+- Source: ${deal.source || "N/A"}
+- Probability: ${deal.probability != null ? `${deal.probability}%` : "N/A"}
+- Expected Close: ${deal.expected_close_date || "N/A"}
+- Revenue: ${deal.deal_revenue ? `$${Number(deal.deal_revenue).toLocaleString()}` : "N/A"}
+- EBITDA: ${deal.deal_ebitda ? `$${Number(deal.deal_ebitda).toLocaleString()}` : "N/A"}
+- Next Step: ${deal.next_step || "N/A"}
+- Notes: ${deal.notes || "None"}${companyInfo}${brokerInfo}`;
+        emailPurpose = "deal-related outreach / acquisition communication";
       }
     }
 
@@ -131,11 +236,11 @@ Deno.serve(async (req) => {
       ? `**User's Saved Email Templates (learn the writing style, tone, and patterns from these):**\n${allTemplates.map((t, i) => `Template ${i + 1} - "${t.name}" (${t.category}):\nSubject: ${t.subject}\nBody: ${t.body}`).join("\n\n")}`
       : "";
 
-    const systemPrompt = `You are an AI email composer for DealScope, a Search Fund CRM. Generate a professional, personalized email for investor outreach.
+    const systemPrompt = `You are an AI email composer for DealScope, a Search Fund CRM. Generate a professional, personalized email for ${emailPurpose}.
 
 ${profileContext}
 
-${investorContext}
+${entityContext}
 
 ${templateContext}
 
@@ -148,18 +253,20 @@ ${customInstructions ? `**User Instructions:** ${customInstructions}` : ""}
 IMPORTANT: You MUST respond with a valid JSON object (no markdown code fences) with these fields:
 {
   "subject": "Email subject line",
-  "body": "Full email body in PLAIN TEXT only. No HTML tags like <p>, <br>, <strong>, <em>, etc. Use line breaks for paragraphs. Address the investor by their first name naturally.",
+  "body": "Full email body in PLAIN TEXT only. No HTML tags like <p>, <br>, <strong>, <em>, etc. Use line breaks for paragraphs. Address the recipient by their first name naturally.",
   "suggested_documents": ["document_id_1", "document_id_2"],
   "reasoning": "Brief explanation of why you chose this approach and these documents"
 }
 
 CRITICAL STYLE INSTRUCTIONS:
 - The body must be plain text only — NO HTML tags whatsoever.
-- Use the investor's actual name directly in the email greeting and body. Do not use placeholders like {{name}}.
+- Use the recipient's actual name directly in the email greeting and body. Do not use placeholders like {{name}}.
 - Study the user's saved templates above carefully. Match their writing tone, vocabulary, greeting style, sign-off style, and overall communication approach.
 - If the user tends to be formal, be formal. If casual, be casual. Mirror their voice.
 - When a base template is provided, stick closely to its structure and content. Only personalize the name and relevant details. Do NOT invent or add new information like specific dollar amounts, metrics, or claims that are not in the template. Keep the template's message intact.
 - Do NOT pull fundraising goal amounts or other profile data into the email unless the template or custom instructions explicitly mention them.
+- For deal sourcing / acquisition outreach: Focus on expressing interest in the company, requesting an introductory call, and demonstrating relevant background. Be respectful and professional.
+- For deal pipeline outreach: Tailor the email to the current deal stage — early stages should be exploratory, later stages more direct about next steps.
 
 For suggested_documents, analyze the email content and suggest relevant documents from the available documents list. For example:
 - If discussing a deal, suggest the relevant pitch deck or CIM
@@ -215,7 +322,7 @@ Only include document IDs from the available documents list above. If no documen
     } catch {
       // If JSON parsing fails, return the raw content
       parsed = {
-        subject: "Investor Outreach",
+        subject: "Outreach",
         body: content,
         suggested_documents: [],
         reasoning: "AI returned non-structured response",

@@ -11,7 +11,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useCompanies, useCreateCompany, useUpdateCompany, useDeleteCompany } from '@/hooks/useCompanies';
 import { useCreateDeal } from '@/hooks/useDeals';
 import { useSavedFilters, useCreateSavedFilter, useDeleteSavedFilter } from '@/hooks/useICMemo';
-import { Plus, Search, Filter, Download, Tag, Bookmark, Loader2, Building2, Trash2, X, Upload, ArrowRight } from 'lucide-react';
+import { Plus, Search, Filter, Download, Tag, Bookmark, Loader2, Building2, Trash2, X, Upload, ArrowRight, Mail } from 'lucide-react';
+import { SmartComposeModal } from '@/components/email/SmartComposeModal';
 import { ImportModal } from '@/components/import/ImportModal';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -42,6 +43,7 @@ export default function TargetUniverse() {
   const [bulkTag, setBulkTag] = useState('');
   const [showBulkTag, setShowBulkTag] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [outreachCompany, setOutreachCompany] = useState<{ id: string; name: string } | null>(null);
 
   const handleImportCompanies = async (records: any[]) => {
     for (const record of records) {
@@ -303,6 +305,15 @@ export default function TargetUniverse() {
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7"
+                        title="AI Outreach"
+                        onClick={() => setOutreachCompany({ id: c.id, name: c.name })}
+                      >
+                        <Mail className="w-3.5 h-3.5 text-primary" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
                         title="Move to Deal Pipeline"
                         onClick={() => {
                           createDeal.mutate({
@@ -429,6 +440,14 @@ export default function TargetUniverse() {
         onOpenChange={setShowImport}
         entityType="companies"
         onImport={handleImportCompanies}
+      />
+
+      {/* AI Outreach Modal */}
+      <SmartComposeModal
+        open={!!outreachCompany}
+        onOpenChange={(open) => !open && setOutreachCompany(null)}
+        companyId={outreachCompany?.id}
+        companyName={outreachCompany?.name}
       />
     </div>
   );

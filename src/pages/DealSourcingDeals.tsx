@@ -13,7 +13,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDeals, useCreateDeal, useUpdateDealStage, useDeleteDeal, DEAL_STAGES, DEAL_STAGE_LABELS } from '@/hooks/useDeals';
 import { useCompanies } from '@/hooks/useCompanies';
 import { useBrokers } from '@/hooks/useBrokers';
-import { Plus, Search, Loader2, LayoutGrid, List, Trash2, ArrowRight, Upload } from 'lucide-react';
+import { Plus, Search, Loader2, LayoutGrid, List, Trash2, ArrowRight, Upload, Mail } from 'lucide-react';
+import { SmartComposeModal } from '@/components/email/SmartComposeModal';
 import { ImportModal } from '@/components/import/ImportModal';
 import { useCreateCompany } from '@/hooks/useCompanies';
 import { cn } from '@/lib/utils';
@@ -47,6 +48,7 @@ export default function DealSourcingDeals() {
   const [showImport, setShowImport] = useState(false);
   const createCompany = useCreateCompany();
   const [form, setForm] = useState({ name: '', company_id: '', broker_id: '', source: 'proprietary', stage: 'screening' });
+  const [outreachDeal, setOutreachDeal] = useState<{ id: string; name: string } | null>(null);
 
   const handleImportCompanies = async (records: any[]) => {
     for (const record of records) {
@@ -155,20 +157,31 @@ export default function DealSourcingDeals() {
                   <p className="text-[11px] text-muted-foreground/50 text-center py-6">No deals</p>
                 ) : (
                   stageDeals.map(deal => (
-                    <a key={deal.id} href={`/deals/${deal.id}`} className="block">
-                      <Card className="goldman-card cursor-pointer p-3">
+                    <Card key={deal.id} className="goldman-card p-3">
+                      <a href={`/deals/${deal.id}`} className="block">
                         <p className="text-sm font-medium text-foreground truncate">{deal.name}</p>
                         {deal.companies?.name && (
                           <p className="text-xs text-muted-foreground truncate mt-0.5">{deal.companies.name}</p>
                         )}
-                        <div className="flex items-center justify-between mt-2">
-                          <Badge variant="outline" className="text-[10px] capitalize">{deal.source || 'proprietary'}</Badge>
+                      </a>
+                      <div className="flex items-center justify-between mt-2">
+                        <Badge variant="outline" className="text-[10px] capitalize">{deal.source || 'proprietary'}</Badge>
+                        <div className="flex items-center gap-1">
                           {deal.probability != null && (
                             <span className="text-[10px] text-muted-foreground">{deal.probability}%</span>
                           )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            title="AI Outreach"
+                            onClick={(e) => { e.preventDefault(); setOutreachDeal({ id: deal.id, name: deal.name }); }}
+                          >
+                            <Mail className="w-3 h-3 text-primary" />
+                          </Button>
                         </div>
-                      </Card>
-                    </a>
+                      </div>
+                    </Card>
                   ))
                 )}
               </div>
@@ -215,9 +228,14 @@ export default function DealSourcingDeals() {
                       {deal.expected_close_date ? format(new Date(deal.expected_close_date), 'MMM d, yyyy') : '—'}
                     </TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100" onClick={() => deleteDeal.mutate(deal.id)}>
-                        <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                      </Button>
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100">
+                        <Button variant="ghost" size="icon" className="h-7 w-7" title="AI Outreach" onClick={() => setOutreachDeal({ id: deal.id, name: deal.name })}>
+                          <Mail className="w-3.5 h-3.5 text-primary" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteDeal.mutate(deal.id)}>
+                          <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -289,6 +307,14 @@ export default function DealSourcingDeals() {
         onOpenChange={setShowImport}
         entityType="companies"
         onImport={handleImportCompanies}
+      />
+
+      {/* AI Outreach Modal */}
+      <SmartComposeModal
+        open={!!outreachDeal}
+        onOpenChange={(open) => !open && setOutreachDeal(null)}
+        dealId={outreachDeal?.id}
+        dealName={outreachDeal?.name}
       />
     </div>
   );

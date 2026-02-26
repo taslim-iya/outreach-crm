@@ -48,6 +48,10 @@ interface SmartComposeModalProps {
   investorId?: string;
   investorName?: string;
   investorEmail?: string;
+  companyId?: string;
+  companyName?: string;
+  dealId?: string;
+  dealName?: string;
   preAttachedDocIds?: string[];
   onEmailSent?: () => void;
 }
@@ -58,6 +62,10 @@ export function SmartComposeModal({
   investorId,
   investorName,
   investorEmail,
+  companyId,
+  companyName,
+  dealId,
+  dealName,
   preAttachedDocIds,
   onEmailSent,
 }: SmartComposeModalProps) {
@@ -122,12 +130,16 @@ export function SmartComposeModal({
     }
   };
 
+  const recipientLabel = investorName || companyName || dealName || 'Recipient';
+
   const handleGenerateWithAI = async () => {
     setIsGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke('generate-email', {
         body: {
-          investorId,
+          investorId: investorId || undefined,
+          companyId: companyId || undefined,
+          dealId: dealId || undefined,
           templateId: selectedTemplateId || undefined,
           customInstructions: customInstructions || undefined,
         },
@@ -212,9 +224,9 @@ export function SmartComposeModal({
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-primary" />
             Smart Compose
-            {investorName && (
+            {recipientLabel !== 'Recipient' && (
               <Badge variant="secondary" className="ml-2 font-normal">
-                {investorName}
+                {recipientLabel}
               </Badge>
             )}
           </DialogTitle>
