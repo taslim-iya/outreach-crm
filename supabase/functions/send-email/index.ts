@@ -278,7 +278,20 @@ async function sendViaResend(
   });
 
   const data = await response.json();
-  if (!response.ok) throw new Error(data.message || "Resend failed");
+  if (!response.ok) {
+    const message = typeof data?.message === "string" ? data.message : "Resend failed";
+    const isResendSetupIssue =
+      message.includes("verify a domain") ||
+      message.includes("only send testing emails");
+
+    if (isResendSetupIssue) {
+      throw new Error(
+        `EMAIL_PROVIDER_SETUP_REQUIRED:${message} Connect Google/Microsoft in Settings → Integrations, or verify a domain in Resend and use a matching from address.`
+      );
+    }
+
+    throw new Error(message);
+  }
   return data;
 }
 
@@ -468,9 +481,18 @@ Deno.serve(async (req) => {
     );
   } catch (error) {
     console.error("Send email error:", error);
+    const message = error instanceof Error ? error.message : "Internal server error";
+    const isSetupError = message.startsWith("EMAIL_PROVIDER_SETUP_REQUIRED:");
+    const cleanMessage = isSetupError
+      ? message.replace("EMAIL_PROVIDER_SETUP_REQUIRED:", "")
+      : message;
+
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Internal server error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ error: cleanMessage }),
+      {
+        status: isSetupError ? 400 : 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
     );
   }
 });
