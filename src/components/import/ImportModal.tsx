@@ -5,23 +5,45 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
-import { Upload, FileText, Loader2, CheckCircle2, AlertCircle, X } from 'lucide-react';
+import { Upload, FileText, Loader2, CheckCircle2, AlertCircle, X, Building2, Users, Briefcase } from 'lucide-react';
 import { toast } from 'sonner';
 
-type EntityType = 'companies' | 'contacts';
+type EntityType = 'companies' | 'contacts' | 'deals' | 'auto';
 
 interface ImportModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   entityType: EntityType;
-  onImport: (records: any[]) => Promise<void>;
+  onImport: (records: any[], detectedType?: string) => Promise<void>;
 }
 
 type Step = 'upload' | 'parsing' | 'preview' | 'importing' | 'done';
 
+const ENTITY_META: Record<string, { label: string; icon: typeof Building2; columns: string[]; columnLabels: Record<string, string> }> = {
+  companies: {
+    label: 'Companies',
+    icon: Building2,
+    columns: ['name', 'industry', 'geography', 'revenue_band', 'company_status'],
+    columnLabels: { name: 'Name', industry: 'Industry', geography: 'Geography', revenue_band: 'Revenue', company_status: 'Status' },
+  },
+  contacts: {
+    label: 'Contacts',
+    icon: Users,
+    columns: ['name', 'email', 'organization', 'role', 'contact_type'],
+    columnLabels: { name: 'Name', email: 'Email', organization: 'Organization', role: 'Role', contact_type: 'Type' },
+  },
+  deals: {
+    label: 'Deals',
+    icon: Briefcase,
+    columns: ['name', 'source', 'stage', 'notes'],
+    columnLabels: { name: 'Name', source: 'Source', stage: 'Stage', notes: 'Notes' },
+  },
+};
+
 export function ImportModal({ open, onOpenChange, entityType, onImport }: ImportModalProps) {
   const [step, setStep] = useState<Step>('upload');
   const [records, setRecords] = useState<any[]>([]);
+  const [detectedType, setDetectedType] = useState<string>(entityType === 'auto' ? 'companies' : entityType);
   const [selectedRecords, setSelectedRecords] = useState<Set<number>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
@@ -31,10 +53,11 @@ export function ImportModal({ open, onOpenChange, entityType, onImport }: Import
   const reset = useCallback(() => {
     setStep('upload');
     setRecords([]);
+    setDetectedType(entityType === 'auto' ? 'companies' : entityType);
     setSelectedRecords(new Set());
     setError(null);
     setProgress(0);
-  }, []);
+  }, [entityType]);
 
   const handleClose = (val: boolean) => {
     if (!val) reset();
@@ -48,7 +71,7 @@ export function ImportModal({ open, onOpenChange, entityType, onImport }: Import
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('entity_type', entityType);
+      formData.append('entity_type', entityType === 'auto' ? 'auto' : entityType);
 
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/parse-import`;
       const resp = await fetch(url, {
@@ -69,6 +92,8 @@ export function ImportModal({ open, onOpenChange, entityType, onImport }: Import
         throw new Error('No records found in file. Check the file format and try again.');
       }
 
+      const type = data.entity_type || entityType;
+      setDetectedType(type === 'auto' ? 'companies' : type);
       setRecords(data.records);
       setSelectedRecords(new Set(data.records.map((_: any, i: number) => i)));
       setStep('preview');
@@ -97,15 +122,14 @@ export function ImportModal({ open, onOpenChange, entityType, onImport }: Import
     setProgress(0);
 
     try {
-      // Batch in chunks of 10
       const chunkSize = 10;
       for (let i = 0; i < toImport.length; i += chunkSize) {
         const chunk = toImport.slice(i, i + chunkSize);
-        await onImport(chunk);
+        await onImport(chunk, detectedType);
         setProgress(Math.round(((i + chunk.length) / toImport.length) * 100));
       }
       setStep('done');
-      toast.success(`Successfully imported ${toImport.length} ${entityType}`);
+      toast.success(`Successfully imported ${toImport.length} ${ENTITY_META[detectedType]?.label.toLowerCase() || 'records'}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Import failed');
       setStep('preview');
@@ -126,16 +150,8 @@ export function ImportModal({ open, onOpenChange, entityType, onImport }: Import
     }
   };
 
-  const columns = entityType === 'companies'
-    ? ['name', 'industry', 'geography', 'revenue_band', 'company_status']
-    : ['name', 'email', 'organization', 'role', 'contact_type'];
-
-  const columnLabels: Record<string, string> = {
-    name: 'Name', industry: 'Industry', geography: 'Geography',
-    revenue_band: 'Revenue', company_status: 'Status',
-    email: 'Email', organization: 'Organization', role: 'Role',
-    contact_type: 'Type',
-  };
+  const meta = ENTITY_META[detectedType] || ENTITY_META.companies;
+  const DetectedIcon = meta.icon;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -143,7 +159,7 @@ export function ImportModal({ open, onOpenChange, entityType, onImport }: Import
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Upload className="w-5 h-5" />
-            Import {entityType === 'companies' ? 'Companies' : 'Contacts'}
+            Import {entityType === 'auto' ? 'Data' : meta.label}
           </DialogTitle>
         </DialogHeader>
 
@@ -186,7 +202,7 @@ export function ImportModal({ open, onOpenChange, entityType, onImport }: Import
               </div>
             )}
             <p className="text-xs text-muted-foreground mt-4">
-              AI will automatically detect columns and map them to the correct fields. For best results, use a CSV with clear column headers.
+              AI will automatically detect the data type (companies, contacts, or deals) and map columns to the correct fields.
             </p>
           </div>
         )}
@@ -196,7 +212,7 @@ export function ImportModal({ open, onOpenChange, entityType, onImport }: Import
           <div className="flex-1 flex flex-col items-center justify-center py-16">
             <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
             <p className="text-base font-medium text-foreground">AI is reading your file...</p>
-            <p className="text-sm text-muted-foreground mt-1">Extracting and mapping fields automatically</p>
+            <p className="text-sm text-muted-foreground mt-1">Detecting data type and mapping fields automatically</p>
           </div>
         )}
 
@@ -204,10 +220,16 @@ export function ImportModal({ open, onOpenChange, entityType, onImport }: Import
         {step === 'preview' && (
           <div className="flex-1 flex flex-col min-h-0">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-sm text-muted-foreground">
-                Found <span className="font-medium text-foreground">{records.length}</span> records · 
-                <span className="font-medium text-foreground"> {selectedRecords.size}</span> selected for import
-              </p>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="flex items-center gap-1.5 px-2.5 py-1">
+                  <DetectedIcon className="w-3.5 h-3.5" />
+                  {meta.label}
+                </Badge>
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">{records.length}</span> records found · 
+                  <span className="font-medium text-foreground"> {selectedRecords.size}</span> selected
+                </p>
+              </div>
               <Button variant="ghost" size="sm" onClick={toggleAll}>
                 {selectedRecords.size === records.length ? 'Deselect All' : 'Select All'}
               </Button>
@@ -230,8 +252,8 @@ export function ImportModal({ open, onOpenChange, entityType, onImport }: Import
                         className="rounded"
                       />
                     </TableHead>
-                    {columns.map(col => (
-                      <TableHead key={col}>{columnLabels[col] || col}</TableHead>
+                    {meta.columns.map(col => (
+                      <TableHead key={col}>{meta.columnLabels[col] || col}</TableHead>
                     ))}
                   </TableRow>
                 </TableHeader>
@@ -246,7 +268,7 @@ export function ImportModal({ open, onOpenChange, entityType, onImport }: Import
                           className="rounded"
                         />
                       </TableCell>
-                      {columns.map(col => (
+                      {meta.columns.map(col => (
                         <TableCell key={col} className="text-sm max-w-[200px] truncate">
                           {Array.isArray(record[col]) ? record[col].join(', ') : (record[col] || '—')}
                         </TableCell>
@@ -277,7 +299,7 @@ export function ImportModal({ open, onOpenChange, entityType, onImport }: Import
             <CheckCircle2 className="w-12 h-12 text-primary mb-4" />
             <p className="text-base font-medium text-foreground">Import complete!</p>
             <p className="text-sm text-muted-foreground mt-1">
-              {selectedRecords.size} {entityType} imported successfully
+              {selectedRecords.size} {meta.label.toLowerCase()} imported successfully
             </p>
           </div>
         )}
@@ -290,7 +312,7 @@ export function ImportModal({ open, onOpenChange, entityType, onImport }: Import
             <>
               <Button variant="outline" onClick={reset}>Back</Button>
               <Button onClick={handleImportConfirm} disabled={selectedRecords.size === 0}>
-                Import {selectedRecords.size} {entityType === 'companies' ? 'Companies' : 'Contacts'}
+                Import {selectedRecords.size} {meta.label}
               </Button>
             </>
           )}
