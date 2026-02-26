@@ -24,6 +24,9 @@ import {
   PieChart,
   CheckSquare,
   Shield,
+  Building2,
+  Search,
+  Handshake,
 } from 'lucide-react';
 import { useUnreadEmailCount } from '@/hooks/useEmails';
 
@@ -33,7 +36,7 @@ interface NavItem {
   icon: typeof LayoutDashboard;
 }
 
-const navigation: NavItem[] = [
+const fundraisingNav: NavItem[] = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Inbox', href: '/inbox', icon: Inbox },
   { name: 'Contacts', href: '/contacts', icon: Users },
@@ -44,6 +47,20 @@ const navigation: NavItem[] = [
   { name: 'Calendar', href: '/calendar', icon: Calendar },
   { name: 'Tasks', href: '/tasks', icon: CheckSquare },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
+];
+
+const dealSourcingNav: NavItem[] = [
+  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { name: 'Inbox', href: '/inbox', icon: Inbox },
+  { name: 'Deal Pipeline', href: '/deal-sourcing', icon: TrendingUp },
+  { name: 'Target Universe', href: '/target-universe', icon: Search },
+  { name: 'Brokers', href: '/brokers', icon: Handshake },
+  { name: 'Contacts', href: '/contacts', icon: Users },
+  { name: 'Outreach', href: '/outreach', icon: Mail },
+  { name: 'Documents', href: '/documents', icon: FileText },
+  { name: 'Calendar', href: '/calendar', icon: Calendar },
+  { name: 'Tasks', href: '/tasks', icon: CheckSquare },
+  { name: 'Analytics', href: '/deal-sourcing-analytics', icon: BarChart3 },
 ];
 
 const bottomNav = [
@@ -110,6 +127,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { user, signOut } = useAuth();
   const { data: unreadCount } = useUnreadEmailCount();
   const { isDemoMode, exitDemoMode } = useDemoMode();
+  const { mode } = useAppMode();
 
   const handleSignOut = async () => {
     if (isDemoMode) {
@@ -149,7 +167,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       </div>
 
       <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
-        {navigation.map((item) => {
+        {(mode === 'deal-sourcing' ? dealSourcingNav : fundraisingNav).map((item) => {
           const isActive = location.pathname === item.href;
           return (
             <Link

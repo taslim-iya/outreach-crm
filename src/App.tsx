@@ -22,6 +22,12 @@ import Assistant from "./pages/Assistant";
 import Settings from "./pages/Settings";
 import Inbox from "./pages/Inbox";
 import Tasks from "./pages/Tasks";
+import Deals from "./pages/Deals";
+import DealProfile from "./pages/DealProfile";
+import DealSourcingDeals from "./pages/DealSourcingDeals";
+import DealSourcingAnalytics from "./pages/DealSourcingAnalytics";
+import BrokersPage from "./pages/BrokersPage";
+import TargetUniverse from "./pages/TargetUniverse";
 
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -58,7 +64,13 @@ const App = () => (
                           <Route path="/calendar" element={<CalendarPage />} />
                           <Route path="/analytics" element={<Analytics />} />
                           <Route path="/tasks" element={<Tasks />} />
-                          
+                          <Route path="/deals" element={<Deals />} />
+                          <Route path="/deals/:id" element={<DealProfile />} />
+                          <Route path="/deal-sourcing" element={<DealSourcingDeals />} />
+                          <Route path="/deal-sourcing-analytics" element={<DealSourcingAnalytics />} />
+                          <Route path="/brokers" element={<BrokersPage />} />
+                          <Route path="/target-universe" element={<TargetUniverse />} />
+
                           <Route path="/notes" element={<NotesPage />} />
                           <Route path="/assistant" element={<Assistant />} />
                           <Route path="/settings" element={<Settings />} />
