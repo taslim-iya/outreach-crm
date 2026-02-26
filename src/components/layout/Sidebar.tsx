@@ -23,7 +23,6 @@ import {
   PieChart,
   CheckSquare,
   Shield,
-  CalendarClock,
 } from 'lucide-react';
 import { useUnreadEmailCount } from '@/hooks/useEmails';
 
@@ -43,7 +42,6 @@ const navigation: NavItem[] = [
   { name: 'Documents', href: '/documents', icon: FileText },
   { name: 'Calendar', href: '/calendar', icon: Calendar },
   { name: 'Tasks', href: '/tasks', icon: CheckSquare },
-  { name: 'Scheduled', href: '/scheduled', icon: CalendarClock },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
 ];
 

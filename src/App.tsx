@@ -22,7 +22,7 @@ import Assistant from "./pages/Assistant";
 import Settings from "./pages/Settings";
 import Inbox from "./pages/Inbox";
 import Tasks from "./pages/Tasks";
-import Scheduled from "./pages/Scheduled";
+
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import AdminAnalytics from "./pages/AdminAnalytics";
@@ -58,7 +58,7 @@ const App = () => (
                           <Route path="/calendar" element={<CalendarPage />} />
                           <Route path="/analytics" element={<Analytics />} />
                           <Route path="/tasks" element={<Tasks />} />
-                          <Route path="/scheduled" element={<Scheduled />} />
+                          
                           <Route path="/notes" element={<NotesPage />} />
                           <Route path="/assistant" element={<Assistant />} />
                           <Route path="/settings" element={<Settings />} />
