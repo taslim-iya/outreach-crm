@@ -4,6 +4,7 @@ import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
 import { useInvestorDeals } from '@/hooks/useInvestorDeals';
 import { useCompanies } from '@/hooks/useCompanies';
 import { Loader2, TrendingUp, Users, Target, BarChart3 } from 'lucide-react';
+import AdminAnalytics from './AdminAnalytics';
 
 export default function Analytics() {
   const { data: metrics, isLoading: metricsLoading } = useDashboardMetrics();
@@ -190,6 +191,11 @@ export default function Analytics() {
             )}
           </CardContent>
         </Card>
+      </div>
+
+      {/* Admin Analytics Section */}
+      <div className="mt-6">
+        <AdminAnalytics embedded />
       </div>
     </div>
   );
