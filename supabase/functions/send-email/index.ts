@@ -125,7 +125,8 @@ async function sendViaGmail(
   subject: string,
   htmlBody: string,
   replyTo: string,
-  attachments: Attachment[]
+  attachments: Attachment[],
+  bccList: string[] = []
 ): Promise<{ id: string }> {
   const boundary = `boundary_${crypto.randomUUID()}`;
   const toHeader = toList.join(", ");
@@ -135,6 +136,7 @@ async function sendViaGmail(
     rawMessage += `MIME-Version: 1.0\r\n`;
     rawMessage += `From: ${fromName} <${from}>\r\n`;
     rawMessage += `To: ${toHeader}\r\n`;
+    if (bccList.length > 0) rawMessage += `Bcc: ${bccList.join(", ")}\r\n`;
     rawMessage += `Subject: ${subject}\r\n`;
     rawMessage += `Reply-To: ${replyTo}\r\n`;
     rawMessage += `Content-Type: multipart/mixed; boundary="${boundary}"\r\n\r\n`;
@@ -153,6 +155,7 @@ async function sendViaGmail(
     rawMessage += `MIME-Version: 1.0\r\n`;
     rawMessage += `From: ${fromName} <${from}>\r\n`;
     rawMessage += `To: ${toHeader}\r\n`;
+    if (bccList.length > 0) rawMessage += `Bcc: ${bccList.join(", ")}\r\n`;
     rawMessage += `Subject: ${subject}\r\n`;
     rawMessage += `Reply-To: ${replyTo}\r\n`;
     rawMessage += `Content-Type: text/html; charset="UTF-8"\r\n\r\n`;
@@ -188,9 +191,14 @@ async function sendViaMicrosoft(
   subject: string,
   htmlBody: string,
   replyTo: string,
-  attachments: Attachment[]
+  attachments: Attachment[],
+  bccList: string[] = []
 ): Promise<void> {
   const toRecipients = toList.map((email) => ({
+    emailAddress: { address: email },
+  }));
+
+  const bccRecipients = bccList.map((email) => ({
     emailAddress: { address: email },
   }));
 
@@ -199,6 +207,7 @@ async function sendViaMicrosoft(
       subject,
       body: { contentType: "HTML", content: htmlBody },
       toRecipients,
+      bccRecipients,
       from: { emailAddress: { address: from, name: fromName } },
       replyTo: [{ emailAddress: { address: replyTo } }],
     },
@@ -237,7 +246,8 @@ async function sendViaResend(
   subject: string,
   htmlBody: string,
   replyTo: string,
-  attachments: Attachment[]
+  attachments: Attachment[],
+  bccList: string[] = []
 ): Promise<{ id: string }> {
   const resendApiKey = Deno.env.get("RESEND_API_KEY");
   if (!resendApiKey) throw new Error("RESEND_API_KEY not configured");
@@ -245,6 +255,7 @@ async function sendViaResend(
   const resendPayload: Record<string, unknown> = {
     from: `${fromName} <taslim@mungerlongview.com>`,
     to: toList,
+    bcc: bccList,
     subject,
     html: htmlBody,
     reply_to: replyTo,
@@ -348,9 +359,12 @@ Deno.serve(async (req) => {
       .eq("user_id", userId)
       .maybeSingle();
 
-    const senderName = from_name || profile?.display_name || profile?.company_name || "DealScope";
-    const toList = Array.isArray(to) ? to : [to];
-    const replyTo = reply_to || userEmail;
+  const senderName = from_name || profile?.display_name || profile?.company_name || "DealScope";
+  const toList = Array.isArray(to) ? to : [to];
+  const replyTo = reply_to || userEmail;
+
+  // BCC the sender so outgoing emails appear in their inbox
+  const bccList = [userEmail];
 
     // Build HTML with tracking pixel
     // We'll generate a tracking ID and embed the pixel
@@ -398,7 +412,7 @@ Deno.serve(async (req) => {
       if (!accessToken) throw new Error("Failed to get valid Google access token");
 
       senderEmail = googleIntegration.email || userEmail;
-      const result = await sendViaGmail(accessToken, senderEmail, senderName, toList, subject, html, replyTo, attachments);
+      const result = await sendViaGmail(accessToken, senderEmail, senderName, toList, subject, html, replyTo, attachments, bccList);
       externalId = result.id;
       externalProvider = "google";
       console.log("Email sent via Gmail:", externalId);
@@ -408,12 +422,12 @@ Deno.serve(async (req) => {
       if (!accessToken) throw new Error("Failed to get valid Microsoft access token");
 
       senderEmail = microsoftIntegration.email || userEmail;
-      await sendViaMicrosoft(accessToken, senderEmail, senderName, toList, subject, html, replyTo, attachments);
+      await sendViaMicrosoft(accessToken, senderEmail, senderName, toList, subject, html, replyTo, attachments, bccList);
       externalProvider = "microsoft";
       console.log("Email sent via Microsoft Graph");
     } else {
       // --- Resend fallback ---
-      const result = await sendViaResend(senderName, toList, subject, html, replyTo, attachments);
+      const result = await sendViaResend(senderName, toList, subject, html, replyTo, attachments, bccList);
       externalId = result.id;
       externalProvider = "resend";
       console.log("Email sent via Resend:", externalId);
