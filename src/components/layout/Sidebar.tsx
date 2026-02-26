@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useDemoMode } from '@/hooks/useDemoMode';
+import { useAppMode } from '@/hooks/useAppMode';
 import { BrandLogo } from '@/components/brand/BrandLogo';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -73,6 +74,36 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
   );
 }
 
+function ModeToggle() {
+  const { mode, setMode } = useAppMode();
+  return (
+    <div className="flex rounded-lg bg-sidebar-accent/30 p-0.5">
+      <button
+        onClick={() => setMode('fundraising')}
+        className={cn(
+          'flex-1 text-xs font-medium py-1.5 px-2 rounded-md transition-all duration-200',
+          mode === 'fundraising'
+            ? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-sm'
+            : 'text-sidebar-foreground/60 hover:text-sidebar-foreground'
+        )}
+      >
+        Fundraising
+      </button>
+      <button
+        onClick={() => setMode('deal-sourcing')}
+        className={cn(
+          'flex-1 text-xs font-medium py-1.5 px-2 rounded-md transition-all duration-200',
+          mode === 'deal-sourcing'
+            ? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-sm'
+            : 'text-sidebar-foreground/60 hover:text-sidebar-foreground'
+        )}
+      >
+        Deal Sourcing
+      </button>
+    </div>
+  );
+}
+
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -112,8 +143,12 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           iconClassName="bg-white/10 backdrop-blur-sm border border-white/10"
         />
       </div>
+      {/* Mode toggle */}
+      <div className="px-3 pt-4 pb-2">
+        <ModeToggle />
+      </div>
 
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
         {navigation.map((item) => {
           const isActive = location.pathname === item.href;
           return (
