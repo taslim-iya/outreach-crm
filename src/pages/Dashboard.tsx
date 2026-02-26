@@ -5,6 +5,7 @@ import { TaskList } from '@/components/dashboard/TaskList';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
 import { useAppMode } from '@/hooks/useAppMode';
+import { Link } from 'react-router-dom';
 import {
   Users,
   Calendar,
@@ -14,6 +15,8 @@ import {
   Building2,
   FileSignature,
   Target,
+  MessageCircle,
+  Mail,
 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -89,6 +92,21 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <TaskList />
+      </div>
+
+      {/* Support contact */}
+      <div className="mt-6 flex items-center gap-4 text-sm text-muted-foreground border-t pt-4">
+        <div className="flex items-center gap-2">
+          <Mail className="w-4 h-4" />
+          <a href="mailto:support@acquirecrm.mungerlongview.com" className="hover:text-foreground transition-colors">
+            support@acquirecrm.mungerlongview.com
+          </a>
+        </div>
+        <span className="text-border">|</span>
+        <Link to="/support" className="flex items-center gap-1.5 hover:text-foreground transition-colors">
+          <MessageCircle className="w-4 h-4" />
+          Chat with us
+        </Link>
       </div>
     </div>
   );
