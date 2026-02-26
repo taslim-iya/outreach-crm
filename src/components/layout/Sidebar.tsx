@@ -2,6 +2,7 @@ import { useState, createContext, useContext, ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
+import { useDemoMode } from '@/hooks/useDemoMode';
 import { BrandLogo } from '@/components/brand/BrandLogo';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,7 @@ import {
   PieChart,
   CheckSquare,
   Shield,
+  CalendarClock,
 } from 'lucide-react';
 import { useUnreadEmailCount } from '@/hooks/useEmails';
 
@@ -41,6 +43,7 @@ const navigation: NavItem[] = [
   { name: 'Documents', href: '/documents', icon: FileText },
   { name: 'Calendar', href: '/calendar', icon: Calendar },
   { name: 'Tasks', href: '/tasks', icon: CheckSquare },
+  { name: 'Scheduled', href: '/scheduled', icon: CalendarClock },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
 ];
 
@@ -77,19 +80,27 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { data: unreadCount } = useUnreadEmailCount();
+  const { isDemoMode, exitDemoMode } = useDemoMode();
 
   const handleSignOut = async () => {
+    if (isDemoMode) {
+      exitDemoMode();
+      navigate('/auth');
+      return;
+    }
     await signOut();
     navigate('/auth');
   };
 
   const getUserInitials = () => {
+    if (isDemoMode) return 'G';
     if (!user?.email) return 'U';
     const name = user.user_metadata?.full_name || user.email;
     return name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
   const getDisplayName = () => {
+    if (isDemoMode) return 'Guest';
     return user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
   };
 
@@ -190,7 +201,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-sidebar-foreground truncate">{getDisplayName()}</p>
-            <p className="text-xs text-sidebar-foreground/60 truncate">{user?.email}</p>
+            <p className="text-xs text-sidebar-foreground/60 truncate">{isDemoMode ? 'Demo Mode' : user?.email}</p>
           </div>
           <button onClick={handleSignOut} className="p-1.5 rounded-md text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors" title="Sign out">
             <LogOut className="w-4 h-4" />
