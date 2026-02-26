@@ -212,9 +212,8 @@ export default function Settings() {
         throw new Error(data.error || 'Failed to start OAuth');
       }
 
-      // Use top-level redirect to avoid iframe/popup blockers
-      const target = window.top || window;
-      target.location.href = data.url;
+      // Redirect in current frame to avoid cross-frame SecurityError in preview
+      window.location.assign(data.url);
     } catch (error) {
       console.error('OAuth init error:', error);
       toast.error('Failed to connect Google', {
@@ -251,8 +250,7 @@ export default function Settings() {
         throw new Error(data.error || 'Failed to start Microsoft OAuth');
       }
 
-      const target = window.top || window;
-      target.location.href = data.url;
+      window.location.assign(data.url);
     } catch (error) {
       console.error('Microsoft OAuth init error:', error);
       toast.error('Failed to connect Microsoft', {
