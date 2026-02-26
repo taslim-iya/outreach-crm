@@ -438,6 +438,7 @@ Deno.serve(async (req) => {
       user_id: userId,
       subject,
       body_preview: body.substring(0, 500),
+      body_html: html,
       from_email: senderEmail,
       from_name: senderName,
       to_emails: toList,

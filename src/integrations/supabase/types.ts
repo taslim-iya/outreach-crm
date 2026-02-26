@@ -802,6 +802,7 @@ export type Database = {
       }
       emails: {
         Row: {
+          body_html: string | null
           body_preview: string | null
           contact_id: string | null
           created_at: string
@@ -825,6 +826,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          body_html?: string | null
           body_preview?: string | null
           contact_id?: string | null
           created_at?: string
@@ -848,6 +850,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          body_html?: string | null
           body_preview?: string | null
           contact_id?: string | null
           created_at?: string

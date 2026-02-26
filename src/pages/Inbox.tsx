@@ -284,7 +284,7 @@ export default function Inbox() {
                 <div
                   className="prose prose-sm max-w-none text-foreground leading-relaxed"
                   dangerouslySetInnerHTML={{
-                    __html: selectedEmail.body_preview || '',
+                    __html: (selectedEmail as any).body_html || selectedEmail.body_preview?.replace(/\n/g, '<br>') || '',
                   }}
                 />
               </ScrollArea>

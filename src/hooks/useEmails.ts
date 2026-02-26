@@ -7,6 +7,7 @@ export interface Email {
   user_id: string;
   subject: string | null;
   body_preview: string | null;
+  body_html: string | null;
   from_email: string | null;
   from_name: string | null;
   to_emails: string[] | null;

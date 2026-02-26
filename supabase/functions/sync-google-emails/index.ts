@@ -127,7 +127,7 @@ Deno.serve(async (req) => {
 
     for (const msg of messages.slice(0, 20)) {
       const msgResponse = await fetch(
-        `https://gmail.googleapis.com/gmail/v1/users/me/messages/${msg.id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date`,
+        `https://gmail.googleapis.com/gmail/v1/users/me/messages/${msg.id}?format=full&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date`,
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
 
@@ -143,6 +143,26 @@ Deno.serve(async (req) => {
       const fromName = fromMatch[1]?.trim() || null;
       const fromEmail = fromMatch[2]?.trim() || fromHeader;
 
+      // Extract full body from payload
+      let bodyHtml = '';
+      const extractBody = (payload: any): string => {
+        if (payload.mimeType === 'text/html' && payload.body?.data) {
+          return atob(payload.body.data.replace(/-/g, '+').replace(/_/g, '/'));
+        }
+        if (payload.mimeType === 'text/plain' && payload.body?.data && !bodyHtml) {
+          const plain = atob(payload.body.data.replace(/-/g, '+').replace(/_/g, '/'));
+          return plain.split('\n').map((line: string) => line.trim() === '' ? '<br>' : `<p>${line}</p>`).join('');
+        }
+        if (payload.parts) {
+          for (const part of payload.parts) {
+            const result = extractBody(part);
+            if (result) return result;
+          }
+        }
+        return '';
+      };
+      bodyHtml = extractBody(msgData.payload);
+
       const emailData = {
         user_id: userId,
         external_id: msg.id,
@@ -153,6 +173,7 @@ Deno.serve(async (req) => {
         from_email: fromEmail,
         received_at: new Date(parseInt(msgData.internalDate)).toISOString(),
         body_preview: msgData.snippet || null,
+        body_html: bodyHtml || null,
         is_read: !msgData.labelIds?.includes('UNREAD'),
       };
 

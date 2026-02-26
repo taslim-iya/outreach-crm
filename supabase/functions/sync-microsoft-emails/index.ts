@@ -106,8 +106,8 @@ Deno.serve(async (req) => {
 
     // Fetch emails from Microsoft Graph
     const messagesResponse = await fetch(
-      'https://graph.microsoft.com/v1.0/me/messages?$top=20&$orderby=receivedDateTime desc&$select=id,conversationId,subject,from,receivedDateTime,bodyPreview,isRead',
-      { headers: { Authorization: `Bearer ${accessToken}` } }
+      'https://graph.microsoft.com/v1.0/me/messages?$top=20&$orderby=receivedDateTime desc&$select=id,conversationId,subject,from,receivedDateTime,bodyPreview,body,isRead',
+      { headers: { Authorization: `Bearer ${accessToken}`, Prefer: 'outlook.body-content-type="html"' } }
     );
 
     if (!messagesResponse.ok) {
@@ -137,6 +137,7 @@ Deno.serve(async (req) => {
         from_email: fromEmail,
         received_at: msg.receivedDateTime,
         body_preview: msg.bodyPreview || null,
+        body_html: msg.body?.content || null,
         is_read: msg.isRead || false,
         direction: 'inbound',
       };
