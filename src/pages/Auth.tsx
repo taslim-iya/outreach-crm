@@ -74,14 +74,14 @@ export default function Auth() {
           <div className="space-y-6">
             <h1 className="text-4xl font-semibold leading-tight tracking-tight">
               The modern CRM for<br />
-              search fund professionals
+              acquirers
             </h1>
             <p className="text-lg text-white/70 max-w-md leading-relaxed">
               Manage your investor pipeline, track target companies, and close deals faster with our purpose-built platform.
             </p>
           </div>
 
-          <p className="text-sm text-white/40">© 2026 Acquire CRM. Built for searchers, by searchers.</p>
+          <p className="text-sm text-white/40">© 2026 Acquire CRM. Built for acquirers, by acquirers.</p>
         </div>
       </div>
 
@@ -101,7 +101,7 @@ export default function Auth() {
             <CardHeader className="text-center pb-2 pt-8">
               <CardTitle className="text-2xl font-semibold tracking-tight">Welcome</CardTitle>
               <CardDescription className="text-muted-foreground">
-                Sign in to manage your search fund journey
+                Sign in to manage your acquisition journey
               </CardDescription>
             </CardHeader>
             <CardContent className="pb-8">

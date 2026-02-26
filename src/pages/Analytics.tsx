@@ -42,7 +42,7 @@ export default function Analytics() {
     <div className="p-6">
       <PageHeader
         title="Analytics"
-        description="Track your search fund performance"
+        description="Track your acquisition performance"
       />
 
       {/* Key Metrics Grid */}
