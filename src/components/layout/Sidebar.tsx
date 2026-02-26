@@ -27,6 +27,7 @@ import {
   Building2,
   Search,
   Handshake,
+  MessageCircle,
 } from 'lucide-react';
 import { useUnreadEmailCount } from '@/hooks/useEmails';
 
@@ -65,6 +66,7 @@ const dealSourcingNav: NavItem[] = [
 
 const bottomNav = [
   { name: 'AI Assistant', href: '/assistant', icon: Sparkles },
+  { name: 'Support', href: '/support', icon: MessageCircle },
   { name: 'Notes', href: '/notes', icon: StickyNote },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];

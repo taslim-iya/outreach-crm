@@ -29,6 +29,7 @@ import DealSourcingDeals from "./pages/DealSourcingDeals";
 import DealSourcingAnalytics from "./pages/DealSourcingAnalytics";
 import BrokersPage from "./pages/BrokersPage";
 import TargetUniverse from "./pages/TargetUniverse";
+import Support from "./pages/Support";
 
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -74,6 +75,7 @@ const App = () => (
                           <Route path="/target-universe" element={<TargetUniverse />} />
 
                           <Route path="/notes" element={<NotesPage />} />
+                          <Route path="/support" element={<Support />} />
                           <Route path="/assistant" element={<Assistant />} />
                           <Route path="/settings" element={<Settings />} />
                           <Route path="/admin-analytics" element={<AdminAnalytics />} />
