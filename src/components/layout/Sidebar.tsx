@@ -27,6 +27,7 @@ import {
   Target,
   Handshake,
   Briefcase,
+  Shield,
 } from 'lucide-react';
 import { useUnreadEmailCount } from '@/hooks/useEmails';
 
@@ -60,9 +61,11 @@ const navigation: NavItem[] = [
 const bottomNav = [
   { name: 'AI Assistant', href: '/assistant', icon: Sparkles },
   { name: 'Notes', href: '/notes', icon: StickyNote },
-  { name: 'Admin Analytics', href: '/admin-analytics', icon: BarChart3 },
-  { name: 'Brand Assets', href: '/brand', icon: ImageIcon },
   { name: 'Settings', href: '/settings', icon: Settings },
+];
+
+const adminNav = [
+  { name: 'Admin Panel', href: '/admin', icon: Shield },
 ];
 
 const SidebarContext = createContext<{
@@ -210,6 +213,30 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             </Link>
           );
         })}
+
+        {/* Admin section */}
+        <div className="pt-2 mt-2 border-t border-sidebar-border/50">
+          <p className="px-3 py-1 text-[10px] uppercase tracking-wider font-semibold text-sidebar-foreground/40">Admin</p>
+          {adminNav.map((item) => {
+            const isActive = location.pathname === item.href;
+            return (
+              <Link
+                key={item.name}
+                to={item.href}
+                onClick={() => onNavigate?.()}
+                className={cn(
+                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                  isActive
+                    ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                    : 'text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground'
+                )}
+              >
+                <item.icon className={cn('w-5 h-5', isActive && 'text-sidebar-primary')} />
+                {item.name}
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
       <div className="px-3 py-4 border-t border-sidebar-border">

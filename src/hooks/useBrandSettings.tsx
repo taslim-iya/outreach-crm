@@ -36,7 +36,7 @@ export interface BrandSettings {
 }
 
 const DEFAULTS: Omit<BrandSettings, 'id' | 'user_id' | 'created_at' | 'updated_at'> = {
-  site_title: 'Acquirer CRM',
+  site_title: 'Acquire CRM',
   site_subtitle: 'Search Fund Platform',
   meta_description: 'The modern CRM for search fund professionals.',
   og_title: null,

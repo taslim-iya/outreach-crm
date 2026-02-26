@@ -19,7 +19,7 @@ import { format, subDays } from 'date-fns';
 
 const CHART_COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
 
-export default function AdminAnalytics() {
+export default function AdminAnalytics({ embedded }: { embedded?: boolean }) {
   const [dateRange, setDateRange] = useState('30');
   const days = parseInt(dateRange);
 
@@ -79,29 +79,31 @@ export default function AdminAnalytics() {
   }
 
   return (
-    <div className="p-6">
-      <PageHeader
-        title="Admin Analytics"
-        description="Email tracking, pipeline metrics, and user activity"
-        actions={
-          <div className="flex gap-2 items-center">
-            <Select value={dateRange} onValueChange={setDateRange}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7">Last 7 days</SelectItem>
-                <SelectItem value="30">Last 30 days</SelectItem>
-                <SelectItem value="90">Last 90 days</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline" size="sm" onClick={handleExport}>
-              <Download className="w-4 h-4 mr-2" />
-              Export CSV
-            </Button>
-          </div>
-        }
-      />
+    <div className={embedded ? '' : 'p-6'}>
+      {!embedded && (
+        <PageHeader
+          title="Admin Analytics"
+          description="Email tracking, pipeline metrics, and user activity"
+          actions={
+            <div className="flex gap-2 items-center">
+              <Select value={dateRange} onValueChange={setDateRange}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7">Last 7 days</SelectItem>
+                  <SelectItem value="30">Last 30 days</SelectItem>
+                  <SelectItem value="90">Last 90 days</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" size="sm" onClick={handleExport}>
+                <Download className="w-4 h-4 mr-2" />
+                Export CSV
+              </Button>
+            </div>
+          }
+        />
+      )}
 
       {/* Top Metric Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">

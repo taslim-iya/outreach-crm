@@ -359,7 +359,7 @@ function PreviewSection() {
   );
 }
 
-export default function BrandAssetsPage() {
+export default function BrandAssetsPage({ embedded }: { embedded?: boolean }) {
   const { settings, isLoading } = useBrandSettings();
 
   if (isLoading) {
@@ -390,11 +390,13 @@ export default function BrandAssetsPage() {
   ];
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <PageHeader
-        title="Brand Assets"
-        description="Manage logos, themes, and metadata across your entire app"
-      />
+    <div className={embedded ? '' : 'p-6 max-w-5xl mx-auto'}>
+      {!embedded && (
+        <PageHeader
+          title="Brand Assets"
+          description="Manage logos, themes, and metadata across your entire app"
+        />
+      )}
 
       <Tabs defaultValue="assets" className="mt-6">
         <TabsList className="mb-6">

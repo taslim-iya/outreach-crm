@@ -33,6 +33,7 @@ import BrokersPage from "./pages/BrokersPage";
 import DealSourcingAnalytics from "./pages/DealSourcingAnalytics";
 import BrandAssets from "./pages/BrandAssets";
 import AdminAnalytics from "./pages/AdminAnalytics";
+import Admin from "./pages/Admin";
 
 const queryClient = new QueryClient();
 
@@ -78,6 +79,7 @@ const App = () => (
                         <Route path="/settings" element={<Settings />} />
                         <Route path="/brand" element={<BrandAssets />} />
                         <Route path="/admin-analytics" element={<AdminAnalytics />} />
+                        <Route path="/admin" element={<Admin />} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>
                     </MainLayout>

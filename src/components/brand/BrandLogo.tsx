@@ -2,6 +2,7 @@ import { Building2 } from 'lucide-react';
 import { useBrandSettings } from '@/hooks/useBrandSettings';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
+import acquireLogoMark from '@/assets/acquire-logo-mark.png';
 
 interface BrandLogoProps {
   variant?: 'full' | 'mark' | 'light' | 'dark';
@@ -61,12 +62,14 @@ export function BrandLogo({
     );
   }
 
-  // Fallback: icon + text
+  // Fallback: generated logo + text
   return (
     <div className={cn('flex items-center gap-3', className)}>
-      <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center', iconClassName)}>
-        <Building2 className="w-5 h-5" />
-      </div>
+      <img
+        src={acquireLogoMark}
+        alt={getSiteTitle()}
+        className={cn('h-9 w-9 rounded-xl object-cover', iconClassName)}
+      />
       {showTitle && (
         <div>
           <span className={cn('font-semibold tracking-tight', titleClassName)}>{getSiteTitle()}</span>

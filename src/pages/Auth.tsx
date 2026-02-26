@@ -92,7 +92,7 @@ export default function Auth() {
             </div>
           </div>
 
-          <p className="text-sm text-white/40">© 2025 Acquirer CRM. Built for searchers, by searchers.</p>
+          <p className="text-sm text-white/40">© 2025 Acquire CRM. Built for searchers, by searchers.</p>
         </div>
       </div>
 
