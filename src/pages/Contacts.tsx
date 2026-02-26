@@ -1,38 +1,46 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { ContactCard } from '@/components/contacts/ContactCard';
 import { ContactFormModal } from '@/components/contacts/ContactFormModal';
 import { DeleteContactDialog } from '@/components/contacts/DeleteContactDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useContacts, Contact } from '@/hooks/useContacts';
 import { Database } from '@/integrations/supabase/types';
-import { Plus, Search, Filter, Users, Star, Building2, Briefcase, User, Loader2, Upload } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Plus, Search, Users, Loader2, Upload, Pencil, Trash2, Mail, Phone } from 'lucide-react';
 import { ImportModal } from '@/components/import/ImportModal';
 import { useCreateContact } from '@/hooks/useContacts';
 
 type ContactType = Database['public']['Enums']['contact_type'];
 
-const tabs: { key: ContactType | 'all'; label: string; icon: React.ElementType }[] = [
-  { key: 'all', label: 'All', icon: Users },
-  { key: 'investor', label: 'Investors', icon: Star },
-  { key: 'owner', label: 'Owners', icon: Building2 },
-  { key: 'intermediary', label: 'Intermediaries', icon: Briefcase },
-  { key: 'advisor', label: 'Advisors', icon: User },
+const TYPE_OPTIONS: { key: ContactType; label: string }[] = [
+  { key: 'investor', label: 'Investor' },
+  { key: 'owner', label: 'Owner' },
+  { key: 'intermediary', label: 'Intermediary' },
+  { key: 'advisor', label: 'Advisor' },
+  { key: 'river_guide', label: 'River Guide' },
 ];
+
+const warmthColors: Record<string, string> = {
+  cold: 'bg-blue-500',
+  warm: 'bg-yellow-500',
+  hot: 'bg-red-500',
+};
 
 export default function Contacts() {
   const { data: contacts = [], isLoading } = useContacts();
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<ContactType | 'all'>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [warmthFilter, setWarmthFilter] = useState<string>('all');
   const [isImportOpen, setIsImportOpen] = useState(false);
   const createContact = useCreateContact();
-  
-  // Modal states
+
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const handleImportContacts = async (records: any[]) => {
     for (const record of records) {
@@ -51,34 +59,40 @@ export default function Contacts() {
     }
   };
 
-  const filteredContacts = contacts.filter((contact) => {
-    const matchesSearch =
-      contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (contact.organization?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
-      (contact.email?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
-    const matchesTab = activeTab === 'all' || contact.contact_type === activeTab;
-    return matchesSearch && matchesTab;
-  });
+  const filtered = useMemo(() => {
+    return contacts.filter((c) => {
+      const matchesSearch =
+        !searchQuery ||
+        c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (c.organization?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
+        (c.email?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
+      const matchesType = typeFilter === 'all' || c.contact_type === typeFilter;
+      const matchesWarmth = warmthFilter === 'all' || c.warmth === warmthFilter;
+      return matchesSearch && matchesType && matchesWarmth;
+    });
+  }, [contacts, searchQuery, typeFilter, warmthFilter]);
 
-  const handleAddContact = () => {
-    setSelectedContact(null);
-    setIsFormOpen(true);
+  const toggleSelect = (id: string) => {
+    const next = new Set(selectedIds);
+    next.has(id) ? next.delete(id) : next.add(id);
+    setSelectedIds(next);
   };
 
-  const handleEditContact = (contact: Contact) => {
-    setSelectedContact(contact);
-    setIsFormOpen(true);
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filtered.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map((c) => c.id)));
+    }
   };
 
-  const handleDeleteContact = (contact: Contact) => {
-    setSelectedContact(contact);
-    setIsDeleteOpen(true);
-  };
-
-  const getTabCount = (tabKey: ContactType | 'all') => {
-    if (tabKey === 'all') return contacts.length;
-    return contacts.filter((c) => c.contact_type === tabKey).length;
-  };
+  if (isLoading) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-6">
@@ -87,115 +101,145 @@ export default function Contacts() {
         description="Manage your relationships"
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setIsImportOpen(true)}>
-              <Upload className="w-4 h-4 mr-2" />
-              Import
+            <Button variant="outline" size="sm" onClick={() => setIsImportOpen(true)}>
+              <Upload className="w-4 h-4 mr-1" /> Import
             </Button>
-            <Button onClick={handleAddContact}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Contact
+            <Button size="sm" onClick={() => { setSelectedContact(null); setIsFormOpen(true); }}>
+              <Plus className="w-4 h-4 mr-1" /> Add Contact
             </Button>
           </div>
         }
       />
 
-      {/* Tabs - scrollable on mobile */}
-      <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 mb-6 border-b border-border pb-4">
-        <div className="flex items-center gap-2 min-w-max">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={cn(
-                'flex items-center gap-2 px-3 md:px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap',
-                activeTab === tab.key
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-              )}
-            >
-              <tab.icon className="w-4 h-4" />
-              <span className="hidden sm:inline">{tab.label}</span>
-              <span className="sm:hidden">{tab.label.slice(0, 3)}</span>
-              <span className="ml-1 text-xs opacity-60">{getTabCount(tab.key)}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Search & Filter */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="relative flex-1">
+      {/* Filters */}
+      <div className="flex flex-wrap gap-3 mb-4">
+        <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Search contacts..."
+            placeholder="Search name, org, email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 bg-card border-border"
+            className="pl-9 h-9"
           />
         </div>
-        <Button variant="outline" size="icon">
-          <Filter className="w-4 h-4" />
-        </Button>
+        <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <SelectTrigger className="w-[150px] h-9">
+            <SelectValue placeholder="Type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Types</SelectItem>
+            {TYPE_OPTIONS.map((t) => (
+              <SelectItem key={t.key} value={t.key}>{t.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={warmthFilter} onValueChange={setWarmthFilter}>
+          <SelectTrigger className="w-[140px] h-9">
+            <SelectValue placeholder="Warmth" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Warmth</SelectItem>
+            <SelectItem value="cold">Cold</SelectItem>
+            <SelectItem value="warm">Warm</SelectItem>
+            <SelectItem value="hot">Hot</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      {/* Loading State */}
-      {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
-      )}
+      {/* Table */}
+      <div className="border border-border rounded-xl overflow-hidden bg-card">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-10">
+                <input type="checkbox" checked={selectedIds.size === filtered.length && filtered.length > 0} onChange={toggleSelectAll} className="rounded" />
+              </TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Organization</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Phone</TableHead>
+              <TableHead>Geography</TableHead>
+              <TableHead>Warmth</TableHead>
+              <TableHead>Tags</TableHead>
+              <TableHead className="w-10" />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filtered.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={10} className="text-center py-12">
+                  <Users className="w-10 h-10 mx-auto text-muted-foreground/40 mb-3" />
+                  <p className="text-muted-foreground font-medium">No contacts found</p>
+                  <p className="text-sm text-muted-foreground/60 mt-1">Add your first contact to get started</p>
+                </TableCell>
+              </TableRow>
+            ) : (
+              filtered.map((c) => (
+                <TableRow key={c.id} className="group">
+                  <TableCell>
+                    <input type="checkbox" checked={selectedIds.has(c.id)} onChange={() => toggleSelect(c.id)} className="rounded" />
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-foreground">{c.name}</span>
+                      {c.role && <span className="text-xs text-muted-foreground">· {c.role}</span>}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{c.organization || '—'}</TableCell>
+                  <TableCell>
+                    <Badge variant="secondary" className="capitalize text-xs">
+                      {c.contact_type.replace('_', ' ')}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {c.email ? (
+                      <a href={`mailto:${c.email}`} className="hover:text-primary transition-colors truncate max-w-[180px] block">{c.email}</a>
+                    ) : '—'}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{c.phone || '—'}</TableCell>
+                  <TableCell className="text-muted-foreground">{c.geography || '—'}</TableCell>
+                  <TableCell>
+                    {c.warmth ? (
+                      <div className="flex items-center gap-1.5">
+                        <div className={`w-2 h-2 rounded-full ${warmthColors[c.warmth] || ''}`} />
+                        <span className="text-xs capitalize text-muted-foreground">{c.warmth}</span>
+                      </div>
+                    ) : '—'}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-1 flex-wrap">
+                      {(c.tags || []).slice(0, 2).map((tag) => (
+                        <Badge key={tag} variant="outline" className="text-[10px] px-1.5">{tag}</Badge>
+                      ))}
+                      {(c.tags || []).length > 2 && (
+                        <Badge variant="outline" className="text-[10px] px-1.5">+{c.tags!.length - 2}</Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100">
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setSelectedContact(c); setIsFormOpen(true); }}>
+                        <Pencil className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setSelectedContact(c); setIsDeleteOpen(true); }}>
+                        <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
-      {/* Contacts Grid */}
-      {!isLoading && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filteredContacts.map((contact) => (
-            <ContactCard
-              key={contact.id}
-              contact={contact}
-              onEdit={() => handleEditContact(contact)}
-              onDelete={() => handleDeleteContact(contact)}
-            />
-          ))}
-        </div>
-      )}
-
-      {!isLoading && filteredContacts.length === 0 && (
-        <div className="text-center py-12">
-          <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-foreground mb-2">
-            {contacts.length === 0 ? 'No contacts yet' : 'No contacts found'}
-          </h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            {contacts.length === 0
-              ? 'Add your first contact to get started.'
-              : 'Try adjusting your search or filters'}
-          </p>
-          {contacts.length === 0 && (
-            <Button onClick={handleAddContact}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Your First Contact
-            </Button>
-          )}
-        </div>
-      )}
+      <p className="text-xs text-muted-foreground mt-2">{filtered.length} of {contacts.length} contacts</p>
 
       {/* Modals */}
-      <ContactFormModal
-        open={isFormOpen}
-        onOpenChange={setIsFormOpen}
-        contact={selectedContact}
-      />
-      <DeleteContactDialog
-        open={isDeleteOpen}
-        onOpenChange={setIsDeleteOpen}
-        contact={selectedContact}
-      />
-      <ImportModal
-        open={isImportOpen}
-        onOpenChange={setIsImportOpen}
-        entityType="contacts"
-        onImport={handleImportContacts}
-      />
+      <ContactFormModal open={isFormOpen} onOpenChange={setIsFormOpen} contact={selectedContact} />
+      <DeleteContactDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen} contact={selectedContact} />
+      <ImportModal open={isImportOpen} onOpenChange={setIsImportOpen} entityType="contacts" onImport={handleImportContacts} />
     </div>
   );
 }
