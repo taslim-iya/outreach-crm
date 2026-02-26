@@ -70,6 +70,10 @@ export default function Support() {
         .from('support_messages')
         .insert({ user_id: user.id, message, is_admin_reply: false });
       if (error) throw error;
+      // Send email notification (fire-and-forget)
+      supabase.functions.invoke('notify-support', {
+        body: { message, userEmail: user.email },
+      }).catch(console.error);
     },
     onSuccess: () => {
       setNewMessage('');
