@@ -9,8 +9,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useCompanies, useCreateCompany, useUpdateCompany, useDeleteCompany } from '@/hooks/useCompanies';
+import { useCreateDeal } from '@/hooks/useDeals';
 import { useSavedFilters, useCreateSavedFilter, useDeleteSavedFilter } from '@/hooks/useICMemo';
-import { Plus, Search, Filter, Download, Tag, Bookmark, Loader2, Building2, Trash2, X, Upload } from 'lucide-react';
+import { Plus, Search, Filter, Download, Tag, Bookmark, Loader2, Building2, Trash2, X, Upload, ArrowRight } from 'lucide-react';
 import { ImportModal } from '@/components/import/ImportModal';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -26,6 +27,7 @@ export default function TargetUniverse() {
   const createCompany = useCreateCompany();
   const updateCompany = useUpdateCompany();
   const deleteCompany = useDeleteCompany();
+  const createDeal = useCreateDeal();
   const { data: savedFilters = [] } = useSavedFilters('company');
   const createSavedFilter = useCreateSavedFilter();
   const deleteSavedFilter = useDeleteSavedFilter();
@@ -296,9 +298,29 @@ export default function TargetUniverse() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100" onClick={() => deleteCompany.mutate(c.id)}>
-                      <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                    </Button>
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        title="Move to Deal Pipeline"
+                        onClick={() => {
+                          createDeal.mutate({
+                            name: c.name,
+                            company_id: c.id,
+                            source: c.company_source || 'proprietary',
+                            stage: 'screening' as any,
+                          }, {
+                            onSuccess: () => toast.success(`${c.name} added to Deal Pipeline`),
+                          });
+                        }}
+                      >
+                        <ArrowRight className="w-3.5 h-3.5 text-primary" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteCompany.mutate(c.id)}>
+                        <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
