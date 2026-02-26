@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { BrandProvider } from "@/hooks/useBrandSettings";
 import { DemoModeProvider } from "@/hooks/useDemoMode";
+import { AppModeProvider } from "@/hooks/useAppMode";
 import { BrandHeadTags } from "@/components/brand/BrandHeadTags";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -42,6 +43,7 @@ const App = () => (
       <AuthProvider>
         <BrandProvider>
           <DemoModeProvider>
+          <AppModeProvider>
             <BrandHeadTags />
             <Toaster />
             <Sonner />
@@ -84,6 +86,7 @@ const App = () => (
                 />
               </Routes>
             </BrowserRouter>
+          </AppModeProvider>
           </DemoModeProvider>
         </BrandProvider>
       </AuthProvider>
