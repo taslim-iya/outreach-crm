@@ -24,9 +24,9 @@ const TYPE_OPTIONS: { key: ContactType; label: string }[] = [
 ];
 
 const warmthColors: Record<string, string> = {
-  cold: 'bg-blue-500',
-  warm: 'bg-yellow-500',
-  hot: 'bg-red-500',
+  cold: 'bg-info',
+  warm: 'bg-stage-warm',
+  hot: 'bg-destructive',
 };
 
 export default function Contacts() {

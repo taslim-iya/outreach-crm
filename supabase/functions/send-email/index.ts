@@ -253,7 +253,7 @@ async function sendViaResend(
   if (!resendApiKey) throw new Error("RESEND_API_KEY not configured");
 
   const resendPayload: Record<string, unknown> = {
-    from: `${fromName} <taslim@mungerlongview.com>`,
+    from: `${fromName} <noreply@acquire-crm.com>`,
     to: toList,
     bcc: bccList,
     subject,
@@ -359,7 +359,7 @@ Deno.serve(async (req) => {
       .eq("user_id", userId)
       .maybeSingle();
 
-  const senderName = from_name || profile?.display_name || profile?.company_name || "DealScope";
+  const senderName = from_name || profile?.display_name || profile?.company_name || "Acquire";
   const toList = Array.isArray(to) ? to : [to];
   const replyTo = reply_to || userEmail;
 
@@ -469,7 +469,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error("Send email error:", error);
     return new Response(
-      JSON.stringify({ error: error.message || "Internal server error" }),
+      JSON.stringify({ error: error instanceof Error ? error.message : "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

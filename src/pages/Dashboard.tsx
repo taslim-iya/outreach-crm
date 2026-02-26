@@ -16,7 +16,6 @@ import {
   FileSignature,
   Target,
   MessageCircle,
-  Mail,
 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -85,7 +84,7 @@ export default function Dashboard() {
         {isFundraising ? (
           <PipelinePreview title="Investor Pipeline" stages={investorStages} href="/investors" total={investorTotal} />
         ) : (
-          <PipelinePreview title="Deal Pipeline" stages={dealStages} href="/contacts" total={dealTotal} />
+          <PipelinePreview title="Deal Pipeline" stages={dealStages} href="/deal-sourcing" total={dealTotal} />
         )}
         <ActivityFeed />
       </div>
@@ -96,16 +95,9 @@ export default function Dashboard() {
 
       {/* Support contact */}
       <div className="mt-6 flex items-center gap-4 text-sm text-muted-foreground border-t pt-4">
-        <div className="flex items-center gap-2">
-          <Mail className="w-4 h-4" />
-           <a href="mailto:taslim@mungerlongview.com" className="hover:text-foreground transition-colors">
-             taslim@mungerlongview.com
-          </a>
-        </div>
-        <span className="text-border">|</span>
         <Link to="/support" className="flex items-center gap-1.5 hover:text-foreground transition-colors">
           <MessageCircle className="w-4 h-4" />
-          Chat with us
+          Need help? Chat with us
         </Link>
       </div>
     </div>

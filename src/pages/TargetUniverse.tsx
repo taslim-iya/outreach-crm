@@ -278,9 +278,9 @@ export default function TargetUniverse() {
                     <input type="checkbox" checked={selectedIds.has(c.id)} onChange={() => toggleSelect(c.id)} className="rounded" />
                   </TableCell>
                   <TableCell>
-                    <a href={`/company/${c.id}`} className="font-medium text-foreground hover:text-primary transition-colors">
+                    <span className="font-medium text-foreground">
                       {c.name}
-                    </a>
+                    </span>
                   </TableCell>
                   <TableCell className="text-muted-foreground">{c.industry || '—'}</TableCell>
                   <TableCell className="text-muted-foreground">{c.geography || '—'}</TableCell>

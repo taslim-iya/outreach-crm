@@ -184,7 +184,7 @@ export default function Assistant() {
               <Sparkles className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <CardTitle className="text-base">DealScope AI</CardTitle>
+              <CardTitle className="text-base">Acquire AI</CardTitle>
               <p className="text-sm text-muted-foreground">Ask me anything about your deals, investors, or outreach</p>
             </div>
           </div>

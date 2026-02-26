@@ -620,7 +620,7 @@ export default function Settings() {
                 </div>
 
                 <p className="text-xs text-muted-foreground pt-2">
-                  Connecting your email and calendar allows SearchCRM to track communications and sync meetings automatically.
+                  Connecting your email and calendar allows Acquire to track communications and sync meetings automatically.
                 </p>
               </>
             )}
