@@ -74,14 +74,14 @@ export default function Auth() {
           <div className="space-y-6">
             <h1 className="text-4xl font-semibold leading-tight tracking-tight">
               The modern CRM for<br />
-              buyers
+              acquisition entrepreneurs
             </h1>
             <p className="text-lg text-white/70 max-w-md leading-relaxed">
               Manage your investor pipeline, track target companies, and close deals faster with our purpose-built platform.
             </p>
           </div>
 
-          <p className="text-sm text-white/40">© 2026 Acquire CRM. Built for buyers, by buyers.</p>
+          <p className="text-sm text-white/40">© 2026 Acquire CRM. Built for acquisition entrepreneurs.</p>
         </div>
       </div>
 

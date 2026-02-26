@@ -37,8 +37,8 @@ export interface BrandSettings {
 
 const DEFAULTS: Omit<BrandSettings, 'id' | 'user_id' | 'created_at' | 'updated_at'> = {
   site_title: 'Acquire CRM',
-  site_subtitle: 'Buyer\'s CRM',
-  meta_description: 'The modern CRM for buyers.',
+  site_subtitle: 'For Acquisition Entrepreneurs',
+  meta_description: 'The modern CRM for acquisition entrepreneurs.',
   og_title: null,
   og_description: null,
   twitter_title: null,
