@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { lovable } from '@/integrations/lovable/index';
 import { useBrandSettings } from '@/hooks/useBrandSettings';
 import { useAuth } from '@/hooks/useAuth';
+import { useDemoMode } from '@/hooks/useDemoMode';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TrendingUp, Loader2, ArrowRight } from 'lucide-react';
+import { TrendingUp, Loader2, ArrowRight, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { BrandLogo } from '@/components/brand/BrandLogo';
 
@@ -16,6 +17,7 @@ export default function Auth() {
   const { getSiteTitle, getMetaDescription, getAsset, settings } = useBrandSettings();
   const navigate = useNavigate();
   const { signIn, signUp } = useAuth();
+  const { enterDemoMode } = useDemoMode();
   const [loading, setLoading] = useState(false);
   
   // Login form state
@@ -242,6 +244,31 @@ export default function Auth() {
                   </form>
                 </TabsContent>
               </Tabs>
+
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted-foreground">or</span>
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full h-11"
+                onClick={() => {
+                  enterDemoMode();
+                  navigate('/');
+                }}
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                Continue as Guest
+              </Button>
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                Explore with sample data — read-only mode
+              </p>
             </CardContent>
           </Card>
 

@@ -1276,6 +1276,57 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_communications: {
+        Row: {
+          auto_send: boolean | null
+          content: string | null
+          created_at: string | null
+          id: string
+          last_sent_at: string | null
+          recipient_ids: string[] | null
+          recipient_type: string
+          recurrence: string | null
+          scheduled_for: string
+          status: string | null
+          title: string
+          type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          auto_send?: boolean | null
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          last_sent_at?: string | null
+          recipient_ids?: string[] | null
+          recipient_type?: string
+          recurrence?: string | null
+          scheduled_for: string
+          status?: string | null
+          title: string
+          type?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          auto_send?: boolean | null
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          last_sent_at?: string | null
+          recipient_ids?: string[] | null
+          recipient_type?: string
+          recurrence?: string | null
+          scheduled_for?: string
+          status?: string | null
+          title?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           company_id: string | null
