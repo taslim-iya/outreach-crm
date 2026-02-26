@@ -105,7 +105,7 @@ export default function DealProfile() {
 
   return (
     <div className="p-4 md:p-6">
-      <Button variant="ghost" size="sm" onClick={() => navigate('/ds-deals')} className="mb-2">
+      <Button variant="ghost" size="sm" onClick={() => navigate('/deal-sourcing')} className="mb-2">
         <ArrowLeft className="w-4 h-4 mr-1" /> Back to Deals
       </Button>
 
