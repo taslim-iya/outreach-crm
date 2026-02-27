@@ -47,12 +47,13 @@ Deno.serve(async (req) => {
 
     const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/google-oauth-callback`;
 
-    // Start with base identity scopes to avoid Google consent restrictions,
-    // then expand to Gmail/Calendar once authorization is confirmed.
     const scopes = [
       'openid',
       'https://www.googleapis.com/auth/userinfo.email',
       'https://www.googleapis.com/auth/userinfo.profile',
+      'https://www.googleapis.com/auth/gmail.readonly',
+      'https://www.googleapis.com/auth/gmail.send',
+      'https://www.googleapis.com/auth/calendar.readonly',
     ].join(' ');
 
     // State contains user ID for security verification in callback
