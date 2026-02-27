@@ -250,6 +250,17 @@ export default function Settings() {
       }
 
       console.log('Microsoft OAuth URL received, redirecting...');
+
+      const authWindow = window.open(data.url, '_blank', 'noopener,noreferrer');
+      if (authWindow) {
+        toast.info('Microsoft sign-in opened in a new tab', {
+          description: 'Finish sign-in there, then return here.',
+        });
+        setConnectingProvider(null);
+        return;
+      }
+
+      // Fallback if popup/new-tab is blocked
       window.location.assign(data.url);
     } catch (error) {
       console.error('Microsoft OAuth init error:', error);
