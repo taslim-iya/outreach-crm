@@ -42,7 +42,7 @@ export default function Settings() {
   const disconnectIntegration = useDisconnectIntegration();
   const { isSyncing, syncAll } = useSyncIntegration();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [isConnecting, setIsConnecting] = useState(false);
+  const [connectingProvider, setConnectingProvider] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const queryClient = useQueryClient();
   const uploadAsset = useUploadBrandAsset();
@@ -186,12 +186,12 @@ export default function Settings() {
 
 
   const handleConnectGoogle = async () => {
-    setIsConnecting(true);
+    setConnectingProvider('google');
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         toast.error('Please sign in first');
-        setIsConnecting(false);
+        setConnectingProvider(null);
         return;
       }
 
@@ -212,24 +212,23 @@ export default function Settings() {
         throw new Error(data.error || 'Failed to start OAuth');
       }
 
-      // Redirect in current frame to avoid cross-frame SecurityError in preview
       window.location.assign(data.url);
     } catch (error) {
       console.error('OAuth init error:', error);
       toast.error('Failed to connect Google', {
         description: error instanceof Error ? error.message : 'Please try again',
       });
-      setIsConnecting(false);
+      setConnectingProvider(null);
     }
   };
 
   const handleConnectMicrosoft = async () => {
-    setIsConnecting(true);
+    setConnectingProvider('microsoft');
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         toast.error('Please sign in first');
-        setIsConnecting(false);
+        setConnectingProvider(null);
         return;
       }
 
@@ -250,13 +249,14 @@ export default function Settings() {
         throw new Error(data.error || 'Failed to start Microsoft OAuth');
       }
 
+      console.log('Microsoft OAuth URL received, redirecting...');
       window.location.assign(data.url);
     } catch (error) {
       console.error('Microsoft OAuth init error:', error);
       toast.error('Failed to connect Microsoft', {
         description: error instanceof Error ? error.message : 'Please try again',
       });
-      setIsConnecting(false);
+      setConnectingProvider(null);
     }
   };
 
@@ -504,9 +504,9 @@ export default function Settings() {
                       variant="outline" 
                       size="sm" 
                       onClick={handleConnectGoogle}
-                      disabled={isConnecting}
+                      disabled={connectingProvider !== null}
                     >
-                      {isConnecting ? (
+                      {connectingProvider === 'google' ? (
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       ) : (
                         <Link2 className="w-4 h-4 mr-2" />
@@ -556,9 +556,9 @@ export default function Settings() {
                       variant="outline" 
                       size="sm" 
                       onClick={handleConnectMicrosoft}
-                      disabled={isConnecting}
+                      disabled={connectingProvider !== null}
                     >
-                      {isConnecting ? (
+                      {connectingProvider === 'microsoft' ? (
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       ) : (
                         <Link2 className="w-4 h-4 mr-2" />
