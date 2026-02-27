@@ -46,10 +46,10 @@ Deno.serve(async (req) => {
 
     const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/google-oauth-callback`;
 
+    // Start with base identity scopes to avoid Google consent restrictions,
+    // then expand to Gmail/Calendar once authorization is confirmed.
     const scopes = [
-      'https://www.googleapis.com/auth/gmail.readonly',
-      'https://www.googleapis.com/auth/gmail.send',
-      'https://www.googleapis.com/auth/calendar.readonly',
+      'openid',
       'https://www.googleapis.com/auth/userinfo.email',
       'https://www.googleapis.com/auth/userinfo.profile',
     ].join(' ');
@@ -64,6 +64,7 @@ Deno.serve(async (req) => {
     authUrl.searchParams.set('scope', scopes);
     authUrl.searchParams.set('state', state);
     authUrl.searchParams.set('access_type', 'offline');
+    authUrl.searchParams.set('include_granted_scopes', 'true');
     authUrl.searchParams.set('prompt', 'consent');
 
     return new Response(JSON.stringify({ url: authUrl.toString() }), {
