@@ -35,6 +35,7 @@ Deno.serve(async (req) => {
     }
 
     const userId = claimsData.claims.sub;
+    const userEmail = claimsData.claims.email as string | undefined;
 
     const clientId = Deno.env.get('GOOGLE_CLIENT_ID');
     if (!clientId) {
@@ -65,7 +66,10 @@ Deno.serve(async (req) => {
     authUrl.searchParams.set('state', state);
     authUrl.searchParams.set('access_type', 'offline');
     authUrl.searchParams.set('include_granted_scopes', 'true');
-    authUrl.searchParams.set('prompt', 'consent');
+    authUrl.searchParams.set('prompt', 'consent select_account');
+    if (userEmail) {
+      authUrl.searchParams.set('login_hint', userEmail);
+    }
 
     return new Response(JSON.stringify({ url: authUrl.toString() }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
