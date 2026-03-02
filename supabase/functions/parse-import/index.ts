@@ -33,7 +33,7 @@ serve(async (req) => {
         if (csv.trim()) sheets.push(`--- Sheet: ${name} ---\n${csv}`);
       }
       rawText = sheets.join("\n\n");
-      if (rawText.length > 80000) rawText = rawText.substring(0, 80000);
+      if (rawText.length > 400000) rawText = rawText.substring(0, 400000);
     } else if (fileName.endsWith(".pdf")) {
       // For PDF, extract printable text as best-effort
       const buffer = await file.arrayBuffer();
@@ -71,7 +71,7 @@ serve(async (req) => {
         decoded = decoded.replace(/[^\x20-\x7E\n\r\t]/g, " ").replace(/\s{3,}/g, " | ");
         rawText = decoded;
       }
-      if (rawText.length > 80000) rawText = rawText.substring(0, 80000);
+      if (rawText.length > 400000) rawText = rawText.substring(0, 400000);
     } else {
       rawText = await file.text();
     }

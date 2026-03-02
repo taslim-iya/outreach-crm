@@ -7,11 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useContacts, Contact } from '@/hooks/useContacts';
+import { useContacts, Contact, useDeleteContact } from '@/hooks/useContacts';
 import { Database } from '@/integrations/supabase/types';
-import { Plus, Search, Users, Loader2, Upload, Pencil, Trash2, Mail, Phone } from 'lucide-react';
+import { Plus, Search, Users, Loader2, Upload, Pencil, Trash2 } from 'lucide-react';
 import { ImportModal } from '@/components/import/ImportModal';
 import { useCreateContact } from '@/hooks/useContacts';
+import { toast } from 'sonner';
 
 type ContactType = Database['public']['Enums']['contact_type'];
 
@@ -36,6 +37,7 @@ export default function Contacts() {
   const [warmthFilter, setWarmthFilter] = useState<string>('all');
   const [isImportOpen, setIsImportOpen] = useState(false);
   const createContact = useCreateContact();
+  const deleteContact = useDeleteContact();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -56,6 +58,18 @@ export default function Contacts() {
         tags: record.tags || [],
         notes: record.notes || null,
       });
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    const count = selectedIds.size;
+    try {
+      await Promise.all(Array.from(selectedIds).map(id => deleteContact.mutateAsync(id)));
+      setSelectedIds(new Set());
+      toast.success(`Deleted ${count} contacts`);
+    } catch {
+      toast.error('Failed to delete some contacts');
     }
   };
 
@@ -101,6 +115,11 @@ export default function Contacts() {
         description="Manage your relationships"
         actions={
           <div className="flex gap-2">
+            {selectedIds.size > 0 && (
+              <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
+                <Trash2 className="w-4 h-4 mr-1" /> Delete {selectedIds.size}
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={() => setIsImportOpen(true)}>
               <Upload className="w-4 h-4 mr-1" /> Import
             </Button>
