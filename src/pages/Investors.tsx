@@ -5,10 +5,12 @@ import { InvestorFormModal } from '@/components/pipeline/InvestorFormModal';
 import { DeleteInvestorDialog } from '@/components/pipeline/DeleteInvestorDialog';
 import { CommitmentAmountModal } from '@/components/pipeline/CommitmentAmountModal';
 import { InvestorUpdateModal } from '@/components/updates/InvestorUpdateModal';
+import { BulkEmailModal } from '@/components/pipeline/BulkEmailModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useInvestorDeals, InvestorDeal, InvestorStage, useUpdateInvestorStage, useUpdateInvestorStageWithCommitment } from '@/hooks/useInvestorDeals';
-import { Plus, Search, Filter, Loader2, TrendingUp, FileText } from 'lucide-react';
+import { Plus, Search, Filter, Loader2, TrendingUp, FileText, Mail } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -71,8 +73,34 @@ export default function Investors() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isUpdateOpen, setIsUpdateOpen] = useState(false);
+  const [isBulkEmailOpen, setIsBulkEmailOpen] = useState(false);
   const [selectedInvestor, setSelectedInvestor] = useState<InvestorDeal | null>(null);
   const [defaultStage, setDefaultStage] = useState<InvestorStage>('not_contacted');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const selectAllInStage = (stage: InvestorStage) => {
+    const ids = getDealsForStage(stage).map(d => d.id);
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      const allSelected = ids.every(id => next.has(id));
+      if (allSelected) {
+        ids.forEach(id => next.delete(id));
+      } else {
+        ids.forEach(id => next.add(id));
+      }
+      return next;
+    });
+  };
+
+  const selectedInvestors = investors.filter(i => selectedIds.has(i.id));
 
   const filteredInvestors = investors.filter((investor) => {
     const matchesSearch =
@@ -173,6 +201,17 @@ export default function Investors() {
             </div>
           </div>
           <div className="flex gap-2">
+            {selectedIds.size > 0 && (
+              <Button variant="outline" onClick={() => setIsBulkEmailOpen(true)}>
+                <Mail className="w-4 h-4 mr-2" />
+                Email {selectedIds.size} Selected
+              </Button>
+            )}
+            {selectedIds.size > 0 && (
+              <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())} className="text-muted-foreground">
+                Clear
+              </Button>
+            )}
             <Button variant="outline" onClick={() => setIsUpdateOpen(true)}>
               <FileText className="w-4 h-4 mr-2" />
               Send Update
@@ -245,9 +284,17 @@ export default function Investors() {
                             ref={provided.innerRef}
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
-                            className={snapshot.isDragging ? 'opacity-90 rotate-1 scale-[1.02]' : ''}
+                            className={`relative ${snapshot.isDragging ? 'opacity-90 rotate-1 scale-[1.02]' : ''}`}
                             style={provided.draggableProps.style}
                           >
+                            <div className="absolute top-2 left-2 z-10">
+                              <Checkbox
+                                checked={selectedIds.has(deal.id)}
+                                onCheckedChange={() => toggleSelect(deal.id)}
+                                className="bg-background"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
                             <InvestorCard
                               deal={deal}
                               onEdit={() => handleEditInvestor(deal)}
@@ -294,6 +341,14 @@ export default function Investors() {
       />
 
       <InvestorUpdateModal open={isUpdateOpen} onOpenChange={setIsUpdateOpen} />
+      <BulkEmailModal
+        open={isBulkEmailOpen}
+        onOpenChange={(open) => {
+          setIsBulkEmailOpen(open);
+          if (!open) setSelectedIds(new Set());
+        }}
+        investors={selectedInvestors}
+      />
     </div>
   );
 }

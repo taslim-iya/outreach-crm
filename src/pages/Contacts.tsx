@@ -12,6 +12,8 @@ import { Database } from '@/integrations/supabase/types';
 import { Plus, Search, Users, Loader2, Upload, Pencil, Trash2 } from 'lucide-react';
 import { ImportModal } from '@/components/import/ImportModal';
 import { useCreateContact } from '@/hooks/useContacts';
+import { useCreateInvestorDeal } from '@/hooks/useInvestorDeals';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 type ContactType = Database['public']['Enums']['contact_type'];
@@ -39,6 +41,7 @@ export default function Contacts() {
   const [warmthFilter, setWarmthFilter] = useState<string>('all');
   const [isImportOpen, setIsImportOpen] = useState(false);
   const createContact = useCreateContact();
+  const createInvestorDeal = useCreateInvestorDeal();
   const deleteContact = useDeleteContact();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -48,7 +51,8 @@ export default function Contacts() {
 
   const handleImportContacts = async (records: any[]) => {
     for (const record of records) {
-      await createContact.mutateAsync({
+      const contactType = record.contact_type || 'investor';
+      const createdContact = await createContact.mutateAsync({
         name: record.name || 'Unknown',
         email: record.email || null,
         phone: record.phone || null,
@@ -56,10 +60,34 @@ export default function Contacts() {
         role: record.role || null,
         geography: record.geography || null,
         source: record.source || 'import',
-        contact_type: record.contact_type || 'investor',
+        contact_type: contactType,
         tags: record.tags || [],
         notes: record.notes || null,
       });
+
+      // Auto-create investor_deals entry for investor-type contacts
+      if (contactType === 'investor' && createdContact) {
+        try {
+          // Check if an investor deal already exists for this contact
+          const { data: existing } = await supabase
+            .from('investor_deals')
+            .select('id')
+            .eq('contact_id', createdContact.id)
+            .maybeSingle();
+
+          if (!existing) {
+            await createInvestorDeal.mutateAsync({
+              name: record.name || 'Unknown',
+              organization: record.organization || null,
+              contact_id: createdContact.id,
+              stage: 'not_contacted',
+              notes: record.notes || null,
+            });
+          }
+        } catch (e) {
+          console.error('Failed to create investor deal for contact:', e);
+        }
+      }
     }
   };
 
