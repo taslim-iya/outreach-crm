@@ -52,7 +52,7 @@ const ENTITY_COLUMNS: Record<string, ColumnDef[]> = {
     { key: 'role', label: 'Role' },
     { key: 'geography', label: 'Geography' },
     { key: 'source', label: 'Source' },
-    { key: 'contact_type', label: 'Type', type: 'select', options: ['investor', 'owner', 'intermediary', 'advisor', 'river_guide'] },
+    { key: 'contact_type', label: 'Type', type: 'select', options: ['investor', 'owner', 'intermediary', 'advisor', 'river_guide', 'operator', 'other'] },
     { key: 'notes', label: 'Notes' },
   ],
   deals: [
@@ -151,7 +151,7 @@ export function ImportModal({ open, onOpenChange, entityType, onImport }: Import
     setProgress(0);
 
     try {
-      const chunkSize = 10;
+      const chunkSize = 50;
       for (let i = 0; i < toImport.length; i += chunkSize) {
         const chunk = toImport.slice(i, i + chunkSize);
         await onImport(chunk, detectedType);

@@ -85,7 +85,7 @@ serve(async (req) => {
       ? `The data should be parsed as "${entityTypeHint}".`
       : `First, analyze the data and determine what type of records these are. The possible types are:
 - "companies" — business/company records with fields like company name, industry, geography, revenue, etc.
-- "contacts" — people/person records with fields like person name, email, phone, organization, role, etc.
+- "contacts" — people/person records with fields like person name, email, phone, organization, role, etc. Contact types include: investor, owner, intermediary, advisor, river_guide, operator, other.
 - "deals" — deal/transaction records with fields like deal name, stage, source, company, etc.
 
 Choose the best matching type based on the columns/content.`;
@@ -102,7 +102,7 @@ Field schemas by type:
 
 **companies**: name (required), industry, geography, website, description, sic_code, naics_code, ownership_type (private/family-owned/pe-backed/public/founder-led/estate/unknown), revenue_band (<$1M/$1-5M/$5-10M/$10-25M/$25-50M/$50-100M/$100M+), ebitda_band (<$500K/$500K-1M/$1-3M/$3-5M/$5-10M/$10M+), employee_count (number), company_status (prospect/researching/contacted/engaged/passed/archived), company_source, company_tags (array)
 
-**contacts**: name (required), email, phone, organization, role, geography, source, contact_type (investor/owner/intermediary/advisor/river_guide), tags (array), notes
+**contacts**: name (required), email, phone, organization, role, geography, source, contact_type (investor/owner/intermediary/advisor/river_guide/operator/other), tags (array), notes
 
 **deals**: name (required), source (proprietary/brokered/inbound), stage (screening/contacted/teaser/cim/ioi/loi/dd/financing/signing/closed_won/lost), notes
 

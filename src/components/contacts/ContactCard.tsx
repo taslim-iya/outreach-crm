@@ -25,6 +25,8 @@ const typeIcons: Record<ContactType, React.ElementType> = {
   intermediary: Briefcase,
   advisor: User,
   river_guide: Compass,
+  operator: User,
+  other: User,
 };
 
 const typeLabels: Record<ContactType, string> = {
@@ -33,6 +35,8 @@ const typeLabels: Record<ContactType, string> = {
   intermediary: 'Intermediary',
   advisor: 'Advisor',
   river_guide: 'River Guide',
+  operator: 'Operator',
+  other: 'Other',
 };
 
 const warmthColors: Record<WarmthLevel, string> = {

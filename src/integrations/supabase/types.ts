@@ -1532,6 +1532,8 @@ export type Database = {
         | "intermediary"
         | "advisor"
         | "river_guide"
+        | "operator"
+        | "other"
       deal_sourcing_stage:
         | "screening"
         | "contacted"
@@ -1702,6 +1704,8 @@ export const Constants = {
         "intermediary",
         "advisor",
         "river_guide",
+        "operator",
+        "other",
       ],
       deal_sourcing_stage: [
         "screening",

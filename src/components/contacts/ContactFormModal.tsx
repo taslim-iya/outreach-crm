@@ -350,6 +350,8 @@ export function ContactFormModal({ open, onOpenChange, contact }: ContactFormMod
                   <SelectItem value="intermediary">Intermediary</SelectItem>
                   <SelectItem value="advisor">Advisor</SelectItem>
                   <SelectItem value="river_guide">River Guide</SelectItem>
+                  <SelectItem value="operator">Operator</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>

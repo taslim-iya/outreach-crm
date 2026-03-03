@@ -22,6 +22,8 @@ const TYPE_OPTIONS: { key: ContactType; label: string }[] = [
   { key: 'intermediary', label: 'Intermediary' },
   { key: 'advisor', label: 'Advisor' },
   { key: 'river_guide', label: 'River Guide' },
+  { key: 'operator', label: 'Operator' },
+  { key: 'other', label: 'Other' },
 ];
 
 const warmthColors: Record<string, string> = {
