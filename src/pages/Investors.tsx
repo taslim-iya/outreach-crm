@@ -1,20 +1,20 @@
-import { useState } from 'react';
-import { KanbanColumn } from '@/components/pipeline/KanbanColumn';
-import { InvestorCard } from '@/components/pipeline/InvestorCard';
+import { useState, useMemo } from 'react';
 import { InvestorFormModal } from '@/components/pipeline/InvestorFormModal';
 import { DeleteInvestorDialog } from '@/components/pipeline/DeleteInvestorDialog';
 import { CommitmentAmountModal } from '@/components/pipeline/CommitmentAmountModal';
 import { InvestorUpdateModal } from '@/components/updates/InvestorUpdateModal';
 import { BulkEmailModal } from '@/components/pipeline/BulkEmailModal';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useInvestorDeals, InvestorDeal, InvestorStage, useUpdateInvestorStage, useUpdateInvestorStageWithCommitment } from '@/hooks/useInvestorDeals';
-import { Plus, Search, Filter, Loader2, TrendingUp, FileText, Mail } from 'lucide-react';
+import { Plus, Search, Loader2, TrendingUp, FileText, Mail, Pencil, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { DragDropContext, Draggable, type DropResult } from '@hello-pangea/dnd';
 import { toast } from 'sonner';
 
 const stages: { key: InvestorStage; label: string; color: string }[] = [
@@ -39,19 +39,29 @@ const stageLabels: Record<InvestorStage, string> = {
   closed: 'Closed',
 };
 
+const stageColors: Record<InvestorStage, string> = {
+  not_contacted: 'bg-stage-cold',
+  outreach_sent: 'bg-info',
+  follow_up: 'bg-stage-warm',
+  meeting_scheduled: 'bg-primary',
+  interested: 'bg-success',
+  passed: 'bg-stage-passed',
+  committed: 'bg-success',
+  closed: 'bg-success',
+};
+
 export default function Investors() {
   const { user } = useAuth();
   const { data: investors = [], isLoading } = useInvestorDeals();
   const [searchQuery, setSearchQuery] = useState('');
+  const [stageFilter, setStageFilter] = useState<string>('all');
   const updateStage = useUpdateInvestorStage();
   const updateStageWithCommitment = useUpdateInvestorStageWithCommitment();
 
-  // Commitment modal state for drag-to-committed/closed
   const [commitmentModalOpen, setCommitmentModalOpen] = useState(false);
-  const [pendingDragDeal, setPendingDragDeal] = useState<InvestorDeal | null>(null);
-  const [pendingDragStage, setPendingDragStage] = useState<'committed' | 'closed' | null>(null);
+  const [pendingDeal, setPendingDeal] = useState<InvestorDeal | null>(null);
+  const [pendingStage, setPendingStage] = useState<'committed' | 'closed' | null>(null);
 
-  // Fetch company name from profile
   const { data: profile } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
@@ -69,7 +79,6 @@ export default function Investors() {
 
   const companyName = profile?.company_name;
 
-  // Modal states
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isUpdateOpen, setIsUpdateOpen] = useState(false);
@@ -78,102 +87,68 @@ export default function Investors() {
   const [defaultStage, setDefaultStage] = useState<InvestorStage>('not_contacted');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const toggleSelect = (id: string) => {
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
+  const filtered = useMemo(() => {
+    return investors.filter((inv) => {
+      const matchesSearch =
+        !searchQuery ||
+        inv.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (inv.organization?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
+      const matchesStage = stageFilter === 'all' || inv.stage === stageFilter;
+      return matchesSearch && matchesStage;
     });
-  };
-
-  const selectAllInStage = (stage: InvestorStage) => {
-    const ids = getDealsForStage(stage).map(d => d.id);
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      const allSelected = ids.every(id => next.has(id));
-      if (allSelected) {
-        ids.forEach(id => next.delete(id));
-      } else {
-        ids.forEach(id => next.add(id));
-      }
-      return next;
-    });
-  };
+  }, [investors, searchQuery, stageFilter]);
 
   const selectedInvestors = investors.filter(i => selectedIds.has(i.id));
 
-  const filteredInvestors = investors.filter((investor) => {
-    const matchesSearch =
-      investor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (investor.organization?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
-    return matchesSearch;
-  });
-
-  const getDealsForStage = (stage: InvestorStage) => {
-    return filteredInvestors.filter((investor) => investor.stage === stage);
+  const toggleSelect = (id: string) => {
+    const next = new Set(selectedIds);
+    next.has(id) ? next.delete(id) : next.add(id);
+    setSelectedIds(next);
   };
 
-  const handleAddInvestor = (stage?: InvestorStage) => {
-    setSelectedInvestor(null);
-    setDefaultStage(stage || 'not_contacted');
-    setIsFormOpen(true);
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filtered.length && filtered.length > 0) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map(i => i.id)));
+    }
   };
 
-  const handleEditInvestor = (investor: InvestorDeal) => {
-    setSelectedInvestor(investor);
-    setIsFormOpen(true);
-  };
-
-  const handleDeleteInvestor = (investor: InvestorDeal) => {
-    setSelectedInvestor(investor);
-    setIsDeleteOpen(true);
-  };
-
-  const handleDragEnd = async (result: DropResult) => {
-    const { draggableId, destination, source } = result;
-
-    if (!destination) return;
-    if (destination.droppableId === source.droppableId) return;
-
-    const newStage = destination.droppableId as InvestorStage;
-    const deal = investors.find((d) => d.id === draggableId);
-    if (!deal) return;
-
-    // For committed/closed, prompt for commitment amount
+  const handleStageChange = async (investor: InvestorDeal, newStage: InvestorStage) => {
+    if (newStage === investor.stage) return;
     if (newStage === 'committed' || newStage === 'closed') {
-      setPendingDragDeal(deal);
-      setPendingDragStage(newStage);
+      setPendingDeal(investor);
+      setPendingStage(newStage);
       setCommitmentModalOpen(true);
       return;
     }
-
     try {
-      await updateStage.mutateAsync({ id: deal.id, stage: newStage });
+      await updateStage.mutateAsync({ id: investor.id, stage: newStage });
       toast.success(`Moved to ${stageLabels[newStage]}`);
     } catch {
       toast.error('Failed to update stage');
     }
   };
 
-  const handleDragCommitmentConfirm = async (amount: number) => {
-    if (!pendingDragDeal || !pendingDragStage) return;
+  const handleCommitmentConfirm = async (amount: number) => {
+    if (!pendingDeal || !pendingStage) return;
     try {
       await updateStageWithCommitment.mutateAsync({
-        id: pendingDragDeal.id,
-        stage: pendingDragStage,
+        id: pendingDeal.id,
+        stage: pendingStage,
         commitment_amount: amount,
       });
-      toast.success(`Moved to ${stageLabels[pendingDragStage]}`);
+      toast.success(`Moved to ${stageLabels[pendingStage]}`);
       setCommitmentModalOpen(false);
-      setPendingDragDeal(null);
-      setPendingDragStage(null);
+      setPendingDeal(null);
+      setPendingStage(null);
     } catch {
       toast.error('Failed to update stage');
     }
   };
 
   const formatCurrency = (amount?: number | null) => {
-    if (!amount) return null;
+    if (!amount) return '—';
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
@@ -182,28 +157,24 @@ export default function Investors() {
     }).format(amount);
   };
 
+  if (isLoading) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
-    <div className="h-[calc(100vh-3.5rem)] lg:h-screen flex flex-col bg-background">
-      <div className="p-4 md:p-6 pb-4">
-        {/* Premium Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
-          <div>
-            <div className="flex items-center gap-3 mb-1">
-              <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-md">
-                <TrendingUp className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-xl md:text-2xl font-semibold text-foreground tracking-tight">
-                  {companyName ? `${companyName} Investor Pipeline` : 'Investor Pipeline'}
-                </h1>
-                <p className="text-sm text-muted-foreground">Track your fundraising progress</p>
-              </div>
-            </div>
-          </div>
+    <div className="p-4 md:p-6">
+      <PageHeader
+        title={companyName ? `${companyName} Investor Pipeline` : 'Investor Pipeline'}
+        description="Track your fundraising progress"
+        actions={
           <div className="flex gap-2">
             {selectedIds.size > 0 && (
-              <Button variant="outline" onClick={() => setIsBulkEmailOpen(true)}>
-                <Mail className="w-4 h-4 mr-2" />
+              <Button variant="outline" size="sm" onClick={() => setIsBulkEmailOpen(true)}>
+                <Mail className="w-4 h-4 mr-1" />
                 Email {selectedIds.size} Selected
               </Button>
             )}
@@ -212,105 +183,144 @@ export default function Investors() {
                 Clear
               </Button>
             )}
-            <Button variant="outline" onClick={() => setIsUpdateOpen(true)}>
-              <FileText className="w-4 h-4 mr-2" />
+            <Button variant="outline" size="sm" onClick={() => setIsUpdateOpen(true)}>
+              <FileText className="w-4 h-4 mr-1" />
               Send Update
             </Button>
-            <Button onClick={() => handleAddInvestor()} className="gradient-primary shadow-md hover:shadow-lg transition-shadow">
-              <Plus className="w-4 h-4 mr-2" />
+            <Button size="sm" onClick={() => { setSelectedInvestor(null); setDefaultStage('not_contacted'); setIsFormOpen(true); }}>
+              <Plus className="w-4 h-4 mr-1" />
               Add Investor
             </Button>
           </div>
-        </div>
+        }
+      />
 
-        {/* Search Bar */}
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search investors..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-card border-border shadow-xs focus:shadow-sm transition-shadow"
-            />
-          </div>
-          <Button variant="outline" size="icon" className="shadow-xs">
-            <Filter className="w-4 h-4" />
-          </Button>
+      {/* Filters */}
+      <div className="flex flex-wrap gap-3 mb-4">
+        <div className="relative flex-1 min-w-[200px] max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search name, organization..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 h-9"
+          />
         </div>
+        <Select value={stageFilter} onValueChange={setStageFilter}>
+          <SelectTrigger className="w-[180px] h-9">
+            <SelectValue placeholder="Stage" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Stages</SelectItem>
+            {stages.map((s) => (
+              <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      {/* Loading State */}
-      {isLoading && (
-        <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
-      )}
-
-      {/* Empty State */}
-      {!isLoading && investors.length === 0 && (
-        <div className="flex-1 flex flex-col items-center justify-center px-6">
-          <TrendingUp className="w-12 h-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium text-foreground mb-2">No investors yet</h3>
-          <p className="text-sm text-muted-foreground mb-4 text-center max-w-md">
-            Start building your investor pipeline by adding your first investor.
-          </p>
-          <Button onClick={() => handleAddInvestor()}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Your First Investor
-          </Button>
-        </div>
-      )}
-
-      {/* Kanban Board with Drag & Drop */}
-      {!isLoading && investors.length > 0 && (
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="flex-1 overflow-x-auto px-6 pb-6">
-            <div className="flex gap-4 h-full min-w-max">
-              {stages.map((stage) => {
-                const deals = getDealsForStage(stage.key);
-                return (
-                  <KanbanColumn
-                    key={stage.key}
-                    title={stage.label}
-                    count={deals.length}
-                    color={stage.color}
-                    droppableId={stage.key}
-                  >
-                    {deals.map((deal, index) => (
-                      <Draggable key={deal.id} draggableId={deal.id} index={index}>
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            className={`relative ${snapshot.isDragging ? 'opacity-90 rotate-1 scale-[1.02]' : ''}`}
-                            style={provided.draggableProps.style}
-                          >
-                            <div className="absolute top-2 left-2 z-10">
-                              <Checkbox
-                                checked={selectedIds.has(deal.id)}
-                                onCheckedChange={() => toggleSelect(deal.id)}
-                                className="bg-background"
-                                onClick={(e) => e.stopPropagation()}
-                              />
+      {/* Table */}
+      <div className="border border-border rounded-xl overflow-hidden bg-card">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-10">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.size === filtered.length && filtered.length > 0}
+                  onChange={toggleSelectAll}
+                  className="rounded"
+                />
+              </TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Organization</TableHead>
+              <TableHead>Stage</TableHead>
+              <TableHead>Commitment</TableHead>
+              <TableHead>Notes</TableHead>
+              <TableHead className="w-10" />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filtered.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-12">
+                  <TrendingUp className="w-10 h-10 mx-auto text-muted-foreground/40 mb-3" />
+                  <p className="text-muted-foreground font-medium">No investors found</p>
+                  <p className="text-sm text-muted-foreground/60 mt-1">Add your first investor to get started</p>
+                </TableCell>
+              </TableRow>
+            ) : (
+              filtered.map((inv) => (
+                <TableRow key={inv.id} className="group">
+                  <TableCell>
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(inv.id)}
+                      onChange={() => toggleSelect(inv.id)}
+                      className="rounded"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-medium text-foreground">{inv.name}</span>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{inv.organization || '—'}</TableCell>
+                  <TableCell>
+                    <Select
+                      value={inv.stage}
+                      onValueChange={(val) => handleStageChange(inv, val as InvestorStage)}
+                    >
+                      <SelectTrigger className="h-7 w-[160px] border-none bg-transparent p-0 shadow-none focus:ring-0">
+                        <div className="flex items-center gap-1.5">
+                          <div className={`w-2 h-2 rounded-full ${stageColors[inv.stage] || ''}`} />
+                          <span className="text-xs">{stageLabels[inv.stage]}</span>
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {stages.map((s) => (
+                          <SelectItem key={s.key} value={s.key}>
+                            <div className="flex items-center gap-1.5">
+                              <div className={`w-2 h-2 rounded-full ${s.color}`} />
+                              {s.label}
                             </div>
-                            <InvestorCard
-                              deal={deal}
-                              onEdit={() => handleEditInvestor(deal)}
-                              onDelete={() => handleDeleteInvestor(deal)}
-                            />
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                  </KanbanColumn>
-                );
-              })}
-            </div>
-          </div>
-        </DragDropContext>
-      )}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {formatCurrency(inv.commitment_amount)}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground max-w-[200px] truncate">
+                    {inv.notes || '—'}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => { setSelectedInvestor(inv); setIsFormOpen(true); }}
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => { setSelectedInvestor(inv); setIsDeleteOpen(true); }}
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      <p className="text-xs text-muted-foreground mt-2">{filtered.length} of {investors.length} investors</p>
 
       {/* Modals */}
       <InvestorFormModal
@@ -324,22 +334,17 @@ export default function Investors() {
         onOpenChange={setIsDeleteOpen}
         investor={selectedInvestor}
       />
-      {/* Commitment modal for drag-to-committed/closed */}
       <CommitmentAmountModal
         open={commitmentModalOpen}
         onOpenChange={(open) => {
           setCommitmentModalOpen(open);
-          if (!open) {
-            setPendingDragDeal(null);
-            setPendingDragStage(null);
-          }
+          if (!open) { setPendingDeal(null); setPendingStage(null); }
         }}
-        investor={pendingDragDeal}
-        targetStage={pendingDragStage || 'committed'}
-        onConfirm={handleDragCommitmentConfirm}
+        investor={pendingDeal}
+        targetStage={pendingStage || 'committed'}
+        onConfirm={handleCommitmentConfirm}
         isLoading={updateStageWithCommitment.isPending}
       />
-
       <InvestorUpdateModal open={isUpdateOpen} onOpenChange={setIsUpdateOpen} />
       <BulkEmailModal
         open={isBulkEmailOpen}
