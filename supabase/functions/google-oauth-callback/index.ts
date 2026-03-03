@@ -8,7 +8,10 @@ Deno.serve(async (req) => {
     const error = url.searchParams.get('error');
 
     // Determine the redirect base URL (Settings page)
-    const redirectBase = Deno.env.get('FRONTEND_URL') || 'https://lovable.dev';
+    let redirectBase = Deno.env.get('FRONTEND_URL') || 'https://lovable.dev';
+    if (!redirectBase.startsWith('http://') && !redirectBase.startsWith('https://')) {
+      redirectBase = `https://${redirectBase}`;
+    }
     const settingsUrl = `${redirectBase}/settings`;
 
     if (error) {
@@ -105,7 +108,10 @@ Deno.serve(async (req) => {
     return Response.redirect(`${settingsUrl}?google_auth=success&email=${encodeURIComponent(userInfo.email)}`, 302);
   } catch (error) {
     console.error('Error in google-oauth-callback:', error);
-    const redirectBase = Deno.env.get('FRONTEND_URL') || 'https://lovable.dev';
+    let redirectBase = Deno.env.get('FRONTEND_URL') || 'https://lovable.dev';
+    if (!redirectBase.startsWith('http://') && !redirectBase.startsWith('https://')) {
+      redirectBase = `https://${redirectBase}`;
+    }
     return Response.redirect(`${redirectBase}/settings?google_auth=error&message=internal_error`, 302);
   }
 });

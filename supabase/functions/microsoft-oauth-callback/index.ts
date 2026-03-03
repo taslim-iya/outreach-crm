@@ -8,7 +8,10 @@ Deno.serve(async (req) => {
     const error = url.searchParams.get('error');
     const errorDescription = url.searchParams.get('error_description');
 
-    const redirectBase = Deno.env.get('FRONTEND_URL') || 'https://lovable.dev';
+    let redirectBase = Deno.env.get('FRONTEND_URL') || 'https://lovable.dev';
+    if (!redirectBase.startsWith('http://') && !redirectBase.startsWith('https://')) {
+      redirectBase = `https://${redirectBase}`;
+    }
     const settingsUrl = `${redirectBase}/settings`;
 
     if (error) {
@@ -104,7 +107,10 @@ Deno.serve(async (req) => {
     return Response.redirect(`${settingsUrl}?microsoft_auth=success&email=${encodeURIComponent(email)}`, 302);
   } catch (error) {
     console.error('Error in microsoft-oauth-callback:', error);
-    const redirectBase = Deno.env.get('FRONTEND_URL') || 'https://lovable.dev';
+    let redirectBase = Deno.env.get('FRONTEND_URL') || 'https://lovable.dev';
+    if (!redirectBase.startsWith('http://') && !redirectBase.startsWith('https://')) {
+      redirectBase = `https://${redirectBase}`;
+    }
     return Response.redirect(`${redirectBase}/settings?microsoft_auth=error&message=internal_error`, 302);
   }
 });
