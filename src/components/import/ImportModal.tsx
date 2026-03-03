@@ -151,7 +151,7 @@ export function ImportModal({ open, onOpenChange, entityType, onImport }: Import
     setProgress(0);
 
     try {
-      const chunkSize = 50;
+      const chunkSize = 200;
       for (let i = 0; i < toImport.length; i += chunkSize) {
         const chunk = toImport.slice(i, i + chunkSize);
         await onImport(chunk, detectedType);
