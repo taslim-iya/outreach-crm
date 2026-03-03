@@ -90,7 +90,7 @@ serve(async (req) => {
 
 Choose the best matching type based on the columns/content.`;
 
-    const systemPrompt = `You are a data extraction AI. ${entityTypeInstruction}
+    const systemPrompt = `You are a data extraction AI. You MUST extract ALL records from the data — up to 200 records. Do NOT truncate, summarize, or stop early. Extract every single row. ${entityTypeInstruction}
 
 Based on the detected (or specified) type, extract records into a JSON object with this structure:
 {
@@ -115,10 +115,11 @@ Use null for missing fields. Infer values where reasonable (e.g., map revenue nu
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-flash",
+        max_tokens: 65000,
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `Parse the following document and extract all records:\n\n${rawText}` },
+          { role: "user", content: `Parse the following document and extract ALL records (every single row, up to 200). Do not stop early or truncate:\n\n${rawText}` },
         ],
       }),
     });
