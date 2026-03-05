@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { useGenerateUpdate, useSaveUpdate } from '@/hooks/useInvestorUpdates';
 import { useSendEmail } from '@/hooks/useSendEmail';
+import { useDocuments } from '@/hooks/useDocuments';
 import { useInvestorDeals } from '@/hooks/useInvestorDeals';
-import { Loader2, Sparkles, Send, Save, RefreshCw } from 'lucide-react';
+import { Loader2, Sparkles, Send, Save, RefreshCw, Paperclip, FileText, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface InvestorUpdateModalProps {
@@ -21,11 +23,15 @@ export function InvestorUpdateModal({ open, onOpenChange }: InvestorUpdateModalP
   const [customNotes, setCustomNotes] = useState('');
   const [step, setStep] = useState<'generate' | 'edit'>('generate');
   const [isSending, setIsSending] = useState(false);
+  const [attachedDocIds, setAttachedDocIds] = useState<string[]>([]);
+  const [manualFiles, setManualFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const generateUpdate = useGenerateUpdate();
   const saveUpdate = useSaveUpdate();
   const sendEmail = useSendEmail();
   const { data: investors } = useInvestorDeals();
+  const { documents, uploadDocument } = useDocuments();
 
   const committedInvestors = investors?.filter(i => ['committed', 'closed'].includes(i.stage)) || [];
 
@@ -44,6 +50,33 @@ export function InvestorUpdateModal({ open, onOpenChange }: InvestorUpdateModalP
     saveUpdate.mutate({ title, content, status: 'draft' });
   };
 
+  const toggleAttachment = (docId: string) => {
+    setAttachedDocIds((prev) =>
+      prev.includes(docId) ? prev.filter((id) => id !== docId) : [...prev, docId]
+    );
+  };
+
+  const attachedDocs = documents.filter((d) => attachedDocIds.includes(d.id));
+
+  const resolveAttachmentDocIds = async () => {
+    if (manualFiles.length === 0) return attachedDocIds;
+
+    const uploadedDocs = await Promise.all(
+      manualFiles.map((file) =>
+        uploadDocument.mutateAsync({
+          file,
+          documentType: 'other',
+        })
+      )
+    );
+
+    const mergedIds = [...new Set([...attachedDocIds, ...uploadedDocs.map((doc) => doc.id)])];
+    setAttachedDocIds(mergedIds);
+    setManualFiles([]);
+
+    return mergedIds;
+  };
+
   const handleSendToAll = async () => {
     if (committedInvestors.length === 0) {
       toast.error('No committed investors to send to');
@@ -52,6 +85,8 @@ export function InvestorUpdateModal({ open, onOpenChange }: InvestorUpdateModalP
 
     setIsSending(true);
     try {
+      const attachmentDocIds = await resolveAttachmentDocIds();
+
       // Send to each committed investor's contact
       let sentCount = 0;
       for (const investor of committedInvestors) {
@@ -69,6 +104,7 @@ export function InvestorUpdateModal({ open, onOpenChange }: InvestorUpdateModalP
                 to: contact.email,
                 subject: title,
                 body: content,
+                attachment_doc_ids: attachmentDocIds.length > 0 ? attachmentDocIds : undefined,
               });
               sentCount++;
             } catch {
@@ -83,7 +119,7 @@ export function InvestorUpdateModal({ open, onOpenChange }: InvestorUpdateModalP
       toast.success(`Update sent to ${sentCount} investor(s)`);
       onOpenChange(false);
       resetState();
-    } catch (error) {
+    } catch {
       toast.error('Failed to send updates');
     } finally {
       setIsSending(false);
@@ -95,6 +131,8 @@ export function InvestorUpdateModal({ open, onOpenChange }: InvestorUpdateModalP
     setContent('');
     setCustomNotes('');
     setTitle('Monthly Investor Update');
+    setAttachedDocIds([]);
+    setManualFiles([]);
   };
 
   return (
@@ -186,6 +224,86 @@ export function InvestorUpdateModal({ open, onOpenChange }: InvestorUpdateModalP
                 placeholder="Your update content..."
               />
             </div>
+            <div>
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-2">
+                  <Paperclip className="w-4 h-4" />
+                  Attachments
+                </Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="gap-1 h-7 text-xs"
+                >
+                  <Upload className="w-3 h-3" />
+                  Upload
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      setManualFiles((prev) => [...prev, ...Array.from(e.target.files!)]);
+                    }
+                    e.target.value = '';
+                  }}
+                />
+              </div>
+
+              {(attachedDocs.length > 0 || manualFiles.length > 0) && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {attachedDocs.map((doc) => (
+                    <Badge key={doc.id} variant="secondary" className="flex items-center gap-1 pr-1 text-xs">
+                      <FileText className="w-3 h-3" />
+                      <span className="max-w-[120px] truncate">{doc.name}</span>
+                      <button
+                        onClick={() => toggleAttachment(doc.id)}
+                        className="ml-1 hover:text-destructive"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                  {manualFiles.map((file, idx) => (
+                    <Badge key={`manual-${idx}`} variant="secondary" className="flex items-center gap-1 pr-1 text-xs">
+                      <Upload className="w-3 h-3" />
+                      <span className="max-w-[120px] truncate">{file.name}</span>
+                      <button
+                        onClick={() => setManualFiles((prev) => prev.filter((_, i) => i !== idx))}
+                        className="ml-1 hover:text-destructive"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+
+              {documents.length > 0 && (
+                <div className="mt-2 max-h-[100px] overflow-y-auto border rounded-md">
+                  {documents
+                    .filter((d) => !attachedDocIds.includes(d.id))
+                    .map((doc) => (
+                      <button
+                        key={doc.id}
+                        onClick={() => toggleAttachment(doc.id)}
+                        className="w-full text-left px-3 py-1.5 text-xs hover:bg-accent/50 flex items-center gap-2 border-b last:border-b-0"
+                      >
+                        <FileText className="w-3 h-3 text-muted-foreground shrink-0" />
+                        <span className="truncate">{doc.name}</span>
+                        <Badge variant="outline" className="text-[10px] ml-auto shrink-0">
+                          {doc.document_type}
+                        </Badge>
+                      </button>
+                    ))}
+                </div>
+              )}
+            </div>
+
             <div className="flex gap-2">
               <Button variant="outline" onClick={handleSaveDraft} disabled={saveUpdate.isPending} className="flex-1">
                 <Save className="w-4 h-4 mr-2" />
@@ -193,10 +311,10 @@ export function InvestorUpdateModal({ open, onOpenChange }: InvestorUpdateModalP
               </Button>
               <Button
                 onClick={handleSendToAll}
-                disabled={isSending || committedInvestors.length === 0}
+                disabled={isSending || committedInvestors.length === 0 || uploadDocument.isPending}
                 className="flex-1 gradient-primary text-primary-foreground"
               >
-                {isSending ? (
+                {isSending || uploadDocument.isPending ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : (
                   <Send className="w-4 h-4 mr-2" />
