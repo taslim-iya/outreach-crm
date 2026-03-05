@@ -35,7 +35,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { InvestorDeal } from '@/hooks/useInvestorDeals';
+import { InvestorDeal, useUpdateInvestorStage } from '@/hooks/useInvestorDeals';
 
 interface BulkEmailModalProps {
   open: boolean;
@@ -82,6 +82,7 @@ export function BulkEmailModal({ open, onOpenChange, investors }: BulkEmailModal
   const { data: templates } = useEmailTemplates();
   const sendEmail = useSendEmail();
   const { documents } = useDocuments();
+  const updateStage = useUpdateInvestorStage();
 
   // Load contact emails for selected investors
   useEffect(() => {
@@ -235,6 +236,16 @@ export function BulkEmailModal({ open, onOpenChange, investors }: BulkEmailModal
       });
       setSentCount(prev => prev + 1);
       toast.success(`Sent to ${r.name}`);
+
+      // Auto-move investor from not_contacted to outreach_sent
+      const investor = investors.find(i => i.id === r.investorId);
+      if (investor && investor.stage === 'not_contacted') {
+        try {
+          await updateStage.mutateAsync({ id: investor.id, stage: 'outreach_sent' });
+        } catch {
+          // silently fail stage update
+        }
+      }
     } catch {
       toast.error(`Failed to send to ${r.name}`);
     } finally {
