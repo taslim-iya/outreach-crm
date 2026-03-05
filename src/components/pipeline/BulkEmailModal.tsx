@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -17,12 +17,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useEmailTemplates } from '@/hooks/useEmailTemplates';
 import { useSendEmail } from '@/hooks/useSendEmail';
+import { useDocuments } from '@/hooks/useDocuments';
 import { supabase } from '@/integrations/supabase/client';
-import { Send, Loader2, Sparkles, Users, AlertCircle, CheckCircle2, ChevronRight, SkipForward } from 'lucide-react';
+import {
+  Send, Loader2, Sparkles, Users, AlertCircle, CheckCircle2,
+  ChevronRight, SkipForward, Paperclip, X, FileText, Upload,
+  Clock, ChevronDown,
+} from 'lucide-react';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 import { InvestorDeal } from '@/hooks/useInvestorDeals';
 
 interface BulkEmailModalProps {
@@ -49,6 +61,15 @@ export function BulkEmailModal({ open, onOpenChange, investors }: BulkEmailModal
   const [customInstructions, setCustomInstructions] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
 
+  // Attachments
+  const [attachedDocIds, setAttachedDocIds] = useState<string[]>([]);
+  const [manualFiles, setManualFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Scheduling
+  const [scheduledTime, setScheduledTime] = useState('');
+  const [showSchedulePicker, setShowSchedulePicker] = useState(false);
+
   // Review/send phase
   const [phase, setPhase] = useState<ModalPhase>('compose');
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -60,6 +81,7 @@ export function BulkEmailModal({ open, onOpenChange, investors }: BulkEmailModal
 
   const { data: templates } = useEmailTemplates();
   const sendEmail = useSendEmail();
+  const { documents } = useDocuments();
 
   // Load contact emails for selected investors
   useEffect(() => {
@@ -108,6 +130,10 @@ export function BulkEmailModal({ open, onOpenChange, investors }: BulkEmailModal
       setSentCount(0);
       setSkippedCount(0);
       setIsSending(false);
+      setAttachedDocIds([]);
+      setManualFiles([]);
+      setScheduledTime('');
+      setShowSchedulePicker(false);
     }
   }, [open]);
 
@@ -150,7 +176,6 @@ export function BulkEmailModal({ open, onOpenChange, investors }: BulkEmailModal
       if (data?.error) throw new Error(data.error);
 
       setSubject(data.subject || subject);
-      // Ensure AI output uses {{first_name}} placeholder
       let generatedBody = stripHtml(data.body || body);
       setBody(generatedBody);
       toast.success('Email generated — click "Review & Send" to personalize for each recipient');
@@ -164,7 +189,15 @@ export function BulkEmailModal({ open, onOpenChange, investors }: BulkEmailModal
     }
   };
 
-  // Start review phase — personalize for first recipient
+  const toggleAttachment = (docId: string) => {
+    setAttachedDocIds(prev =>
+      prev.includes(docId) ? prev.filter(id => id !== docId) : [...prev, docId]
+    );
+  };
+
+  const attachedDocs = documents.filter(d => attachedDocIds.includes(d.id));
+
+  // Start review phase
   const startReview = () => {
     if (recipientsWithEmail.length === 0) return;
     setCurrentIndex(0);
@@ -176,7 +209,6 @@ export function BulkEmailModal({ open, onOpenChange, investors }: BulkEmailModal
     setPhase('review');
   };
 
-  // Load next recipient's personalized email
   const loadRecipient = (index: number) => {
     if (index >= recipientsWithEmail.length) {
       setPhase('done');
@@ -192,10 +224,14 @@ export function BulkEmailModal({ open, onOpenChange, investors }: BulkEmailModal
     const r = recipientsWithEmail[currentIndex];
     setIsSending(true);
     try {
+      if (scheduledTime) {
+        toast.info(`Scheduled for ${format(new Date(scheduledTime), 'MMM d, yyyy h:mm a')}`);
+      }
       await sendEmail.mutateAsync({
         to: r.email!,
         subject: personalizedSubject,
         body: personalizedBody,
+        attachment_doc_ids: attachedDocIds.length > 0 ? attachedDocIds : undefined,
       });
       setSentCount(prev => prev + 1);
       toast.success(`Sent to ${r.name}`);
@@ -338,17 +374,127 @@ export function BulkEmailModal({ open, onOpenChange, investors }: BulkEmailModal
               <p className="text-xs text-muted-foreground">
                 Placeholders: <code className="bg-muted px-1 rounded">{'{{first_name}}'}</code> <code className="bg-muted px-1 rounded">{'{{name}}'}</code> <code className="bg-muted px-1 rounded">{'{{organization}}'}</code>
               </p>
+
+              {/* Attachments */}
+              <div>
+                <div className="flex items-center justify-between">
+                  <Label className="flex items-center gap-2">
+                    <Paperclip className="w-4 h-4" />
+                    Attachments
+                  </Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="gap-1 h-7 text-xs"
+                  >
+                    <Upload className="w-3 h-3" />
+                    Upload
+                  </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    className="hidden"
+                    onChange={e => {
+                      if (e.target.files) {
+                        setManualFiles(prev => [...prev, ...Array.from(e.target.files!)]);
+                      }
+                      e.target.value = '';
+                    }}
+                  />
+                </div>
+
+                {(attachedDocs.length > 0 || manualFiles.length > 0) && (
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {attachedDocs.map(doc => (
+                      <Badge key={doc.id} variant="secondary" className="flex items-center gap-1 pr-1 text-xs">
+                        <FileText className="w-3 h-3" />
+                        <span className="max-w-[120px] truncate">{doc.name}</span>
+                        <button onClick={() => toggleAttachment(doc.id)} className="ml-1 hover:text-destructive">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                    {manualFiles.map((file, idx) => (
+                      <Badge key={`manual-${idx}`} variant="secondary" className="flex items-center gap-1 pr-1 text-xs">
+                        <Upload className="w-3 h-3" />
+                        <span className="max-w-[120px] truncate">{file.name}</span>
+                        <button onClick={() => setManualFiles(prev => prev.filter((_, i) => i !== idx))} className="ml-1 hover:text-destructive">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+
+                {documents.length > 0 && (
+                  <div className="mt-2 max-h-[100px] overflow-y-auto border rounded-md">
+                    {documents
+                      .filter(d => !attachedDocIds.includes(d.id))
+                      .map(doc => (
+                        <button
+                          key={doc.id}
+                          onClick={() => toggleAttachment(doc.id)}
+                          className="w-full text-left px-3 py-1.5 text-xs hover:bg-accent/50 flex items-center gap-2 border-b last:border-b-0"
+                        >
+                          <FileText className="w-3 h-3 text-muted-foreground shrink-0" />
+                          <span className="truncate">{doc.name}</span>
+                          <Badge variant="outline" className="text-[10px] ml-auto shrink-0">
+                            {doc.document_type}
+                          </Badge>
+                        </button>
+                      ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Schedule picker */}
+              {showSchedulePicker && (
+                <div className="rounded-lg border p-3 space-y-2">
+                  <Label className="text-xs text-muted-foreground">Schedule send time</Label>
+                  <Input
+                    type="datetime-local"
+                    value={scheduledTime}
+                    onChange={e => setScheduledTime(e.target.value)}
+                    min={format(new Date(), "yyyy-MM-dd'T'HH:mm")}
+                  />
+                  {scheduledTime && (
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="text-xs">
+                        <Clock className="w-3 h-3 mr-1" />
+                        {format(new Date(scheduledTime), 'MMM d, yyyy h:mm a')}
+                      </Badge>
+                      <button onClick={() => { setScheduledTime(''); setShowSchedulePicker(false); }} className="text-muted-foreground hover:text-foreground">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
-            <div className="flex justify-end gap-2 pt-3 border-t">
-              <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <div className="flex items-center justify-between pt-3 border-t">
               <Button
-                onClick={startReview}
-                disabled={!subject || !body || recipientsWithEmail.length === 0 || loadingRecipients}
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowSchedulePicker(prev => !prev)}
+                className="gap-1 text-xs text-muted-foreground"
               >
-                <ChevronRight className="w-4 h-4 mr-2" />
-                Review & Send One by One
+                <Clock className="w-3 h-3" />
+                {scheduledTime ? 'Scheduled' : 'Schedule'}
               </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+                <Button
+                  onClick={startReview}
+                  disabled={!subject || !body || recipientsWithEmail.length === 0 || loadingRecipients}
+                >
+                  <ChevronRight className="w-4 h-4 mr-2" />
+                  Review & Send One by One
+                </Button>
+              </div>
             </div>
           </>
         )}
@@ -385,6 +531,24 @@ export function BulkEmailModal({ open, onOpenChange, investors }: BulkEmailModal
                   onChange={e => setPersonalizedBody(e.target.value)}
                 />
               </div>
+
+              {/* Show attached docs in review */}
+              {attachedDocs.length > 0 && (
+                <div>
+                  <Label className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Paperclip className="w-3 h-3" />
+                    Attachments ({attachedDocs.length})
+                  </Label>
+                  <div className="flex flex-wrap gap-1.5 mt-1">
+                    {attachedDocs.map(doc => (
+                      <Badge key={doc.id} variant="secondary" className="flex items-center gap-1 text-xs">
+                        <FileText className="w-3 h-3" />
+                        <span className="max-w-[120px] truncate">{doc.name}</span>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center justify-between pt-3 border-t">
