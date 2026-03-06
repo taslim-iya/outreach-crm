@@ -21,6 +21,7 @@ const CHART_COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--c
 
 export default function AdminAnalytics({ embedded }: { embedded?: boolean }) {
   const [dateRange, setDateRange] = useState('30');
+  const [showAllRecipients, setShowAllRecipients] = useState(false);
   const days = parseInt(dateRange);
 
   const { data: emailAnalytics, isLoading: emailsLoading } = useEmailAnalytics(days);
