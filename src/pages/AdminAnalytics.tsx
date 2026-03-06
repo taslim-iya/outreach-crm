@@ -250,37 +250,44 @@ export default function AdminAnalytics({ embedded }: { embedded?: boolean }) {
             </CardContent>
           </Card>
 
-          {/* Top Recipients */}
+          {/* All Recipients */}
           <Card className="goldman-card">
-            <CardHeader>
-              <CardTitle className="text-sm font-semibold">Top Recipients</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-sm font-semibold">All Recipients</CardTitle>
+              {emailAnalytics && emailAnalytics.topRecipients.length > 10 && (
+                <Button variant="ghost" size="sm" onClick={() => setShowAllRecipients(prev => !prev)}>
+                  {showAllRecipients ? 'Show Top 10' : `Show All (${emailAnalytics.topRecipients.length})`}
+                </Button>
+              )}
             </CardHeader>
             <CardContent>
               {emailAnalytics && emailAnalytics.topRecipients.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Emails Sent</TableHead>
-                      <TableHead>Opens</TableHead>
-                      <TableHead>Open Rate</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {emailAnalytics.topRecipients.map((r) => (
-                      <TableRow key={r.email}>
-                        <TableCell className="font-medium text-sm">{r.email}</TableCell>
-                        <TableCell>{r.count}</TableCell>
-                        <TableCell>{r.opens}</TableCell>
-                        <TableCell>
-                          <Badge variant={r.count > 0 && r.opens / r.count > 0.5 ? 'default' : 'secondary'}>
-                            {r.count > 0 ? Math.round((r.opens / r.count) * 100) : 0}%
-                          </Badge>
-                        </TableCell>
+                <div className={showAllRecipients ? 'max-h-[500px] overflow-y-auto' : ''}>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Emails Sent</TableHead>
+                        <TableHead>Opens</TableHead>
+                        <TableHead>Open Rate</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {(showAllRecipients ? emailAnalytics.topRecipients : emailAnalytics.topRecipients.slice(0, 10)).map((r) => (
+                        <TableRow key={r.email}>
+                          <TableCell className="font-medium text-sm">{r.email}</TableCell>
+                          <TableCell>{r.count}</TableCell>
+                          <TableCell>{r.opens}</TableCell>
+                          <TableCell>
+                            <Badge variant={r.count > 0 && r.opens / r.count > 0.5 ? 'default' : 'secondary'}>
+                              {r.count > 0 ? Math.round((r.opens / r.count) * 100) : 0}%
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-6">No data yet</p>
               )}

@@ -63,8 +63,7 @@ export function useEmailAnalytics(days = 30) {
         emailsByDay: Object.entries(dayMap).map(([date, v]) => ({ date, ...v })).sort((a, b) => a.date.localeCompare(b.date)),
         topRecipients: Object.entries(recipientMap)
           .map(([email, v]) => ({ email, ...v }))
-          .sort((a, b) => b.count - a.count)
-          .slice(0, 10),
+          .sort((a, b) => b.count - a.count),
       };
     },
     enabled: !!user,
