@@ -107,7 +107,7 @@ export function BulkEmailModal({ open, onOpenChange, investors }: BulkEmailModal
         const contact = inv.contact_id ? contactEmails[inv.contact_id] : null;
         return {
           investorId: inv.id,
-          name: inv.name,
+          name: contact?.name?.trim() || inv.name,
           email: contact?.email || null,
           organization: inv.organization,
         };
