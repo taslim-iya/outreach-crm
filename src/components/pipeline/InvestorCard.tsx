@@ -138,9 +138,13 @@ export function InvestorCard({ deal, onEdit, onDelete }: InvestorCardProps) {
             {getInitials(displayName)}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors truncate leading-tight">
+            <button
+              type="button"
+              onClick={() => setComposeOpen(true)}
+              className="text-sm font-semibold text-foreground hover:text-primary transition-colors truncate leading-tight text-left hover:underline cursor-pointer"
+            >
               {displayName}
-            </p>
+            </button>
             {showPersonalName && (
               <div className="flex items-center gap-1 mt-0.5">
                 <User className="w-3 h-3 text-muted-foreground shrink-0" />
