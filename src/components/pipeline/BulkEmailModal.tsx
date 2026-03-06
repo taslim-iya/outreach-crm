@@ -84,9 +84,9 @@ export function BulkEmailModal({ open, onOpenChange, investors }: BulkEmailModal
   const { documents } = useDocuments();
   const updateStage = useUpdateInvestorStage();
 
-  // Load contact emails for selected investors
+  // Load contact emails for selected investors — only during compose phase
   useEffect(() => {
-    if (!open || investors.length === 0) return;
+    if (!open || investors.length === 0 || phase !== 'compose') return;
 
     const loadRecipients = async () => {
       setLoadingRecipients(true);
@@ -117,7 +117,7 @@ export function BulkEmailModal({ open, onOpenChange, investors }: BulkEmailModal
     };
 
     loadRecipients();
-  }, [open, investors]);
+  }, [open, investors, phase]);
 
   useEffect(() => {
     if (open) {
