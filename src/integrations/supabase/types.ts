@@ -1021,7 +1021,9 @@ export type Database = {
           commitment_amount: number | null
           contact_id: string | null
           created_at: string
+          geography: string | null
           id: string
+          investor_type: string | null
           name: string
           notes: string | null
           organization: string | null
@@ -1033,7 +1035,9 @@ export type Database = {
           commitment_amount?: number | null
           contact_id?: string | null
           created_at?: string
+          geography?: string | null
           id?: string
+          investor_type?: string | null
           name: string
           notes?: string | null
           organization?: string | null
@@ -1045,7 +1049,9 @@ export type Database = {
           commitment_amount?: number | null
           contact_id?: string | null
           created_at?: string
+          geography?: string | null
           id?: string
+          investor_type?: string | null
           name?: string
           notes?: string | null
           organization?: string | null
