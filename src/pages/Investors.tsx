@@ -252,7 +252,7 @@ export default function Investors() {
       </div>
 
       {/* Table */}
-      <div className="border border-border rounded-xl overflow-hidden bg-card">
+      <div className="border border-border rounded-xl overflow-hidden bg-card overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -264,14 +264,114 @@ export default function Investors() {
                   className="rounded"
                 />
               </TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Organization</TableHead>
-              <TableHead>Stage</TableHead>
-              <TableHead>Commitment</TableHead>
-              <TableHead>Notes</TableHead>
+              {([
+                ['name', 'Name'],
+                ['organization', 'Organization'],
+                ['investor_type', 'Investor Type'],
+                ['geography', 'Geography'],
+                ['stage', 'Stage'],
+                ['commitment_amount', 'Commitment'],
+                ['notes', 'Notes'],
+              ] as [SortField, string][]).map(([field, label]) => (
+                <TableHead key={field}>
+                  <button
+                    type="button"
+                    onClick={() => handleSort(field)}
+                    className="flex items-center gap-1 hover:text-foreground transition-colors cursor-pointer select-none"
+                  >
+                    {label}
+                    {sortField === field ? (
+                      sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 opacity-30" />
+                    )}
+                  </button>
+                </TableHead>
+              ))}
               <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
+          <TableBody>
+            {filtered.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={9} className="text-center py-12">
+                  <TrendingUp className="w-10 h-10 mx-auto text-muted-foreground/40 mb-3" />
+                  <p className="text-muted-foreground font-medium">No investors found</p>
+                  <p className="text-sm text-muted-foreground/60 mt-1">Add your first investor to get started</p>
+                </TableCell>
+              </TableRow>
+            ) : (
+              filtered.map((inv) => (
+                <TableRow key={inv.id} className="group">
+                  <TableCell>
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(inv.id)}
+                      onChange={() => toggleSelect(inv.id)}
+                      className="rounded"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-medium text-foreground">{inv.name}</span>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{inv.organization || '—'}</TableCell>
+                  <TableCell className="text-muted-foreground">{(inv as any).investor_type || '—'}</TableCell>
+                  <TableCell className="text-muted-foreground">{(inv as any).geography || '—'}</TableCell>
+                  <TableCell>
+                    <Select
+                      value={inv.stage}
+                      onValueChange={(val) => handleStageChange(inv, val as InvestorStage)}
+                    >
+                      <SelectTrigger className="h-7 w-[160px] border-none bg-transparent p-0 shadow-none focus:ring-0">
+                        <div className="flex items-center gap-1.5">
+                          <div className={`w-2 h-2 rounded-full ${stageColors[inv.stage] || ''}`} />
+                          <span className="text-xs">{stageLabels[inv.stage]}</span>
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {stages.map((s) => (
+                          <SelectItem key={s.key} value={s.key}>
+                            <div className="flex items-center gap-1.5">
+                              <div className={`w-2 h-2 rounded-full ${s.color}`} />
+                              {s.label}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {formatCurrency(inv.commitment_amount)}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground max-w-[200px] truncate">
+                    {inv.notes || '—'}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => { setSelectedInvestor(inv); setIsFormOpen(true); }}
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => { setSelectedInvestor(inv); setIsDeleteOpen(true); }}
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
