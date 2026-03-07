@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { ContactFormModal } from '@/components/contacts/ContactFormModal';
 import { DeleteContactDialog } from '@/components/contacts/DeleteContactDialog';
@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useContacts, Contact, useDeleteContact } from '@/hooks/useContacts';
+import { useContacts, Contact, useDeleteContact, useUpdateContact } from '@/hooks/useContacts';
+import { EditableCell } from '@/components/ui/EditableCell';
 import { Database } from '@/integrations/supabase/types';
 import { Plus, Search, Users, Loader2, Upload, Pencil, Trash2 } from 'lucide-react';
 import { ImportModal } from '@/components/import/ImportModal';
@@ -43,6 +44,17 @@ export default function Contacts() {
   const createContact = useCreateContact();
   const createInvestorDeal = useCreateInvestorDeal();
   const deleteContact = useDeleteContact();
+  const updateContact = useUpdateContact();
+
+  const handleInlineEdit = useCallback(async (id: string, field: string, value: string) => {
+    try {
+      const update: any = { id };
+      update[field] = value || null;
+      await updateContact.mutateAsync(update);
+    } catch {
+      toast.error('Failed to update');
+    }
+  }, [updateContact]);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -231,23 +243,47 @@ export default function Contacts() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-foreground">{c.name}</span>
+                      <EditableCell
+                        value={c.name}
+                        onSave={(v) => handleInlineEdit(c.id, 'name', v)}
+                        className="font-medium text-foreground"
+                      />
                       {c.role && <span className="text-xs text-muted-foreground">· {c.role}</span>}
                     </div>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{c.organization || '—'}</TableCell>
+                  <TableCell>
+                    <EditableCell
+                      value={c.organization || ''}
+                      onSave={(v) => handleInlineEdit(c.id, 'organization', v)}
+                      className="text-muted-foreground"
+                    />
+                  </TableCell>
                   <TableCell>
                     <Badge variant="secondary" className="capitalize text-xs">
                       {c.contact_type.replace('_', ' ')}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {c.email ? (
-                      <a href={`mailto:${c.email}`} className="hover:text-primary transition-colors truncate max-w-[180px] block">{c.email}</a>
-                    ) : '—'}
+                  <TableCell>
+                    <EditableCell
+                      value={c.email || ''}
+                      onSave={(v) => handleInlineEdit(c.id, 'email', v)}
+                      className="text-muted-foreground"
+                    />
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{c.phone || '—'}</TableCell>
-                  <TableCell className="text-muted-foreground">{c.geography || '—'}</TableCell>
+                  <TableCell>
+                    <EditableCell
+                      value={c.phone || ''}
+                      onSave={(v) => handleInlineEdit(c.id, 'phone', v)}
+                      className="text-muted-foreground"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <EditableCell
+                      value={c.geography || ''}
+                      onSave={(v) => handleInlineEdit(c.id, 'geography', v)}
+                      className="text-muted-foreground"
+                    />
+                  </TableCell>
                   <TableCell>
                     {c.warmth ? (
                       <div className="flex items-center gap-1.5">

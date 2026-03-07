@@ -10,7 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useInvestorDeals, InvestorDeal, InvestorStage, useUpdateInvestorStage, useUpdateInvestorStageWithCommitment } from '@/hooks/useInvestorDeals';
+import { useInvestorDeals, InvestorDeal, InvestorStage, useUpdateInvestorStage, useUpdateInvestorStageWithCommitment, useUpdateInvestorDeal } from '@/hooks/useInvestorDeals';
+import { EditableCell } from '@/components/ui/EditableCell';
 import { Plus, Search, Loader2, TrendingUp, FileText, Mail, Pencil, Trash2, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
@@ -60,6 +61,21 @@ export default function Investors() {
   const [stageFilter, setStageFilter] = useState<string>('all');
   const updateStage = useUpdateInvestorStage();
   const updateStageWithCommitment = useUpdateInvestorStageWithCommitment();
+  const updateInvestor = useUpdateInvestorDeal();
+
+  const handleInlineEdit = useCallback(async (id: string, field: string, value: string) => {
+    try {
+      const update: any = { id };
+      if (field === 'commitment_amount') {
+        update[field] = value ? parseFloat(value) : null;
+      } else {
+        update[field] = value || null;
+      }
+      await updateInvestor.mutateAsync(update);
+    } catch {
+      toast.error('Failed to update');
+    }
+  }, [updateInvestor]);
 
   const [commitmentModalOpen, setCommitmentModalOpen] = useState(false);
   const [pendingDeal, setPendingDeal] = useState<InvestorDeal | null>(null);
@@ -312,11 +328,33 @@ export default function Investors() {
                     />
                   </TableCell>
                   <TableCell>
-                    <span className="font-medium text-foreground">{inv.name}</span>
+                    <EditableCell
+                      value={inv.name}
+                      onSave={(v) => handleInlineEdit(inv.id, 'name', v)}
+                      className="font-medium text-foreground"
+                    />
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{inv.organization || '—'}</TableCell>
-                  <TableCell className="text-muted-foreground">{(inv as any).investor_type || '—'}</TableCell>
-                  <TableCell className="text-muted-foreground">{(inv as any).geography || '—'}</TableCell>
+                  <TableCell>
+                    <EditableCell
+                      value={inv.organization || ''}
+                      onSave={(v) => handleInlineEdit(inv.id, 'organization', v)}
+                      className="text-muted-foreground"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <EditableCell
+                      value={(inv as any).investor_type || ''}
+                      onSave={(v) => handleInlineEdit(inv.id, 'investor_type', v)}
+                      className="text-muted-foreground"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <EditableCell
+                      value={(inv as any).geography || ''}
+                      onSave={(v) => handleInlineEdit(inv.id, 'geography', v)}
+                      className="text-muted-foreground"
+                    />
+                  </TableCell>
                   <TableCell>
                     <Select
                       value={inv.stage}
@@ -340,11 +378,20 @@ export default function Investors() {
                       </SelectContent>
                     </Select>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {formatCurrency(inv.commitment_amount)}
+                  <TableCell>
+                    <EditableCell
+                      value={inv.commitment_amount?.toString() || ''}
+                      onSave={(v) => handleInlineEdit(inv.id, 'commitment_amount', v)}
+                      className="text-muted-foreground"
+                      type="number"
+                    />
                   </TableCell>
-                  <TableCell className="text-muted-foreground max-w-[200px] truncate">
-                    {inv.notes || '—'}
+                  <TableCell className="max-w-[200px]">
+                    <EditableCell
+                      value={inv.notes || ''}
+                      onSave={(v) => handleInlineEdit(inv.id, 'notes', v)}
+                      className="text-muted-foreground"
+                    />
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100">
