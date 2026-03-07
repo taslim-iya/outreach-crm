@@ -70,6 +70,8 @@ export function InvestorFormModal({ open, onOpenChange, investor, defaultStage =
     commitment_amount: '',
     notes: '',
     contact_id: '',
+    investor_type: '',
+    geography: '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -83,6 +85,8 @@ export function InvestorFormModal({ open, onOpenChange, investor, defaultStage =
         commitment_amount: investor.commitment_amount?.toString() || '',
         notes: investor.notes || '',
         contact_id: investor.contact_id || '',
+        investor_type: (investor as any).investor_type || '',
+        geography: (investor as any).geography || '',
       });
     } else {
       setFormData({
@@ -92,6 +96,8 @@ export function InvestorFormModal({ open, onOpenChange, investor, defaultStage =
         commitment_amount: '',
         notes: '',
         contact_id: '',
+        investor_type: '',
+        geography: '',
       });
     }
     setErrors({});
@@ -134,13 +140,15 @@ export function InvestorFormModal({ open, onOpenChange, investor, defaultStage =
       return;
     }
 
-    const investorData: Omit<InvestorDealInsert, 'user_id'> = {
+    const investorData: Omit<InvestorDealInsert, 'user_id'> & { investor_type?: string | null; geography?: string | null } = {
       name: formData.name.trim(),
       organization: formData.organization.trim() || null,
       stage: formData.stage,
       commitment_amount: commitmentAmount,
       notes: formData.notes.trim() || null,
       contact_id: formData.contact_id || null,
+      investor_type: formData.investor_type.trim() || null,
+      geography: formData.geography.trim() || null,
     };
 
     try {
@@ -252,6 +260,28 @@ export function InvestorFormModal({ open, onOpenChange, investor, defaultStage =
               value={formData.commitment_amount}
               onChange={(e) => setFormData((prev) => ({ ...prev, commitment_amount: e.target.value }))}
               placeholder="0"
+            />
+          </div>
+
+          {/* Investor Type */}
+          <div className="space-y-2">
+            <Label htmlFor="investor_type">Investor Type</Label>
+            <Input
+              id="investor_type"
+              value={formData.investor_type}
+              onChange={(e) => setFormData((prev) => ({ ...prev, investor_type: e.target.value }))}
+              placeholder="e.g. Family Office, VC, Angel..."
+            />
+          </div>
+
+          {/* Geography */}
+          <div className="space-y-2">
+            <Label htmlFor="geography">Geography</Label>
+            <Input
+              id="geography"
+              value={formData.geography}
+              onChange={(e) => setFormData((prev) => ({ ...prev, geography: e.target.value }))}
+              placeholder="e.g. New York, Midwest, Global..."
             />
           </div>
 
