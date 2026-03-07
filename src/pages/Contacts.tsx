@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { ContactFormModal } from '@/components/contacts/ContactFormModal';
 import { DeleteContactDialog } from '@/components/contacts/DeleteContactDialog';
@@ -44,6 +44,17 @@ export default function Contacts() {
   const createContact = useCreateContact();
   const createInvestorDeal = useCreateInvestorDeal();
   const deleteContact = useDeleteContact();
+  const updateContact = useUpdateContact();
+
+  const handleInlineEdit = useCallback(async (id: string, field: string, value: string) => {
+    try {
+      const update: any = { id };
+      update[field] = value || null;
+      await updateContact.mutateAsync(update);
+    } catch {
+      toast.error('Failed to update');
+    }
+  }, [updateContact]);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
