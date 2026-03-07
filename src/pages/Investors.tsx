@@ -378,11 +378,20 @@ export default function Investors() {
                       </SelectContent>
                     </Select>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {formatCurrency(inv.commitment_amount)}
+                  <TableCell>
+                    <EditableCell
+                      value={inv.commitment_amount?.toString() || ''}
+                      onSave={(v) => handleInlineEdit(inv.id, 'commitment_amount', v)}
+                      className="text-muted-foreground"
+                      type="number"
+                    />
                   </TableCell>
-                  <TableCell className="text-muted-foreground max-w-[200px] truncate">
-                    {inv.notes || '—'}
+                  <TableCell className="max-w-[200px]">
+                    <EditableCell
+                      value={inv.notes || ''}
+                      onSave={(v) => handleInlineEdit(inv.id, 'notes', v)}
+                      className="text-muted-foreground"
+                    />
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100">
