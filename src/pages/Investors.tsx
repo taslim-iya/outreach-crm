@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { InvestorFormModal } from '@/components/pipeline/InvestorFormModal';
 import { DeleteInvestorDialog } from '@/components/pipeline/DeleteInvestorDialog';
 import { CommitmentAmountModal } from '@/components/pipeline/CommitmentAmountModal';
@@ -11,7 +11,14 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useInvestorDeals, InvestorDeal, InvestorStage, useUpdateInvestorStage, useUpdateInvestorStageWithCommitment } from '@/hooks/useInvestorDeals';
-import { Plus, Search, Loader2, TrendingUp, FileText, Mail, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Search, Loader2, TrendingUp, FileText, Mail, Pencil, Trash2, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+type SortField = 'name' | 'organization' | 'stage' | 'commitment_amount' | 'investor_type' | 'geography' | 'notes';
+type SortDir = 'asc' | 'desc';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -86,17 +93,46 @@ export default function Investors() {
   const [selectedInvestor, setSelectedInvestor] = useState<InvestorDeal | null>(null);
   const [defaultStage, setDefaultStage] = useState<InvestorStage>('not_contacted');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [sortField, setSortField] = useState<SortField | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
+
+  const handleSort = useCallback((field: SortField) => {
+    if (sortField === field) {
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDir('asc');
+    }
+  }, [sortField]);
 
   const filtered = useMemo(() => {
-    return investors.filter((inv) => {
+    let result = investors.filter((inv) => {
       const matchesSearch =
         !searchQuery ||
         inv.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (inv.organization?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
+        (inv.organization?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
+        ((inv as any).investor_type?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
+        ((inv as any).geography?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
       const matchesStage = stageFilter === 'all' || inv.stage === stageFilter;
       return matchesSearch && matchesStage;
     });
-  }, [investors, searchQuery, stageFilter]);
+
+    if (sortField) {
+      result = [...result].sort((a, b) => {
+        const aVal = ((a as any)[sortField] ?? '') as string;
+        const bVal = ((b as any)[sortField] ?? '') as string;
+        if (sortField === 'commitment_amount') {
+          const aNum = (a.commitment_amount ?? 0);
+          const bNum = (b.commitment_amount ?? 0);
+          return sortDir === 'asc' ? aNum - bNum : bNum - aNum;
+        }
+        const cmp = String(aVal).localeCompare(String(bVal), undefined, { sensitivity: 'base' });
+        return sortDir === 'asc' ? cmp : -cmp;
+      });
+    }
+
+    return result;
+  }, [investors, searchQuery, stageFilter, sortField, sortDir]);
 
   const selectedInvestors = investors.filter(i => selectedIds.has(i.id));
 
