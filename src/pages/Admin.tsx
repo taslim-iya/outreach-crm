@@ -1,5 +1,6 @@
 import { PageHeader } from '@/components/ui/PageHeader';
 import AdminAnalytics from './AdminAnalytics';
+import { InvestorReplyTracker } from '@/components/admin/InvestorReplyTracker';
 
 export default function Admin() {
   return (
@@ -8,7 +9,8 @@ export default function Admin() {
         title="Admin Panel"
         description="Platform analytics and administration"
       />
-      <div className="mt-4">
+      <div className="mt-4 space-y-6">
+        <InvestorReplyTracker />
         <AdminAnalytics embedded />
       </div>
     </div>
