@@ -5,6 +5,128 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const tools = [
+  {
+    type: "function",
+    function: {
+      name: "create_calendar_event",
+      description: "Create a new calendar event / meeting for the user. Use this when the user asks to schedule or add a meeting, event, or appointment.",
+      parameters: {
+        type: "object",
+        properties: {
+          title: { type: "string", description: "Title of the event" },
+          start_time: { type: "string", description: "ISO 8601 start datetime, e.g. 2026-03-10T14:00:00" },
+          end_time: { type: "string", description: "ISO 8601 end datetime, e.g. 2026-03-10T15:00:00" },
+          description: { type: "string", description: "Optional description or notes" },
+          location: { type: "string", description: "Optional location" },
+          meeting_type: { type: "string", enum: ["video", "phone", "in_person", "google_meet"], description: "Optional meeting type" },
+          meeting_link: { type: "string", description: "Optional meeting link URL" },
+          all_day: { type: "boolean", description: "Whether this is an all-day event" },
+        },
+        required: ["title", "start_time", "end_time"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "create_task",
+      description: "Create a new task for the user. Use this when the user asks to add a task, reminder, or to-do item.",
+      parameters: {
+        type: "object",
+        properties: {
+          title: { type: "string", description: "Title of the task" },
+          description: { type: "string", description: "Optional description" },
+          due_date: { type: "string", description: "Optional due date in YYYY-MM-DD format" },
+          priority: { type: "string", enum: ["low", "medium", "high"], description: "Task priority" },
+        },
+        required: ["title"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "create_note",
+      description: "Create a new note for the user. Use this when the user asks to save or jot down a note.",
+      parameters: {
+        type: "object",
+        properties: {
+          title: { type: "string", description: "Title of the note" },
+          content: { type: "string", description: "Content of the note" },
+        },
+        required: ["title"],
+      },
+    },
+  },
+];
+
+async function executeTool(
+  toolName: string,
+  args: Record<string, any>,
+  supabase: any,
+  userId: string,
+): Promise<string> {
+  try {
+    if (toolName === "create_calendar_event") {
+      const { data, error } = await supabase
+        .from("calendar_events")
+        .insert({
+          user_id: userId,
+          title: args.title,
+          start_time: args.start_time,
+          end_time: args.end_time,
+          description: args.description || null,
+          location: args.location || null,
+          meeting_type: args.meeting_type || null,
+          meeting_link: args.meeting_link || null,
+          all_day: args.all_day || false,
+        })
+        .select()
+        .single();
+
+      if (error) return JSON.stringify({ success: false, error: error.message });
+      return JSON.stringify({ success: true, event: { id: data.id, title: data.title, start_time: data.start_time, end_time: data.end_time } });
+    }
+
+    if (toolName === "create_task") {
+      const { data, error } = await supabase
+        .from("tasks")
+        .insert({
+          user_id: userId,
+          title: args.title,
+          description: args.description || null,
+          due_date: args.due_date || null,
+          priority: args.priority || "medium",
+        })
+        .select()
+        .single();
+
+      if (error) return JSON.stringify({ success: false, error: error.message });
+      return JSON.stringify({ success: true, task: { id: data.id, title: data.title } });
+    }
+
+    if (toolName === "create_note") {
+      const { data, error } = await supabase
+        .from("notes")
+        .insert({
+          user_id: userId,
+          title: args.title,
+          content: args.content || null,
+        })
+        .select()
+        .single();
+
+      if (error) return JSON.stringify({ success: false, error: error.message });
+      return JSON.stringify({ success: true, note: { id: data.id, title: data.title } });
+    }
+
+    return JSON.stringify({ success: false, error: "Unknown tool" });
+  } catch (e) {
+    return JSON.stringify({ success: false, error: e instanceof Error ? e.message : "Unknown error" });
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -47,17 +169,8 @@ Deno.serve(async (req) => {
 
     // Fetch all data in parallel
     const [
-      profileRes,
-      investorsRes,
-      companiesRes,
-      contactsRes,
-      dealsRes,
-      tasksRes,
-      emailsRes,
-      calendarRes,
-      notesRes,
-      activitiesRes,
-      updatesRes,
+      profileRes, investorsRes, companiesRes, contactsRes, dealsRes,
+      tasksRes, emailsRes, calendarRes, notesRes, activitiesRes, updatesRes,
     ] = await Promise.all([
       supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
       supabase.from("investor_deals").select("*").order("updated_at", { ascending: false }).limit(50),
@@ -84,7 +197,6 @@ Deno.serve(async (req) => {
     const activities = activitiesRes.data || [];
     const updates = updatesRes.data || [];
 
-    // Build investor pipeline summary
     const investorsByStage: Record<string, number> = {};
     let totalCommitted = 0;
     investors.forEach((inv: any) => {
@@ -94,17 +206,19 @@ Deno.serve(async (req) => {
       }
     });
 
-    // Build deal pipeline summary
     const dealsByStage: Record<string, number> = {};
     deals.forEach((d: any) => {
       dealsByStage[d.stage] = (dealsByStage[d.stage] || 0) + 1;
     });
 
-    // Build task summary
     const overdueTasks = tasks.filter((t: any) => !t.completed && t.due_date && new Date(t.due_date) < new Date());
     const pendingTasks = tasks.filter((t: any) => !t.completed);
 
+    const today = new Date().toISOString().split("T")[0];
+
     const dataContext = `
+
+**Today's Date:** ${today}
 
 **User Profile:**
 - Name: ${profile?.display_name || "Not set"}
@@ -148,57 +262,109 @@ ${activities.slice(0, 10).map((a: any) => `- ${a.activity_type}: ${a.title}`).jo
     const systemPrompt = `You are an intelligent AI assistant for Acquire CRM, a platform built for acquisition entrepreneurs. You have FULL ACCESS to the user's data and can make decisions, suggestions, and draft content based on real data — the user does NOT need to give you information manually.
 
 Your capabilities:
-1. **Email Drafting**: Generate personalized outreach emails to investors, company owners, and intermediaries based on their actual profiles and deal context.
-2. **Deal Analysis**: Score and analyze deals based on real data — revenue, EBITDA, industry, geography, and attractiveness.
-3. **Follow-up Suggestions**: Recommend optimal timing and content for follow-ups based on pipeline stage and interaction history.
-4. **Meeting Summaries**: Generate summaries and action items from meeting notes.
-5. **Pipeline Insights**: Provide insights about the deal pipeline, investor relationships, and outreach effectiveness.
-6. **Task Recommendations**: Suggest tasks based on overdue items, stale relationships, and upcoming deadlines.
-7. **Investor Updates**: Help draft monthly/quarterly investor updates using real metrics.
+1. **Create Calendar Events**: When users ask to schedule meetings, events, or appointments, USE the create_calendar_event tool to actually create them. Always use the tool — don't just say you created it.
+2. **Create Tasks**: When users ask to add tasks, reminders, or to-dos, USE the create_task tool.
+3. **Create Notes**: When users ask to save notes, USE the create_note tool.
+4. **Email Drafting**: Generate personalized outreach emails based on actual profiles and deal context.
+5. **Deal Analysis**: Score and analyze deals based on real data.
+6. **Follow-up Suggestions**: Recommend optimal timing and content for follow-ups.
+7. **Meeting Summaries**: Generate summaries and action items from meeting notes.
+8. **Pipeline Insights**: Provide insights about the deal pipeline and investor relationships.
+9. **Task Recommendations**: Suggest tasks based on overdue items and stale relationships.
+10. **Investor Updates**: Help draft monthly/quarterly investor updates using real metrics.
 
-Keep responses clear, actionable, and professional. When drafting emails, match the appropriate tone for the recipient type. For analysis, be specific and data-driven. Reference actual data from the user's CRM whenever relevant.
+IMPORTANT RULES:
+- When the user asks to create/schedule/add something (meeting, task, note), ALWAYS use the appropriate tool. Never just describe what you would do — actually do it.
+- You already have the user's data below. Use it proactively.
+- Keep responses clear, actionable, and professional.
+- Today's date is provided in the context — use it for relative date references like "tomorrow", "next Monday", etc.
+${dataContext}`;
 
-IMPORTANT: You already have the user's data below. Use it proactively — don't ask the user for information you already have.${dataContext}`;
+    // Non-streaming tool-calling loop
+    let aiMessages: any[] = [
+      { role: "system", content: systemPrompt },
+      ...messages,
+    ];
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...messages,
-        ],
-        stream: true,
-      }),
-    });
+    const MAX_TOOL_ROUNDS = 5;
+    let finalContent = "";
 
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "AI usage limit reached. Please add credits to continue." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      return new Response(JSON.stringify({ error: "AI service temporarily unavailable" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
+      const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-3-flash-preview",
+          messages: aiMessages,
+          tools,
+          tool_choice: "auto",
+        }),
       });
+
+      if (!aiResponse.ok) {
+        if (aiResponse.status === 429) {
+          return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), {
+            status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        if (aiResponse.status === 402) {
+          return new Response(JSON.stringify({ error: "AI usage limit reached. Please add credits to continue." }), {
+            status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        const errorText = await aiResponse.text();
+        console.error("AI gateway error:", aiResponse.status, errorText);
+        return new Response(JSON.stringify({ error: "AI service temporarily unavailable" }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const result = await aiResponse.json();
+      const choice = result.choices?.[0];
+
+      if (!choice) {
+        return new Response(JSON.stringify({ error: "No response from AI" }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const assistantMessage = choice.message;
+      aiMessages.push(assistantMessage);
+
+      // If no tool calls, we have the final answer
+      if (!assistantMessage.tool_calls || assistantMessage.tool_calls.length === 0) {
+        finalContent = assistantMessage.content || "";
+        break;
+      }
+
+      // Execute tool calls
+      for (const toolCall of assistantMessage.tool_calls) {
+        const toolName = toolCall.function.name;
+        let toolArgs: Record<string, any> = {};
+        try {
+          toolArgs = JSON.parse(toolCall.function.arguments);
+        } catch {
+          toolArgs = {};
+        }
+
+        console.log(`Executing tool: ${toolName}`, toolArgs);
+        const toolResult = await executeTool(toolName, toolArgs, supabase, userId);
+        console.log(`Tool result: ${toolResult}`);
+
+        aiMessages.push({
+          role: "tool",
+          tool_call_id: toolCall.id,
+          content: toolResult,
+        });
+      }
     }
 
-    return new Response(response.body, {
-      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+    // Return the final text response as a simple JSON (non-streaming since we need tool calling)
+    return new Response(JSON.stringify({ content: finalContent }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("Chat function error:", e);
