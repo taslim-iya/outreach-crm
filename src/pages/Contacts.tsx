@@ -242,13 +242,13 @@ export default function Contacts() {
                     <input type="checkbox" checked={selectedIds.has(c.id)} onChange={() => toggleSelect(c.id)} className="rounded" />
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col">
                       <EditableCell
                         value={c.name}
                         onSave={(v) => handleInlineEdit(c.id, 'name', v)}
                         className="font-medium text-foreground"
                       />
-                      {c.role && <span className="text-xs text-muted-foreground">· {c.role}</span>}
+                      {c.role && <span className="text-xs text-muted-foreground truncate max-w-[200px]">{c.role}</span>}
                     </div>
                   </TableCell>
                   <TableCell>
