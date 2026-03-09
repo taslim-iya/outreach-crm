@@ -77,7 +77,9 @@ export function BulkEmailModal({ open, onOpenChange, investors }: BulkEmailModal
   const [personalizedBody, setPersonalizedBody] = useState('');
   const [sentCount, setSentCount] = useState(0);
   const [skippedCount, setSkippedCount] = useState(0);
+  const [failedCount, setFailedCount] = useState(0);
   const [isSending, setIsSending] = useState(false);
+  const [isBulkSending, setIsBulkSending] = useState(false);
 
   const { data: templates } = useEmailTemplates();
   const sendEmail = useSendEmail();
