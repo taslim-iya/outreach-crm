@@ -153,7 +153,7 @@ export default function Documents() {
         description="Manage all your deal documents"
         actions={
           <Button 
-            className="gradient-gold text-primary-foreground hover:opacity-90"
+            size="sm"
             onClick={handleUploadClick}
             disabled={uploadDocument.isPending}
           >
@@ -178,18 +178,18 @@ export default function Documents() {
       />
 
       {/* Search & Filter */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="relative flex-1 max-w-md">
+      <div className="flex flex-wrap gap-3 mb-4">
+        <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Search documents..."
-            className="pl-9 bg-card border-border"
+            className="pl-9 h-9"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         <Select value={filterType} onValueChange={setFilterType}>
-          <SelectTrigger className="w-[150px]">
+          <SelectTrigger className="w-[150px] h-9">
             <Filter className="w-4 h-4 mr-2" />
             <SelectValue placeholder="Filter" />
           </SelectTrigger>

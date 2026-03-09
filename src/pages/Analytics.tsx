@@ -40,7 +40,7 @@ export default function Analytics() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-4 md:p-6">
       <PageHeader
         title="Analytics"
         description="Track your acquisition performance"

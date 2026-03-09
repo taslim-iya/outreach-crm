@@ -390,7 +390,7 @@ export default function BrandAssetsPage({ embedded }: { embedded?: boolean }) {
   ];
 
   return (
-    <div className={embedded ? '' : 'p-6 max-w-5xl mx-auto'}>
+    <div className={embedded ? '' : 'p-4 md:p-6 max-w-5xl mx-auto'}>
       {!embedded && (
         <PageHeader
           title="Brand Assets"

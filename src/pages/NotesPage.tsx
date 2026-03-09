@@ -194,7 +194,7 @@ export default function NotesPage() {
   );
 
   return (
-    <div className="p-6">
+    <div className="p-4 md:p-6">
       <PageHeader
         title="Notes"
         description="Capture ideas and important information"
@@ -207,14 +207,14 @@ export default function NotesPage() {
       />
 
       {/* Search */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex flex-wrap gap-3 mb-4">
+        <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Search notes..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 bg-card border-border"
+            className="pl-9 h-9"
           />
         </div>
       </div>

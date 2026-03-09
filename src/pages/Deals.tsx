@@ -102,15 +102,16 @@ export default function Deals() {
           description="Track your acquisition targets"
           actions={
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setIsImportOpen(true)}>
-                <Upload className="w-4 h-4 mr-2" />
+              <Button variant="outline" size="sm" onClick={() => setIsImportOpen(true)}>
+                <Upload className="w-4 h-4 mr-1" />
                 Import
               </Button>
               <Button 
+                size="sm"
                 className="gradient-gold text-primary-foreground hover:opacity-90"
                 onClick={handleAddCompany}
               >
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="w-4 h-4 mr-1" />
                 Add Company
               </Button>
             </div>
@@ -118,17 +119,17 @@ export default function Deals() {
         />
 
         {/* Filters */}
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1 max-w-sm">
+        <div className="flex flex-wrap gap-3 mb-4">
+          <div className="relative flex-1 min-w-[200px] max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Search companies..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-card border-border"
+              className="pl-9 h-9"
             />
           </div>
-          <Button variant="outline" size="icon">
+          <Button variant="outline" size="sm">
             <Filter className="w-4 h-4" />
           </Button>
         </div>

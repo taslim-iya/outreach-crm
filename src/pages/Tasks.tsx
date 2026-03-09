@@ -135,7 +135,7 @@ export default function Tasks() {
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
+    <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6">
       <PageHeader
         title="Tasks"
         description={mode === 'fundraising' ? 'Manage investor follow-ups and reminders' : 'Manage deal tasks, diligence items, and follow-ups'}
