@@ -46,6 +46,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           )}
           <div className="min-h-screen">{children}</div>
         </main>
+        <ChatBubble />
       </div>
     </SidebarProvider>
   );
