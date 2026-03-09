@@ -31,6 +31,7 @@ import DealSourcingAnalytics from "./pages/DealSourcingAnalytics";
 import BrokersPage from "./pages/BrokersPage";
 import TargetUniverse from "./pages/TargetUniverse";
 import Support from "./pages/Support";
+import Notifications from "./pages/Notifications";
 
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -82,6 +83,7 @@ const App = () => (
 
                           <Route path="/notes" element={<NotesPage />} />
                           <Route path="/support" element={<Support />} />
+                          <Route path="/notifications" element={<Notifications />} />
                           <Route path="/assistant" element={<Assistant />} />
                           <Route path="/settings" element={<Settings />} />
                           <Route path="/admin-analytics" element={<AdminRoute><AdminAnalytics /></AdminRoute>} />
