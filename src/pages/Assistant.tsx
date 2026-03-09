@@ -79,18 +79,6 @@ export default function Assistant() {
     setInput('');
     setIsLoading(true);
 
-    let assistantSoFar = '';
-    const upsertAssistant = (nextChunk: string) => {
-      assistantSoFar += nextChunk;
-      setMessages((prev) => {
-        const last = prev[prev.length - 1];
-        if (last?.role === 'assistant') {
-          return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistantSoFar } : m));
-        }
-        return [...prev, { role: 'assistant', content: assistantSoFar }];
-      });
-    };
-
     await sendChat({
       messages: [...messages, userMsg],
       onResult: (text) => {
