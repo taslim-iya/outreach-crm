@@ -289,7 +289,7 @@ export default function Settings() {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="p-4 md:p-6 max-w-4xl mx-auto">
       <PageHeader
         title="Settings"
         description="Manage your account and integrations"

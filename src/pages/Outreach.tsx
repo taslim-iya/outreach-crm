@@ -74,7 +74,7 @@ export default function Outreach() {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-4 md:p-6">
       <PageHeader
         title="Outreach"
         description="Manage email campaigns and templates"
