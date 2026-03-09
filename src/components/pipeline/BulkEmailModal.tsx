@@ -270,6 +270,58 @@ export function BulkEmailModal({ open, onOpenChange, investors }: BulkEmailModal
     loadRecipient(currentIndex + 1);
   };
 
+  // Send all emails without review
+  const handleSendAll = async () => {
+    setIsBulkSending(true);
+    let sent = 0;
+    let failed = 0;
+
+    for (const r of recipientsWithEmail) {
+      const personalizedSubj = personalizeText(subject, r);
+      const personalizedBod = personalizeText(body, r);
+
+      try {
+        await sendEmail.mutateAsync({
+          to: r.email!,
+          subject: personalizedSubj,
+          body: personalizedBod,
+          attachment_doc_ids: attachedDocIds.length > 0 ? attachedDocIds : undefined,
+        });
+        sent++;
+
+        // Auto-advance investor stage
+        const investor = investors.find(i => i.id === r.investorId);
+        if (investor) {
+          const stageAdvancement: Record<string, string> = {
+            not_contacted: 'outreach_sent',
+            outreach_sent: 'follow_up',
+          };
+          const nextStage = stageAdvancement[investor.stage];
+          if (nextStage) {
+            try {
+              await updateStage.mutateAsync({ id: investor.id, stage: nextStage as any });
+            } catch {
+              // silently fail stage update
+            }
+          }
+        }
+      } catch {
+        failed++;
+      }
+    }
+
+    setSentCount(sent);
+    setFailedCount(failed);
+    setIsBulkSending(false);
+    setPhase('done');
+    
+    if (scheduledTime) {
+      toast.info(`${sent} emails scheduled for ${format(new Date(scheduledTime), 'MMM d, yyyy h:mm a')}`);
+    } else {
+      toast.success(`${sent} emails sent${failed > 0 ? `, ${failed} failed` : ''}`);
+    }
+  };
+
   const currentRecipient = recipientsWithEmail[currentIndex];
 
   return (
