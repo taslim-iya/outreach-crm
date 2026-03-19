@@ -10,12 +10,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useContacts, Contact, useDeleteContact, useUpdateContact } from '@/hooks/useContacts';
 import { EditableCell } from '@/components/ui/EditableCell';
 import { Database } from '@/integrations/supabase/types';
-import { Plus, Search, Users, Loader2, Upload, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Search, Users, Loader2, Upload, Pencil, Trash2, Merge } from 'lucide-react';
 import { ImportModal } from '@/components/import/ImportModal';
 import { useCreateContact } from '@/hooks/useContacts';
 import { useCreateInvestorDeal } from '@/hooks/useInvestorDeals';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { DeduplicateContactsDialog } from '@/components/contacts/DeduplicateContactsDialog';
 
 type ContactType = Database['public']['Enums']['contact_type'];
 
@@ -41,6 +42,7 @@ export default function Contacts() {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [warmthFilter, setWarmthFilter] = useState<string>('all');
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isDedupeOpen, setIsDedupeOpen] = useState(false);
   const createContact = useCreateContact();
   const createInvestorDeal = useCreateInvestorDeal();
   const deleteContact = useDeleteContact();
@@ -162,6 +164,9 @@ export default function Contacts() {
                 <Trash2 className="w-4 h-4 mr-1" /> Delete {selectedIds.size}
               </Button>
             )}
+            <Button variant="outline" size="sm" onClick={() => setIsDedupeOpen(true)}>
+              <Merge className="w-4 h-4 mr-1" /> Deduplicate
+            </Button>
             <Button variant="outline" size="sm" onClick={() => setIsImportOpen(true)}>
               <Upload className="w-4 h-4 mr-1" /> Import
             </Button>
@@ -325,6 +330,7 @@ export default function Contacts() {
       <ContactFormModal open={isFormOpen} onOpenChange={setIsFormOpen} contact={selectedContact} />
       <DeleteContactDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen} contact={selectedContact} />
       <ImportModal open={isImportOpen} onOpenChange={setIsImportOpen} entityType="contacts" onImport={handleImportContacts} />
+      <DeduplicateContactsDialog open={isDedupeOpen} onOpenChange={setIsDedupeOpen} contacts={contacts} />
     </div>
   );
 }
