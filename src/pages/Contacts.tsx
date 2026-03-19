@@ -42,6 +42,7 @@ export default function Contacts() {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [warmthFilter, setWarmthFilter] = useState<string>('all');
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isDedupeOpen, setIsDedupeOpen] = useState(false);
   const createContact = useCreateContact();
   const createInvestorDeal = useCreateInvestorDeal();
   const deleteContact = useDeleteContact();

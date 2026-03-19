@@ -144,7 +144,7 @@ export function DeduplicateContactsDialog({ open, onOpenChange, contacts }: Prop
 
         {done ? (
           <div className="flex flex-col items-center gap-3 py-10 text-center">
-            <CheckCircle2 className="w-12 h-12 text-green-500" />
+            <CheckCircle2 className="w-12 h-12 text-primary" />
             <p className="font-semibold text-lg">All done!</p>
             <p className="text-sm text-muted-foreground">Your contacts are now clean.</p>
           </div>
