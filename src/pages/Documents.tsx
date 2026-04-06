@@ -150,7 +150,7 @@ export default function Documents() {
     <div className="p-4 md:p-6">
       <PageHeader
         title="Templates"
-        description="Manage all your deal documents"
+        description="Manage your email templates and assets"
         actions={
           <Button 
             size="sm"

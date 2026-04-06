@@ -37,7 +37,7 @@ export const DEMO_DATA = {
   metrics: {
     totalInvestors: 47,
     totalCommitted: 2850000,
-    fundraisingGoal: 5000000,
+    dailySendLimit: 500,
     activePipeline: 23,
     meetingsThisWeek: 4,
     emailsSent: 156,
@@ -60,7 +60,7 @@ export const DEMO_DATA = {
   tasks: [
     { id: '1', title: 'Follow up with Sarah Chen on term sheet', priority: 'high', due_date: '2026-02-27', completed: false },
     { id: '2', title: 'Send LOI to TechFlow Solutions', priority: 'high', due_date: '2026-02-28', completed: false },
-    { id: '3', title: 'Prepare Q1 investor update', priority: 'medium', due_date: '2026-03-01', completed: false },
+    { id: '3', title: 'Follow up with warm leads', priority: 'medium', due_date: '2026-03-01', completed: false },
     { id: '4', title: 'Schedule call with David Park', priority: 'medium', due_date: '2026-02-26', completed: false },
   ],
 };

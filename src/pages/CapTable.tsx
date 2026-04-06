@@ -420,7 +420,7 @@ export default function CapTable() {
     return (
       <div className="p-4 md:p-6">
         <PageHeader
-          title="Cap Table"
+          title="Deliverability"
           description="Track your fundraising progress"
         />
         <div className="flex items-center justify-center h-64">
@@ -435,7 +435,7 @@ export default function CapTable() {
     return (
       <div className="p-4 md:p-6">
         <PageHeader
-          title="Cap Table"
+          title="Deliverability"
           description="Track your fundraising progress"
           actions={
             <Button onClick={handleAddEntry} size="sm">

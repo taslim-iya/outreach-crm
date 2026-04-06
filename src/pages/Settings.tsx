@@ -434,7 +434,7 @@ export default function Settings() {
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground mt-2">
-                This will affect how amounts are displayed in Cap Table and other areas
+                This will affect how amounts are displayed across the platform
               </p>
             </div>
           </CardContent>

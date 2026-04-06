@@ -168,8 +168,8 @@ export function TaskFormModal({ open, onOpenChange, onSubmit, task }: TaskFormMo
               </Select>
             </div>
             <div>
-              <Label>{mode === 'fundraising' ? 'Investor' : 'Deal'}</Label>
-              {mode === 'fundraising' ? (
+              <Label>{mode === 'campaigns' ? 'Investor' : 'Deal'}</Label>
+              {mode === 'campaigns' ? (
                 <Select value={watch('investor_deal_id')} onValueChange={(v) => setValue('investor_deal_id', v)}>
                   <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
                   <SelectContent>

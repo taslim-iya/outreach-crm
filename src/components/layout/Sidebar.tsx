@@ -145,10 +145,10 @@ function ModeToggle() {
   return (
     <div className="flex rounded-lg bg-sidebar-accent/30 p-0.5">
       <button
-        onClick={() => setMode('fundraising')}
+        onClick={() => setMode('campaigns')}
         className={cn(
           'flex-1 text-xs font-medium py-1.5 px-2 rounded-md transition-all duration-200',
-          mode === 'fundraising'
+          mode === 'campaigns'
             ? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-sm'
             : 'text-sidebar-foreground/60 hover:text-sidebar-foreground'
         )}
@@ -156,10 +156,10 @@ function ModeToggle() {
         Fundraising
       </button>
       <button
-        onClick={() => setMode('deal-sourcing')}
+        onClick={() => setMode('sequences')}
         className={cn(
           'flex-1 text-xs font-medium py-1.5 px-2 rounded-md transition-all duration-200',
-          mode === 'deal-sourcing'
+          mode === 'sequences'
             ? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-sm'
             : 'text-sidebar-foreground/60 hover:text-sidebar-foreground'
         )}
@@ -213,12 +213,12 @@ function SidebarContentInner({ onNavigate }: { onNavigate?: () => void }) {
   const { mode } = useAppMode();
   const { isAdmin } = useUserRole();
 
-  const [fundraisingNav, setFundraisingNav] = usePersistedNav('sidebar-fundraising-order', DEFAULT_FUNDRAISING_NAV);
+  const [fundraisingNav, setFundraisingNav] = usePersistedNav('sidebar-campaigns-order', DEFAULT_FUNDRAISING_NAV);
   const [dealSourcingNav, setDealSourcingNav] = usePersistedNav('sidebar-dealsourcing-order', DEFAULT_DEAL_SOURCING_NAV);
   const [bottomNavItems, setBottomNavItems] = usePersistedNav('sidebar-bottom-order', DEFAULT_BOTTOM_NAV);
 
-  const mainNav = mode === 'deal-sourcing' ? dealSourcingNav : fundraisingNav;
-  const setMainNav = mode === 'deal-sourcing' ? setDealSourcingNav : setFundraisingNav;
+  const mainNav = mode === 'sequences' ? dealSourcingNav : fundraisingNav;
+  const setMainNav = mode === 'sequences' ? setDealSourcingNav : setFundraisingNav;
 
   const handleSignOut = async () => {
     if (isDemoMode) {

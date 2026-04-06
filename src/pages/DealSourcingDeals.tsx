@@ -113,7 +113,7 @@ export default function DealSourcingDeals() {
   return (
     <div className="p-4 md:p-6">
       <PageHeader
-        title="Deal Pipeline"
+        title="Sequences"
         description="Track acquisitions from screening to close"
         actions={
           <div className="flex gap-2">

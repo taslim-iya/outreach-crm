@@ -50,7 +50,7 @@ export default function Dashboard() {
     );
   }
 
-  const isFundraising = mode === 'fundraising';
+  const isFundraising = mode === 'campaigns';
 
   return (
     <div className="p-4 md:p-6">

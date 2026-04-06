@@ -157,7 +157,7 @@ export default function TargetUniverse() {
   return (
     <div className="p-4 md:p-6">
       <PageHeader
-        title="Target Universe"
+        title="Lead Finder"
         description="Search, filter, and manage your acquisition targets"
         actions={
           <div className="flex gap-2">

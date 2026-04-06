@@ -175,7 +175,7 @@ export default function Contacts() {
               <Upload className="w-4 h-4 mr-1" /> Import
             </Button>
             <Button size="sm" onClick={() => { setSelectedContact(null); setIsFormOpen(true); }}>
-              <Plus className="w-4 h-4 mr-1" /> Add Contact
+              <Plus className="w-4 h-4 mr-1" /> Add Lead
             </Button>
           </div>
         }

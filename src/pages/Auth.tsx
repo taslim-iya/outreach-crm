@@ -79,7 +79,7 @@ export default function Auth() {
               acquisition entrepreneurs
             </h1>
             <p className="text-lg text-white/70 max-w-md leading-relaxed">
-              Manage your investor pipeline, track target companies, and close deals faster with our purpose-built platform.
+              Manage your cold email outreach, track leads, and close deals faster with AI-powered automation.
             </p>
           </div>
 

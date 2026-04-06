@@ -43,7 +43,7 @@ export default function BrokersPage() {
   return (
     <div className="p-4 md:p-6">
       <PageHeader
-        title="Brokers"
+        title="Email Accounts"
         description="Manage your broker relationships and deal flow"
         actions={
           <Button size="sm" onClick={() => setShowAdd(true)}>
