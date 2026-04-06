@@ -149,7 +149,7 @@ export default function Documents() {
   return (
     <div className="p-4 md:p-6">
       <PageHeader
-        title="Documents"
+        title="Templates"
         description="Manage all your deal documents"
         actions={
           <Button 

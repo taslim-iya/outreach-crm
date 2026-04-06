@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
 
-export type AppMode = 'fundraising' | 'deal-sourcing';
+export type AppMode = 'campaigns' | 'sequences';
 
 interface AppModeContextType {
   mode: AppMode;
@@ -9,14 +9,14 @@ interface AppModeContextType {
 }
 
 const AppModeContext = createContext<AppModeContextType>({
-  mode: 'fundraising',
+  mode: 'campaigns',
   setMode: () => {},
-  modeLabel: 'Fundraising',
+  modeLabel: 'Campaigns',
 });
 
 export function AppModeProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<AppMode>(() => {
-    return (localStorage.getItem('app-mode') as AppMode) || 'fundraising';
+    return (localStorage.getItem('app-mode') as AppMode) || 'campaigns';
   });
 
   const handleSetMode = (newMode: AppMode) => {
@@ -24,7 +24,7 @@ export function AppModeProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('app-mode', newMode);
   };
 
-  const modeLabel = mode === 'fundraising' ? 'Fundraising' : 'Deal Sourcing';
+  const modeLabel = mode === 'campaigns' ? 'Campaigns' : 'Sequences';
 
   return (
     <AppModeContext.Provider value={{ mode, setMode: handleSetMode, modeLabel }}>

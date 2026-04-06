@@ -42,28 +42,28 @@ interface NavItem {
 
 const DEFAULT_FUNDRAISING_NAV: NavItem[] = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { name: 'Campaigns', href: '/outreach', icon: Mail },
+  { name: 'Leads', href: '/contacts', icon: Users },
   { name: 'Inbox', href: '/inbox', icon: Inbox },
-  { name: 'Contacts', href: '/contacts', icon: Users },
-  { name: 'Investors', href: '/investors', icon: TrendingUp },
-  { name: 'Cap Table', href: '/cap-table', icon: PieChart },
-  { name: 'Outreach', href: '/outreach', icon: Mail },
-  { name: 'Documents', href: '/documents', icon: FileText },
+  { name: 'Email Accounts', href: '/investors', icon: TrendingUp },
+  { name: 'Deliverability', href: '/cap-table', icon: PieChart },
+  { name: 'Templates', href: '/documents', icon: FileText },
   { name: 'Calendar', href: '/calendar', icon: Calendar },
-  { name: 'Tasks', href: '/tasks', icon: CheckSquare },
+  { name: 'Follow-ups', href: '/tasks', icon: CheckSquare },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
 ];
 
 const DEFAULT_DEAL_SOURCING_NAV: NavItem[] = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { name: 'Campaigns', href: '/outreach', icon: Mail },
+  { name: 'Sequences', href: '/deal-sourcing', icon: TrendingUp },
+  { name: 'Lead Finder', href: '/target-universe', icon: Search },
+  { name: 'Leads', href: '/contacts', icon: Users },
   { name: 'Inbox', href: '/inbox', icon: Inbox },
-  { name: 'Deal Pipeline', href: '/deal-sourcing', icon: TrendingUp },
-  { name: 'Target Universe', href: '/target-universe', icon: Search },
-  { name: 'Brokers', href: '/brokers', icon: Handshake },
-  { name: 'Contacts', href: '/contacts', icon: Users },
-  { name: 'Outreach', href: '/outreach', icon: Mail },
-  { name: 'Documents', href: '/documents', icon: FileText },
+  { name: 'Email Accounts', href: '/brokers', icon: Handshake },
+  { name: 'Templates', href: '/documents', icon: FileText },
   { name: 'Calendar', href: '/calendar', icon: Calendar },
-  { name: 'Tasks', href: '/tasks', icon: CheckSquare },
+  { name: 'Follow-ups', href: '/tasks', icon: CheckSquare },
   { name: 'Analytics', href: '/deal-sourcing-analytics', icon: BarChart3 },
 ];
 

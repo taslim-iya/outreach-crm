@@ -159,7 +159,7 @@ export default function Contacts() {
   return (
     <div className="p-4 md:p-6">
       <PageHeader
-        title="Contacts"
+        title="Leads"
         description="Manage your relationships"
         actions={
           <div className="flex gap-2">

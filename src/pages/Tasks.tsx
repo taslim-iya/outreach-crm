@@ -137,7 +137,7 @@ export default function Tasks() {
   return (
     <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6">
       <PageHeader
-        title="Tasks"
+        title="Follow-ups"
         description={mode === 'fundraising' ? 'Manage investor follow-ups and reminders' : 'Manage deal tasks, diligence items, and follow-ups'}
         actions={
           <Button onClick={() => { setEditingTask(null); setFormOpen(true); }}>

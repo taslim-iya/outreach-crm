@@ -76,7 +76,7 @@ export default function Outreach() {
   return (
     <div className="p-4 md:p-6">
       <PageHeader
-        title="Outreach"
+        title="Campaigns"
         description="Manage email campaigns and templates"
         actions={
           <Button 
