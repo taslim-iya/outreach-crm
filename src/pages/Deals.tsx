@@ -98,7 +98,7 @@ export default function Deals() {
     <div className="h-screen flex flex-col">
       <div className="p-6 pb-4">
         <PageHeader
-          title="Deal Pipeline"
+          title="Opportunities"
           description="Track your acquisition targets"
           actions={
             <div className="flex gap-2">
