@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { getSavedLeads, SavedLead } from "@/lib/savedLeadsApi";
 import { getSearchHistory } from "@/lib/searchCacheApi";
-import { BarChart3, Users, Mail, TrendingUp, Search, Globe, ArrowUpRight, Clock, MapPin } from "lucide-react";
+import { BarChart3, Users, Mail, TrendingUp, Search, Globe, ArrowUpRight, Clock, MapPin, Download } from "lucide-react";
 import { Link } from "react-router-dom";
+import { exportLeadsToCsv } from "@/lib/exportLeadsApi";
 
 function timeAgo(dateStr: string): string {
   const now = Date.now();
@@ -87,9 +88,19 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
           <p className="text-muted-foreground mt-1">Lead generation overview</p>
         </div>
-        <Link to="/" className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition">
-          <Search className="w-4 h-4" /> New Search
-        </Link>
+        <div className="flex items-center gap-3">
+          {leads.length > 0 && (
+            <button
+              onClick={() => exportLeadsToCsv(leads)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-card border border-border text-foreground rounded-lg hover:bg-muted transition text-sm"
+            >
+              <Download className="w-4 h-4" /> Export CSV
+            </button>
+          )}
+          <Link to="/" className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition">
+            <Search className="w-4 h-4" /> New Search
+          </Link>
+        </div>
       </div>
 
       {/* KPI Cards */}

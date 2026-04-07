@@ -78,6 +78,7 @@ const Index = () => {
   const [sort, setSort] = useState<SortOption>("rating");
   const [view, setView] = useState<ViewMode>("grid");
   const [locationLabel, setLocationLabel] = useState<string>("");
+  const [lastSearchCity, setLastSearchCity] = useState<string>("");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerRefreshKey, setDrawerRefreshKey] = useState(0);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -101,6 +102,7 @@ const Index = () => {
     setIsLoading(true);
     setHasSearched(true);
     setBusinesses([]);
+    setLastSearchCity(city);
 
     // Check cache first
     const cached = await getCachedSearch(city, category, mode);
@@ -175,6 +177,13 @@ const Index = () => {
       setShowHistory(false);
       toast({ title: `Loaded ${data.businesses.length} leads`, description: `From ${entry.source === "csv_upload" ? "CSV upload" : "search"} on ${new Date(entry.created_at).toLocaleDateString()}` });
     }
+  };
+
+  const handleLoadDemo = (demoBiz: Business[]) => {
+    setBusinesses(demoBiz);
+    setHasSearched(true);
+    setLocationLabel("Demo Data · Austin, TX");
+    toast({ title: `Loaded ${demoBiz.length} demo businesses`, description: "Explore the app with sample data" });
   };
 
   const sorted = sortBusinesses(businesses, sort);
@@ -328,13 +337,13 @@ const Index = () => {
 
             {/* Empty state */}
             {!isLoading && businesses.length === 0 && (
-              <EmptyState searched={hasSearched} />
+              <EmptyState searched={hasSearched} searchCity={lastSearchCity} onLoadDemo={handleLoadDemo} />
             )}
           </div>
         )}
 
         {/* Initial empty state */}
-        {!hasSearched && <EmptyState searched={false} />}
+        {!hasSearched && <EmptyState searched={false} onLoadDemo={handleLoadDemo} />}
       </div>
 
       {/* Footer */}
