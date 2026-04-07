@@ -43,6 +43,7 @@ export function useDiligenceItems(dealId: string | undefined) {
       const { data, error } = await supabase
         .from('diligence_items')
         .select('*')
+        .eq('user_id', user!.id)
         .eq('deal_id', dealId!)
         .order('sort_order', { ascending: true });
       if (error) throw error;
@@ -60,13 +61,13 @@ export function useCreateDiligenceItem() {
     mutationFn: async (item: Partial<DiligenceItem>) => {
       const { data, error } = await supabase
         .from('diligence_items')
-        .insert({ ...item, user_id: user!.id } as any)
+        .insert({ ...item, user_id: user!.id } as Record<string, unknown>)
         .select()
         .single();
       if (error) throw error;
       return data;
     },
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['diligence-items'] });
       toast.success('Diligence item added');
     },
@@ -81,7 +82,7 @@ export function useUpdateDiligenceItem() {
     mutationFn: async ({ id, ...updates }: Partial<DiligenceItem> & { id: string }) => {
       const { error } = await supabase
         .from('diligence_items')
-        .update(updates as any)
+        .update(updates as Record<string, unknown>)
         .eq('id', id);
       if (error) throw error;
     },
@@ -117,6 +118,7 @@ export function useRequestItems(dealId: string | undefined) {
       const { data, error } = await supabase
         .from('request_items')
         .select('*')
+        .eq('user_id', user!.id)
         .eq('deal_id', dealId!)
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -134,7 +136,7 @@ export function useCreateRequestItem() {
     mutationFn: async (item: Partial<RequestItem>) => {
       const { data, error } = await supabase
         .from('request_items')
-        .insert({ ...item, user_id: user!.id } as any)
+        .insert({ ...item, user_id: user!.id } as Record<string, unknown>)
         .select()
         .single();
       if (error) throw error;
@@ -155,7 +157,7 @@ export function useUpdateRequestItem() {
     mutationFn: async ({ id, ...updates }: Partial<RequestItem> & { id: string }) => {
       const { error } = await supabase
         .from('request_items')
-        .update(updates as any)
+        .update(updates as Record<string, unknown>)
         .eq('id', id);
       if (error) throw error;
     },

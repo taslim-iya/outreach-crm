@@ -69,7 +69,6 @@ export function useSyncIntegration() {
         }
       }
     } catch (error) {
-      console.error('Email sync error:', error);
       toast({
         title: 'Sync failed',
         description: error instanceof Error ? error.message : 'Failed to sync emails',
@@ -113,7 +112,6 @@ export function useSyncIntegration() {
         }
       }
     } catch (error) {
-      console.error('Calendar sync error:', error);
       toast({
         title: 'Sync failed',
         description: error instanceof Error ? error.message : 'Failed to sync calendar',

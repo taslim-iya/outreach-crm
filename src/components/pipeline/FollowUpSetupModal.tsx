@@ -42,12 +42,17 @@ export function FollowUpSetupModal({
   const createSequence = useCreateFollowUpSequence();
 
   const handleCreate = async () => {
+    const effectiveInterval = customInterval ? parseInt(customInterval) : intervalDays;
+    if (!effectiveInterval || effectiveInterval <= 0) {
+      toast.error('Interval must be at least 1 day');
+      return;
+    }
     try {
       await createSequence.mutateAsync({
         investor_deal_id: investorDealId,
         contact_id: contactId,
         template_id: templateId || undefined,
-        interval_days: customInterval ? parseInt(customInterval) : intervalDays,
+        interval_days: effectiveInterval,
         max_follow_ups: maxFollowUps,
       });
       toast.success(`Follow-up sequence created for ${investorName || 'investor'}`, {
@@ -99,6 +104,7 @@ export function FollowUpSetupModal({
                 onChange={(e) => setCustomInterval(e.target.value)}
                 className="w-32"
                 min={1}
+                max={365}
               />
               <span className="text-sm text-muted-foreground">days</span>
             </div>

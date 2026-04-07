@@ -108,7 +108,7 @@ export function InvestorUpdateModal({ open, onOpenChange }: InvestorUpdateModalP
               });
               sentCount++;
             } catch {
-              console.error(`Failed to send to ${contact.email}`);
+              // Send failed for this recipient
             }
           }
         }

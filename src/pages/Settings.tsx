@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { User, Mail, Bell, Shield, Database, Loader2, Link2, Check, RefreshCw, DollarSign, Upload, X, ImageIcon } from 'lucide-react';
+import { User, Mail, Bell, Shield, Database, Loader2, Link2, Check, RefreshCw, DollarSign, Upload, X, ImageIcon, Download } from 'lucide-react';
 import { useUserIntegrations, useDisconnectIntegration } from '@/hooks/useUserIntegrations';
 import { useSyncIntegration } from '@/hooks/useSyncIntegration';
 import { useAuth } from '@/hooks/useAuth';
@@ -48,6 +48,29 @@ export default function Settings() {
   const uploadAsset = useUploadBrandAsset();
   const removeAsset = useRemoveBrandAsset();
   const { getAsset } = useBrandSettings();
+
+  // Notification preferences (persisted in localStorage)
+  const NOTIF_STORAGE_KEY = 'outreach_crm_notification_prefs';
+  const loadNotifPrefs = () => {
+    try {
+      const stored = localStorage.getItem(NOTIF_STORAGE_KEY);
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    return { emailReplies: true, meetingReminders: true, weeklySummary: true, followUpAlerts: true };
+  };
+  const [notifPrefs, setNotifPrefs] = useState(loadNotifPrefs);
+
+  const updateNotifPref = useCallback((key: string, value: boolean) => {
+    setNotifPrefs((prev: Record<string, boolean>) => {
+      const next = { ...prev, [key]: value };
+      localStorage.setItem(NOTIF_STORAGE_KEY, JSON.stringify(next));
+      toast.success('Notification preference saved');
+      return next;
+    });
+  }, []);
+
+  // Export data state
+  const [isExporting, setIsExporting] = useState(false);
 
   // Profile form state
   const [displayName, setDisplayName] = useState('');
@@ -149,6 +172,83 @@ export default function Settings() {
     updateProfile.mutate({ displayName, companyName });
   };
 
+  const handleEnable2FA = () => {
+    toast.info('Two-factor authentication setup coming soon. Please check back later.');
+  };
+
+  const handleChangePassword = async () => {
+    if (!user?.email) {
+      toast.error('No email address found');
+      return;
+    }
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(user.email);
+      if (error) throw error;
+      toast.success('Password change has been requested. Check your email for the reset link.');
+    } catch (err) {
+      toast.error('Failed to send password reset email');
+    }
+  };
+
+  const handleExportData = async () => {
+    if (!user?.id) return;
+    setIsExporting(true);
+    try {
+      const [contactsRes, dealsRes, tasksRes, notesRes] = await Promise.all([
+        supabase.from('contacts').select('*').order('created_at'),
+        supabase.from('deals').select('*').order('created_at'),
+        supabase.from('tasks').select('*').order('created_at'),
+        supabase.from('notes').select('*').order('created_at'),
+      ]);
+
+      const toCsv = (rows: Record<string, any>[] | null) => {
+        if (!rows || rows.length === 0) return '';
+        const headers = Object.keys(rows[0]);
+        const lines = [
+          headers.join(','),
+          ...rows.map(row =>
+            headers.map(h => {
+              const val = row[h];
+              if (val === null || val === undefined) return '';
+              const str = String(val).replace(/"/g, '""');
+              return str.includes(',') || str.includes('"') || str.includes('\n') ? `"${str}"` : str;
+            }).join(',')
+          ),
+        ];
+        return lines.join('\n');
+      };
+
+      const sections = [
+        '=== CONTACTS ===',
+        toCsv(contactsRes.data),
+        '',
+        '=== DEALS ===',
+        toCsv(dealsRes.data),
+        '',
+        '=== TASKS ===',
+        toCsv(tasksRes.data),
+        '',
+        '=== NOTES ===',
+        toCsv(notesRes.data),
+      ];
+
+      const blob = new Blob([sections.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `outreach-crm-export-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success('Data exported successfully');
+    } catch (err) {
+      toast.error('Failed to export data');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const googleIntegration = integrations.find(i => i.provider === 'google');
   const microsoftIntegration = integrations.find(i => i.provider === 'microsoft');
 
@@ -214,7 +314,6 @@ export default function Settings() {
 
       window.location.assign(data.url);
     } catch (error) {
-      console.error('OAuth init error:', error);
       toast.error('Failed to connect Google', {
         description: error instanceof Error ? error.message : 'Please try again',
       });
@@ -249,8 +348,6 @@ export default function Settings() {
         throw new Error(data.error || 'Failed to start Microsoft OAuth');
       }
 
-      console.log('Microsoft OAuth URL received, redirecting...');
-
       const authWindow = window.open(data.url, '_blank', 'noopener,noreferrer');
       if (authWindow) {
         toast.info('Microsoft sign-in opened in a new tab', {
@@ -263,7 +360,6 @@ export default function Settings() {
       // Fallback if popup/new-tab is blocked
       window.location.assign(data.url);
     } catch (error) {
-      console.error('Microsoft OAuth init error:', error);
       toast.error('Failed to connect Microsoft', {
         description: error instanceof Error ? error.message : 'Please try again',
       });
@@ -602,28 +698,28 @@ export default function Settings() {
                 <p className="text-sm font-medium">Email Replies</p>
                 <p className="text-xs text-muted-foreground">Get notified when contacts reply</p>
               </div>
-              <Switch defaultChecked />
+              <Switch checked={notifPrefs.emailReplies} onCheckedChange={(v) => updateNotifPref('emailReplies', v)} />
             </div>
             <div className="flex items-center justify-between py-2">
               <div>
                 <p className="text-sm font-medium">Meeting Reminders</p>
                 <p className="text-xs text-muted-foreground">30 minutes before meetings</p>
               </div>
-              <Switch defaultChecked />
+              <Switch checked={notifPrefs.meetingReminders} onCheckedChange={(v) => updateNotifPref('meetingReminders', v)} />
             </div>
             <div className="flex items-center justify-between py-2">
               <div>
                 <p className="text-sm font-medium">Weekly Summary</p>
                 <p className="text-xs text-muted-foreground">Activity digest every Monday</p>
               </div>
-              <Switch defaultChecked />
+              <Switch checked={notifPrefs.weeklySummary} onCheckedChange={(v) => updateNotifPref('weeklySummary', v)} />
             </div>
             <div className="flex items-center justify-between py-2">
               <div>
                 <p className="text-sm font-medium">Follow-up Alerts</p>
                 <p className="text-xs text-muted-foreground">Remind when follow-ups are due</p>
               </div>
-              <Switch defaultChecked />
+              <Switch checked={notifPrefs.followUpAlerts} onCheckedChange={(v) => updateNotifPref('followUpAlerts', v)} />
             </div>
           </CardContent>
         </Card>
@@ -643,10 +739,10 @@ export default function Settings() {
                 <p className="text-sm font-medium">Two-Factor Authentication</p>
                 <p className="text-xs text-muted-foreground">Add an extra layer of security</p>
               </div>
-              <Button variant="outline" size="sm">Enable</Button>
+              <Button variant="outline" size="sm" onClick={handleEnable2FA}>Enable</Button>
             </div>
             <div className="pt-2">
-              <Button variant="outline">Change Password</Button>
+              <Button variant="outline" onClick={handleChangePassword}>Change Password</Button>
             </div>
           </CardContent>
         </Card>
@@ -661,9 +757,15 @@ export default function Settings() {
             <CardDescription>Export or manage your data</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button variant="outline">Export All Data</Button>
+            <Button variant="outline" onClick={handleExportData} disabled={isExporting}>
+              {isExporting ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Exporting...</>
+              ) : (
+                <><Download className="w-4 h-4 mr-2" />Export All Data</>
+              )}
+            </Button>
             <p className="text-xs text-muted-foreground">
-              Download all your contacts, deals, and activity history
+              Download all your contacts, deals, tasks, and notes as CSV
             </p>
           </CardContent>
         </Card>

@@ -1,5 +1,8 @@
 import { useState, useMemo } from 'react';
-import { Plus, Trash2, CheckCircle2 } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, Download } from 'lucide-react';
+import { BulkActionBar } from '@/components/common/BulkActionBar';
+import { exportToCSV } from '@/lib/csv-export';
+import { Button as BulkButton } from '@/components/ui/button';
 import { isToday, isFuture, isPast, startOfDay, addDays, addWeeks, addMonths } from 'date-fns';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -71,18 +74,37 @@ export default function Tasks() {
     });
   };
 
+  const [recurringCreated, setRecurringCreated] = useState<Set<string>>(new Set());
+
   const handleToggleComplete = async (id: string, completed: boolean) => {
     const task = tasks.find((t) => t.id === id);
+    if (!task) return;
+
+    // If uncompleting, just toggle and return
+    if (!completed) {
+      await toggleComplete.mutateAsync({ id, completed });
+      return;
+    }
+
+    // Guard: don't create a recurring follow-up if we already did for this task
+    if (task.recurrence && recurringCreated.has(id)) {
+      await toggleComplete.mutateAsync({ id, completed });
+      return;
+    }
+
     await toggleComplete.mutateAsync({ id, completed });
 
-    // Handle recurring task
-    if (completed && task && task.recurrence) {
+    // Handle recurring task: create next occurrence
+    if (task.recurrence) {
       const recurrence = task.recurrence;
       const baseDue = task.due_date ? new Date(task.due_date) : new Date();
       let nextDue: Date;
       if (recurrence === 'daily') nextDue = addDays(baseDue, 1);
       else if (recurrence === 'weekly') nextDue = addWeeks(baseDue, 1);
       else nextDue = addMonths(baseDue, 1);
+
+      // Mark this task as already having spawned a recurring copy
+      setRecurringCreated((prev) => new Set(prev).add(id));
 
       await createTask.mutateAsync({
         title: task.title,
@@ -93,8 +115,8 @@ export default function Tasks() {
         company_id: task.company_id,
         investor_deal_id: task.investor_deal_id,
         recurrence,
-      } as any);
-      toast({ title: 'Recurring task created', description: `Next due ${nextDue.toLocaleDateString()}` });
+      } as Record<string, unknown>);
+      toast({ title: 'Recurring task created', description: `Next occurrence due ${nextDue.toLocaleDateString()}` });
     }
   };
 
@@ -134,15 +156,38 @@ export default function Tasks() {
     setSelected(new Set());
   };
 
+  const taskCSVColumns = [
+    { key: 'title' as const, label: 'Title' },
+    { key: 'description' as const, label: 'Description' },
+    { key: 'priority' as const, label: 'Priority' },
+    { key: 'due_date' as const, label: 'Due Date' },
+    { key: 'completed' as const, label: 'Completed' },
+    { key: 'recurrence' as const, label: 'Recurrence' },
+  ];
+
+  const handleExportSelected = () => {
+    const selectedTasks = filtered.filter((t) => selected.has(t.id));
+    exportToCSV(selectedTasks as Record<string, unknown>[], 'tasks-selected.csv', taskCSVColumns);
+  };
+
+  const handleExportAll = () => {
+    exportToCSV(filtered as Record<string, unknown>[], 'tasks-all.csv', taskCSVColumns);
+  };
+
   return (
     <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6">
       <PageHeader
         title="Follow-ups"
         description={mode === 'fundraising' ? 'Manage investor follow-ups and reminders' : 'Manage deal tasks, diligence items, and follow-ups'}
         actions={
-          <Button onClick={() => { setEditingTask(null); setFormOpen(true); }}>
-            <Plus className="h-4 w-4 mr-2" /> New Task
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleExportAll}>
+              <Download className="h-4 w-4 mr-2" /> Export All
+            </Button>
+            <Button onClick={() => { setEditingTask(null); setFormOpen(true); }}>
+              <Plus className="h-4 w-4 mr-2" /> New Task
+            </Button>
+          </div>
         }
       />
 
@@ -209,6 +254,17 @@ export default function Tasks() {
         onConfirm={handleBulkDelete}
         count={selected.size}
       />
+
+      <BulkActionBar
+        selectedCount={selected.size}
+        onClearSelection={() => setSelected(new Set())}
+        onDelete={() => setBulkDeleteOpen(true)}
+        onExport={handleExportSelected}
+      >
+        <BulkButton variant="ghost" size="sm" className="text-primary-foreground hover:text-primary-foreground/80 hover:bg-primary-foreground/10" onClick={handleBulkComplete}>
+          <CheckCircle2 className="h-4 w-4 mr-1" /> Complete
+        </BulkButton>
+      </BulkActionBar>
     </div>
   );
 }

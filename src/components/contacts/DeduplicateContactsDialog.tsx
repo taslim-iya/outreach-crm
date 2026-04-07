@@ -34,7 +34,7 @@ function mergeContacts(base: Contact, others: Contact[]): Partial<Contact> {
     if (!base[field]) {
       for (const other of others) {
         if (other[field]) {
-          (updates as any)[field] = other[field];
+          (updates as Record<string, unknown>)[field] = other[field];
           break;
         }
       }

@@ -25,22 +25,73 @@ export interface Email {
   tracking_id: string | null;
 }
 
-export function useEmails(limit = 20) {
+interface UseEmailsOptions {
+  limit?: number;
+  search?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export function useEmails(limitOrOptions: number | UseEmailsOptions = 20) {
+  const options: UseEmailsOptions = typeof limitOrOptions === 'number'
+    ? { limit: limitOrOptions }
+    : limitOrOptions;
+  const { limit = 20, search, page, pageSize } = options;
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ['emails', user?.id, limit],
+    queryKey: ['emails', user?.id, limit, search, page, pageSize],
     queryFn: async () => {
       if (!user) return [];
 
-      const { data, error } = await supabase
+      let query = supabase
         .from('emails')
         .select('*')
-        .order('received_at', { ascending: false })
-        .limit(limit);
+        .eq('user_id', user.id)
+        .order('received_at', { ascending: false });
+
+      if (search) {
+        query = query.or(`subject.ilike.%${search}%,from_email.ilike.%${search}%`);
+      }
+
+      if (page !== undefined && pageSize !== undefined) {
+        const from = (page - 1) * pageSize;
+        const to = from + pageSize - 1;
+        query = query.range(from, to);
+      } else {
+        query = query.limit(limit);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       return data as Email[];
+    },
+    enabled: !!user,
+  });
+}
+
+export function useEmailsCount(search?: string) {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['emails', 'count', user?.id, search],
+    queryFn: async () => {
+      if (!user) return 0;
+
+      let query = supabase
+        .from('emails')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      if (search) {
+        query = query.or(`subject.ilike.%${search}%,from_email.ilike.%${search}%`);
+      }
+
+      const { count, error } = await query;
+
+      if (error) throw error;
+      return count || 0;
     },
     enabled: !!user,
   });
@@ -57,6 +108,7 @@ export function useUnreadEmailCount() {
       const { count, error } = await supabase
         .from('emails')
         .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
         .eq('is_read', false);
 
       if (error) throw error;

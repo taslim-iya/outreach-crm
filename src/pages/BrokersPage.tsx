@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,28 +7,40 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useBrokers, useCreateBroker, useUpdateBroker, useDeleteBroker } from '@/hooks/useBrokers';
-import { Plus, Search, Loader2, Trash2, Star, Building, Phone, Mail } from 'lucide-react';
+import { useBrokers, useCreateBroker, useUpdateBroker, useDeleteBroker, useBrokersCount } from '@/hooks/useBrokers';
+import { usePagination } from '@/hooks/usePagination';
+import { PaginationControls } from '@/components/ui/pagination-controls';
+import { Plus, Search, Loader2, Trash2, Star, Building, Phone, Mail, Download } from 'lucide-react';
+import { exportToCSV } from '@/lib/csv-export';
 
 export default function BrokersPage() {
-  const { data: brokers = [], isLoading } = useBrokers();
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const { page, pageSize, setPage, setPageSize } = usePagination();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search, setPage]);
+
+  const { data: brokers = [], isLoading } = useBrokers({ search: debouncedSearch, page, pageSize });
+  const { data: totalCount = 0 } = useBrokersCount(debouncedSearch);
   const createBroker = useCreateBroker();
   const deleteBroker = useDeleteBroker();
-  const [search, setSearch] = useState('');
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({
     firm: '', contact_name: '', email: '', phone: '',
     coverage_sector: '', coverage_geo: '', responsiveness_score: 3, notes: '',
   });
 
-  const filtered = brokers.filter(b =>
-    !search ||
-    b.firm.toLowerCase().includes(search.toLowerCase()) ||
-    b.contact_name.toLowerCase().includes(search.toLowerCase())
-  );
+  // With server-side search, brokers are already filtered
+  const filtered = brokers;
 
   const handleCreate = () => {
-    createBroker.mutate(form as any, {
+    createBroker.mutate(form as Record<string, unknown>, {
       onSuccess: () => {
         setShowAdd(false);
         setForm({ firm: '', contact_name: '', email: '', phone: '', coverage_sector: '', coverage_geo: '', responsiveness_score: 3, notes: '' });
@@ -46,9 +58,26 @@ export default function BrokersPage() {
         title="Email Accounts"
         description="Manage your sender accounts and email providers"
         actions={
-          <Button size="sm" onClick={() => setShowAdd(true)}>
-            <Plus className="w-4 h-4 mr-1" /> Add Broker
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => {
+              const brokerCSVColumns = [
+                { key: 'firm' as const, label: 'Firm' },
+                { key: 'contact_name' as const, label: 'Contact' },
+                { key: 'email' as const, label: 'Email' },
+                { key: 'phone' as const, label: 'Phone' },
+                { key: 'coverage_sector' as const, label: 'Sector' },
+                { key: 'coverage_geo' as const, label: 'Geography' },
+                { key: 'responsiveness_score' as const, label: 'Responsiveness' },
+                { key: 'notes' as const, label: 'Notes' },
+              ];
+              exportToCSV(filtered as Record<string, unknown>[], 'brokers.csv', brokerCSVColumns);
+            }}>
+              <Download className="w-4 h-4 mr-1" /> Export CSV
+            </Button>
+            <Button size="sm" onClick={() => setShowAdd(true)}>
+              <Plus className="w-4 h-4 mr-1" /> Add Broker
+            </Button>
+          </div>
         }
       />
 
@@ -120,6 +149,14 @@ export default function BrokersPage() {
           </TableBody>
         </Table>
       </div>
+
+      <PaginationControls
+        page={page}
+        pageSize={pageSize}
+        totalCount={totalCount}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+      />
 
       <Dialog open={showAdd} onOpenChange={setShowAdd}>
         <DialogContent>

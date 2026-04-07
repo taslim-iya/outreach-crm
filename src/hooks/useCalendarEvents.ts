@@ -47,6 +47,7 @@ export function useCalendarEvents(startDate?: Date, endDate?: Date) {
       let query = supabase
         .from('calendar_events')
         .select('*')
+        .eq('user_id', user.id)
         .order('start_time', { ascending: true });
 
       if (startDate) {
@@ -76,6 +77,7 @@ export function useUpcomingEvents(limit = 5) {
       const { data, error } = await supabase
         .from('calendar_events')
         .select('*')
+        .eq('user_id', user.id)
         .gte('start_time', new Date().toISOString())
         .order('start_time', { ascending: true })
         .limit(limit);

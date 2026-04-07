@@ -38,7 +38,7 @@ export function TaskFormModal({ open, onOpenChange, onSubmit, task }: TaskFormMo
   const { data: deals = [] } = useDeals();
   const { mode } = useAppMode();
 
-  const { register, handleSubmit, reset, setValue, watch } = useForm<TaskFormData>({
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<TaskFormData>({
     defaultValues: {
       title: '',
       description: '',
@@ -101,7 +101,8 @@ export function TaskFormModal({ open, onOpenChange, onSubmit, task }: TaskFormMo
         <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
           <div>
             <Label htmlFor="title">Title</Label>
-            <Input id="title" {...register('title', { required: true })} placeholder="Task title" />
+            <Input id="title" {...register('title', { required: 'Title is required' })} placeholder="Task title" />
+            {errors.title && <p className="text-sm text-destructive mt-1">{errors.title.message}</p>}
           </div>
 
           <div>

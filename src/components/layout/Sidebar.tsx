@@ -31,6 +31,10 @@ import {
   Handshake,
   MessageCircle,
   GripVertical,
+  Flame,
+  Target,
+  GitBranch,
+  UserCheck,
 } from 'lucide-react';
 import { useUnreadEmailCount } from '@/hooks/useEmails';
 
@@ -43,32 +47,37 @@ interface NavItem {
 const DEFAULT_FUNDRAISING_NAV: NavItem[] = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Campaigns', href: '/outreach', icon: Mail },
-  { name: 'Leads', href: '/contacts', icon: Users },
+  { name: 'Sequences', href: '/sequences', icon: GitBranch },
+  { name: 'Lead Finder', href: '/leads', icon: Search },
+  { name: 'Contacts', href: '/contacts', icon: Users },
   { name: 'Inbox', href: '/inbox', icon: Inbox },
-  { name: 'Email Accounts', href: '/investors', icon: TrendingUp },
-  { name: 'Deliverability', href: '/cap-table', icon: PieChart },
-  { name: 'Templates', href: '/documents', icon: FileText },
+  { name: 'Investors', href: '/investors', icon: TrendingUp },
+  { name: 'Cap Table', href: '/cap-table', icon: PieChart },
+  { name: 'Email Warmup', href: '/email-warmup', icon: Flame },
   { name: 'Calendar', href: '/calendar', icon: Calendar },
-  { name: 'Follow-ups', href: '/tasks', icon: CheckSquare },
+  { name: 'Tasks', href: '/tasks', icon: CheckSquare },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
 ];
 
 const DEFAULT_DEAL_SOURCING_NAV: NavItem[] = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Campaigns', href: '/outreach', icon: Mail },
-  { name: 'Sequences', href: '/deal-sourcing', icon: TrendingUp },
-  { name: 'Lead Finder', href: '/target-universe', icon: Search },
-  { name: 'Leads', href: '/contacts', icon: Users },
+  { name: 'Sequences', href: '/sequences', icon: GitBranch },
+  { name: 'Lead Finder', href: '/leads', icon: Search },
+  { name: 'Deals', href: '/deal-sourcing', icon: TrendingUp },
+  { name: 'Target Universe', href: '/target-universe', icon: Target },
+  { name: 'Contacts', href: '/contacts', icon: Users },
   { name: 'Inbox', href: '/inbox', icon: Inbox },
-  { name: 'Email Accounts', href: '/brokers', icon: Handshake },
-  { name: 'Templates', href: '/documents', icon: FileText },
+  { name: 'Brokers', href: '/brokers', icon: Handshake },
+  { name: 'Email Warmup', href: '/email-warmup', icon: Flame },
   { name: 'Calendar', href: '/calendar', icon: Calendar },
-  { name: 'Follow-ups', href: '/tasks', icon: CheckSquare },
+  { name: 'Tasks', href: '/tasks', icon: CheckSquare },
   { name: 'Analytics', href: '/deal-sourcing-analytics', icon: BarChart3 },
 ];
 
 const DEFAULT_BOTTOM_NAV: NavItem[] = [
   { name: 'AI Assistant', href: '/assistant', icon: Sparkles },
+  { name: 'Documents', href: '/documents', icon: FileText },
   { name: 'Notes', href: '/notes', icon: StickyNote },
   { name: 'Settings', href: '/settings', icon: Settings },
   { name: 'Support', href: '/support', icon: MessageCircle },
@@ -82,7 +91,8 @@ const adminNav = [
 const ICON_MAP: Record<string, typeof LayoutDashboard> = {
   LayoutDashboard, Users, TrendingUp, Mail, Inbox, FileText, BarChart3,
   Settings, Sparkles, Calendar, StickyNote, PieChart, CheckSquare,
-  Shield, Building2, Search, Handshake, MessageCircle,
+  Shield, Building2, Search, Handshake, MessageCircle, Flame, Target,
+  GitBranch, UserCheck,
 };
 
 function getIconForName(name: string, defaults: NavItem[]): typeof LayoutDashboard {

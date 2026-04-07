@@ -99,19 +99,19 @@ export function BrandProvider({ children }: { children: ReactNode }) {
     queryFn: async () => {
       if (!user?.id) return null;
       const { data, error } = await supabase
-        .from('brand_settings' as any)
+        .from('brand_settings')
         .select('*')
         .eq('user_id', user.id)
         .maybeSingle();
       if (error) throw error;
-      return data as unknown as BrandSettings | null;
+      return data as BrandSettings | null;
     },
     enabled: !!user?.id,
   });
 
   const getAsset = useCallback((key: keyof typeof DEFAULTS): string | null => {
     if (!settings) return null;
-    const val = (settings as any)[key];
+    const val = settings[key as keyof BrandSettings];
     if (!val) return null;
     // Append cache buster
     const sep = val.includes('?') ? '&' : '?';
@@ -146,21 +146,21 @@ export function useUpdateBrandSettings() {
 
       // Check if row exists
       const { data: existing } = await supabase
-        .from('brand_settings' as any)
+        .from('brand_settings')
         .select('id, asset_version')
         .eq('user_id', user.id)
         .maybeSingle();
 
       if (existing) {
         const { error } = await supabase
-          .from('brand_settings' as any)
-          .update({ ...updates, asset_version: ((existing as any).asset_version || 1) + 1 } as any)
+          .from('brand_settings')
+          .update({ ...updates, asset_version: ((existing as Record<string, unknown>).asset_version as number || 1) + 1 } as Record<string, unknown>)
           .eq('user_id', user.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from('brand_settings' as any)
-          .insert({ ...updates, user_id: user.id } as any);
+          .from('brand_settings')
+          .insert({ ...updates, user_id: user.id } as Record<string, unknown>);
         if (error) throw error;
       }
     },
@@ -198,21 +198,21 @@ export function useUploadBrandAsset() {
       if (!urlField) throw new Error('Invalid asset key');
 
       const { data: existing } = await supabase
-        .from('brand_settings' as any)
+        .from('brand_settings')
         .select('id, asset_version')
         .eq('user_id', user.id)
         .maybeSingle();
 
       if (existing) {
         const { error } = await supabase
-          .from('brand_settings' as any)
-          .update({ [urlField]: publicUrl, asset_version: ((existing as any).asset_version || 1) + 1 } as any)
+          .from('brand_settings')
+          .update({ [urlField]: publicUrl, asset_version: ((existing as Record<string, unknown>).asset_version as number || 1) + 1 } as Record<string, unknown>)
           .eq('user_id', user.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from('brand_settings' as any)
-          .insert({ user_id: user.id, [urlField]: publicUrl } as any);
+          .from('brand_settings')
+          .insert({ user_id: user.id, [urlField]: publicUrl } as Record<string, unknown>);
         if (error) throw error;
       }
 
@@ -237,8 +237,8 @@ export function useRemoveBrandAsset() {
       if (!urlField) throw new Error('Invalid asset key');
 
       const { error } = await supabase
-        .from('brand_settings' as any)
-        .update({ [urlField]: null } as any)
+        .from('brand_settings')
+        .update({ [urlField]: null } as Record<string, unknown>)
         .eq('user_id', user.id);
       if (error) throw error;
     },

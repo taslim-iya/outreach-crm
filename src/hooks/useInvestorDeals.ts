@@ -8,21 +8,67 @@ export type InvestorDealInsert = TablesInsert<'investor_deals'>;
 export type InvestorDealUpdate = TablesUpdate<'investor_deals'>;
 export type InvestorStage = Database['public']['Enums']['investor_stage'];
 
-export function useInvestorDeals() {
+interface UseInvestorDealsOptions {
+  search?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export function useInvestorDeals(options: UseInvestorDealsOptions = {}) {
+  const { search, page, pageSize } = options;
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ['investor_deals', user?.id],
+    queryKey: ['investor_deals', user?.id, search, page, pageSize],
     queryFn: async () => {
       if (!user) return [];
-      
-      const { data, error } = await supabase
+
+      let query = supabase
         .from('investor_deals')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
+
+      if (search) {
+        query = query.ilike('name', `%${search}%`);
+      }
+
+      if (page !== undefined && pageSize !== undefined) {
+        const from = (page - 1) * pageSize;
+        const to = from + pageSize - 1;
+        query = query.range(from, to);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       return data as InvestorDeal[];
+    },
+    enabled: !!user,
+  });
+}
+
+export function useInvestorDealsCount(search?: string) {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['investor_deals', 'count', user?.id, search],
+    queryFn: async () => {
+      if (!user) return 0;
+
+      let query = supabase
+        .from('investor_deals')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      if (search) {
+        query = query.ilike('name', `%${search}%`);
+      }
+
+      const { count, error } = await query;
+
+      if (error) throw error;
+      return count || 0;
     },
     enabled: !!user,
   });

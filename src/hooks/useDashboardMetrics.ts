@@ -40,10 +40,10 @@ export function useDashboardMetrics() {
 
       // Fetch all data in parallel
       const [investorDealsResult, companiesResult, contactsResult, tasksResult] = await Promise.all([
-        supabase.from('investor_deals').select('stage'),
-        supabase.from('companies').select('stage'),
-        supabase.from('contacts').select('contact_type'),
-        supabase.from('tasks').select('completed'),
+        supabase.from('investor_deals').select('stage').eq('user_id', user.id),
+        supabase.from('companies').select('stage').eq('user_id', user.id),
+        supabase.from('contacts').select('contact_type').eq('user_id', user.id),
+        supabase.from('tasks').select('completed').eq('user_id', user.id),
       ]);
 
       // Process investor deals

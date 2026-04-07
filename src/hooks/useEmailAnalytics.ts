@@ -23,11 +23,12 @@ export function useEmailAnalytics(days = 30) {
       const { data: emails, error } = await supabase
         .from('emails')
         .select('id, direction, to_emails, from_email, received_at, open_count, first_opened_at')
+        .eq('user_id', user.id)
         .gte('received_at', since.toISOString())
         .order('received_at', { ascending: true });
 
       if (error) throw error;
-      const allEmails = (emails || []) as any[];
+      const allEmails = emails || [];
 
       const sent = allEmails.filter(e => e.direction === 'outbound');
       const received = allEmails.filter(e => e.direction === 'inbound');

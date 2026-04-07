@@ -62,7 +62,7 @@ export default function TargetUniverse() {
         company_status: record.company_status || 'prospect',
         company_source: record.company_source || 'import',
         company_tags: record.company_tags || [],
-      } as any);
+      } as Record<string, unknown>);
     }
   };
 
@@ -74,7 +74,7 @@ export default function TargetUniverse() {
   });
 
   const filtered = useMemo(() => {
-    return companies.filter((c: any) => {
+    return companies.filter((c) => {
       const matchesSearch = !search || 
         c.name?.toLowerCase().includes(search.toLowerCase()) ||
         c.industry?.toLowerCase().includes(search.toLowerCase()) ||
@@ -92,7 +92,7 @@ export default function TargetUniverse() {
       industry: form.industry || null,
       geography: form.geography || null,
       website: form.website || null,
-    } as any, {
+    } as Record<string, unknown>, {
       onSuccess: () => {
         setShowAddModal(false);
         setForm({ name: '', industry: '', geography: '', website: '', description: '', sic_code: '', naics_code: '', ownership_type: '', revenue_band: '', ebitda_band: '', employee_count: '', company_status: 'prospect', company_source: '', company_tags: '' });
@@ -105,9 +105,9 @@ export default function TargetUniverse() {
     selectedIds.forEach(id => {
       const company = companies.find((c: any) => c.id === id);
       if (company) {
-        const existing = (company as any).company_tags || [];
+        const existing = (company as Record<string, unknown>).company_tags as string[] || [];
         const updated = [...new Set([...existing, bulkTag.trim()])];
-        updateCompany.mutate({ id, company_tags: updated } as any);
+        updateCompany.mutate({ id, company_tags: updated } as Record<string, unknown>);
       }
     });
     setSelectedIds(new Set());
@@ -117,7 +117,7 @@ export default function TargetUniverse() {
   };
 
   const handleExportCSV = () => {
-    const rows = filtered.map((c: any) => ({
+    const rows = filtered.map((c) => ({
       Name: c.name, Industry: c.industry, Geography: c.geography,
       Status: c.company_status, 'Revenue Band': c.revenue_band,
       'EBITDA Band': c.ebitda_band, Source: c.company_source,
@@ -142,7 +142,7 @@ export default function TargetUniverse() {
     if (selectedIds.size === filtered.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(filtered.map((c: any) => c.id)));
+      setSelectedIds(new Set(filtered.map((c) => c.id)));
     }
   };
 
@@ -157,7 +157,7 @@ export default function TargetUniverse() {
   return (
     <div className="p-4 md:p-6">
       <PageHeader
-        title="Lead Finder"
+        title="Target Universe"
         description="Search, filter, and manage your acquisition targets"
         actions={
           <div className="flex gap-2">
@@ -208,13 +208,13 @@ export default function TargetUniverse() {
         {savedFilters.length > 0 && (
           <div className="flex items-center gap-1">
             <Bookmark className="w-4 h-4 text-muted-foreground" />
-            {savedFilters.map((f: any) => (
+            {savedFilters.map((f) => (
               <Badge
                 key={f.id}
                 variant="secondary"
                 className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
                 onClick={() => {
-                  const cfg = f.filter_config;
+                  const cfg = f.filter_config as Record<string, string>;
                   if (cfg.search) setSearch(cfg.search);
                   if (cfg.status) setStatusFilter(cfg.status);
                   if (cfg.ownership) setOwnershipFilter(cfg.ownership);
@@ -272,7 +272,7 @@ export default function TargetUniverse() {
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((c: any) => (
+              filtered.map((c) => (
                 <TableRow key={c.id} className="group">
                   <TableCell>
                     <input type="checkbox" checked={selectedIds.has(c.id)} onChange={() => toggleSelect(c.id)} className="rounded" />
@@ -320,7 +320,7 @@ export default function TargetUniverse() {
                             name: c.name,
                             company_id: c.id,
                             source: c.company_source || 'proprietary',
-                            stage: 'screening' as any,
+                            stage: 'screening',
                           }, {
                             onSuccess: () => toast.success(`${c.name} added to Deal Pipeline`),
                           });

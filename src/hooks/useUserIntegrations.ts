@@ -23,6 +23,7 @@ export function useUserIntegrations() {
       const { data, error } = await supabase
         .from('user_integrations')
         .select('id, user_id, provider, email, is_active, created_at, updated_at')
+        .eq('user_id', user.id)
         .eq('is_active', true);
 
       if (error) throw error;

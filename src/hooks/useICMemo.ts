@@ -40,6 +40,7 @@ export function useICMemo(dealId: string | undefined) {
       const { data, error } = await supabase
         .from('ic_memos')
         .select('*')
+        .eq('user_id', user!.id)
         .eq('deal_id', dealId!)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -61,7 +62,7 @@ export function useUpsertICMemo() {
         const { id, ...updates } = memo;
         const { data, error } = await supabase
           .from('ic_memos')
-          .update(updates as any)
+          .update(updates as Record<string, unknown>)
           .eq('id', id)
           .select()
           .single();
@@ -70,7 +71,7 @@ export function useUpsertICMemo() {
       } else {
         const { data, error } = await supabase
           .from('ic_memos')
-          .insert({ ...memo, user_id: user!.id } as any)
+          .insert({ ...memo, user_id: user!.id } as Record<string, unknown>)
           .select()
           .single();
         if (error) throw error;
@@ -94,6 +95,7 @@ export function useDecisionLog(dealId: string | undefined) {
       const { data, error } = await supabase
         .from('decision_log')
         .select('*')
+        .eq('user_id', user!.id)
         .eq('deal_id', dealId!)
         .order('decision_date', { ascending: false });
       if (error) throw error;
@@ -111,7 +113,7 @@ export function useCreateDecisionLogEntry() {
     mutationFn: async (entry: Partial<DecisionLogEntry> & { deal_id: string }) => {
       const { data, error } = await supabase
         .from('decision_log')
-        .insert({ ...entry, user_id: user!.id } as any)
+        .insert({ ...entry, user_id: user!.id } as Record<string, unknown>)
         .select()
         .single();
       if (error) throw error;
@@ -134,6 +136,7 @@ export function useSavedFilters(entityType: string = 'company') {
       const { data, error } = await supabase
         .from('saved_filters')
         .select('*')
+        .eq('user_id', user!.id)
         .eq('entity_type', entityType)
         .order('name', { ascending: true });
       if (error) throw error;
@@ -148,10 +151,10 @@ export function useCreateSavedFilter() {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (filter: { name: string; filter_config: any; entity_type: string }) => {
+    mutationFn: async (filter: { name: string; filter_config: Record<string, unknown>; entity_type: string }) => {
       const { data, error } = await supabase
         .from('saved_filters')
-        .insert({ ...filter, user_id: user!.id } as any)
+        .insert({ ...filter, user_id: user!.id } as Record<string, unknown>)
         .select()
         .single();
       if (error) throw error;

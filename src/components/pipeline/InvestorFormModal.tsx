@@ -85,8 +85,8 @@ export function InvestorFormModal({ open, onOpenChange, investor, defaultStage =
         commitment_amount: investor.commitment_amount?.toString() || '',
         notes: investor.notes || '',
         contact_id: investor.contact_id || '',
-        investor_type: (investor as any).investor_type || '',
-        geography: (investor as any).geography || '',
+        investor_type: investor.investor_type || '',
+        geography: investor.geography || '',
       });
     } else {
       setFormData({
@@ -171,11 +171,11 @@ export function InvestorFormModal({ open, onOpenChange, investor, defaultStage =
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{isEditing ? 'Edit Account' : 'Add Email Account'}</DialogTitle>
+          <DialogTitle>{isEditing ? 'Edit Investor Deal' : 'Add Investor Deal'}</DialogTitle>
           <DialogDescription>
             {isEditing
-              ? 'Update the investor information below.'
-              : 'Add a new email account to your outreach setup.'}
+              ? 'Update the investor deal information below.'
+              : 'Add a new investor deal to your pipeline.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -310,7 +310,7 @@ export function InvestorFormModal({ open, onOpenChange, investor, defaultStage =
               ) : isEditing ? (
                 'Update Investor'
               ) : (
-                'Add Account'
+                'Add Investor Deal'
               )}
             </Button>
           </DialogFooter>

@@ -4,6 +4,7 @@ import { Sidebar, MobileSidebar, MobileHeader, SidebarProvider } from './Sidebar
 import { NotificationBell } from './NotificationBell';
 import { ChatBubble } from './ChatBubble';
 import { useDemoMode } from '@/hooks/useDemoMode';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { Button } from '@/components/ui/button';
 import { Eye, X } from 'lucide-react';
 
@@ -14,6 +15,7 @@ interface MainLayoutProps {
 export function MainLayout({ children }: MainLayoutProps) {
   const { isDemoMode, exitDemoMode } = useDemoMode();
   const navigate = useNavigate();
+  useKeyboardShortcuts();
 
   return (
     <SidebarProvider>

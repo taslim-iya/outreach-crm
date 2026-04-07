@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { BrandProvider } from "@/hooks/useBrandSettings";
 import { DemoModeProvider } from "@/hooks/useDemoMode";
 import { AppModeProvider } from "@/hooks/useAppMode";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { BrandHeadTags } from "@/components/brand/BrandHeadTags";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { AdminRoute } from "@/components/layout/AdminRoute";
@@ -33,6 +34,11 @@ import TargetUniverse from "./pages/TargetUniverse";
 import Support from "./pages/Support";
 import Notifications from "./pages/Notifications";
 
+import Sequences from "./pages/Sequences";
+import SequenceBuilder from "./pages/SequenceBuilder";
+import CampaignDetail from "./pages/CampaignDetail";
+import EmailWarmup from "./pages/EmailWarmup";
+import LeadFinder from "./pages/LeadFinder";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import AdminAnalytics from "./pages/AdminAnalytics";
@@ -63,6 +69,7 @@ const App = () => (
                   element={
                     <ProtectedRoute>
                       <MainLayout>
+                        <ErrorBoundary>
                         <Routes>
                           <Route path="/" element={<Dashboard />} />
                           <Route path="/inbox" element={<Inbox />} />
@@ -81,6 +88,11 @@ const App = () => (
                           <Route path="/brokers" element={<BrokersPage />} />
                           <Route path="/target-universe" element={<TargetUniverse />} />
 
+                          <Route path="/sequences" element={<Sequences />} />
+                          <Route path="/sequences/:id" element={<SequenceBuilder />} />
+                          <Route path="/campaigns/:id" element={<CampaignDetail />} />
+                          <Route path="/email-warmup" element={<EmailWarmup />} />
+                          <Route path="/leads" element={<LeadFinder />} />
                           <Route path="/notes" element={<NotesPage />} />
                           <Route path="/support" element={<Support />} />
                           <Route path="/notifications" element={<Notifications />} />
@@ -91,6 +103,7 @@ const App = () => (
                           <Route path="/admin/welcome-email" element={<AdminRoute><AdminWelcomeEmail /></AdminRoute>} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
+                        </ErrorBoundary>
                       </MainLayout>
                     </ProtectedRoute>
                   }

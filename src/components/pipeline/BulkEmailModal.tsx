@@ -185,7 +185,6 @@ export function BulkEmailModal({ open, onOpenChange, investors }: BulkEmailModal
       setBody(generatedBody);
       toast.success('Email generated — click "Review & Send" to personalize for each recipient');
     } catch (error) {
-      console.error('AI generation error:', error);
       toast.error('Failed to generate email', {
         description: error instanceof Error ? error.message : 'Please try again',
       });
