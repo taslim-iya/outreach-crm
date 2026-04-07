@@ -28,13 +28,13 @@ interface InvestorCardProps {
 }
 
 const stageLabels: Record<InvestorStage, string> = {
-  not_contacted: 'Not Contacted',
-  outreach_sent: 'Outreach Sent',
-  follow_up: 'Follow-up',
-  meeting_scheduled: 'Meeting Scheduled',
-  interested: 'Interested',
+  not_contacted: 'Inactive',
+  outreach_sent: 'Warming Up',
+  follow_up: 'Active',
+  meeting_scheduled: 'Healthy',
+  interested: 'Premium',
   passed: 'Passed',
-  committed: 'Committed',
+  committed: 'Verified',
   closed: 'Closed',
 };
 
@@ -244,8 +244,8 @@ export function InvestorCard({ deal, onEdit, onDelete }: InvestorCardProps) {
             try {
               await updateStage.mutateAsync({ id: deal.id, stage: nextStage as any });
               const labels: Record<string, string> = {
-                outreach_sent: 'Outreach Sent',
-                follow_up: 'Follow-up',
+                outreach_sent: 'Warming Up',
+                follow_up: 'Active',
               };
               toast.success(`${deal.organization || deal.name} moved to ${labels[nextStage]}`);
             } catch {

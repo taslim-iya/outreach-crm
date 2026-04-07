@@ -153,7 +153,7 @@ function ModeToggle() {
             : 'text-sidebar-foreground/60 hover:text-sidebar-foreground'
         )}
       >
-        Fundraising
+        Campaigns
       </button>
       <button
         onClick={() => setMode('sequences')}
@@ -164,7 +164,7 @@ function ModeToggle() {
             : 'text-sidebar-foreground/60 hover:text-sidebar-foreground'
         )}
       >
-        Deal Sourcing
+        Sequences
       </button>
     </div>
   );

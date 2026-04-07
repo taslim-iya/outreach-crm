@@ -171,11 +171,11 @@ export function InvestorFormModal({ open, onOpenChange, investor, defaultStage =
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{isEditing ? 'Edit Investor' : 'Add New Investor'}</DialogTitle>
+          <DialogTitle>{isEditing ? 'Edit Account' : 'Add Email Account'}</DialogTitle>
           <DialogDescription>
             {isEditing
               ? 'Update the investor information below.'
-              : 'Add a new investor to your pipeline.'}
+              : 'Add a new email account to your outreach setup.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -310,7 +310,7 @@ export function InvestorFormModal({ open, onOpenChange, investor, defaultStage =
               ) : isEditing ? (
                 'Update Investor'
               ) : (
-                'Add Investor'
+                'Add Account'
               )}
             </Button>
           </DialogFooter>

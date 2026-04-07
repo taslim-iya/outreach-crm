@@ -22,12 +22,12 @@ type SortField = 'name' | 'organization' | 'stage' | 'commitment_amount' | 'inve
 type SortDir = 'asc' | 'desc';
 
 const stages: { key: InvestorStage; label: string; color: string }[] = [
-  { key: 'not_contacted', label: 'Not Contacted', color: 'bg-stage-cold' },
-  { key: 'outreach_sent', label: 'Outreach Sent', color: 'bg-info' },
-  { key: 'follow_up', label: 'Follow-up', color: 'bg-stage-warm' },
-  { key: 'meeting_scheduled', label: 'Meeting Scheduled', color: 'bg-primary' },
-  { key: 'interested', label: 'Interested', color: 'bg-success' },
-  { key: 'committed', label: 'Committed', color: 'bg-success' },
+  { key: 'not_contacted', label: 'Inactive', color: 'bg-stage-cold' },
+  { key: 'outreach_sent', label: 'Warming Up', color: 'bg-info' },
+  { key: 'follow_up', label: 'Active', color: 'bg-stage-warm' },
+  { key: 'meeting_scheduled', label: 'Healthy', color: 'bg-primary' },
+  { key: 'interested', label: 'Premium', color: 'bg-success' },
+  { key: 'committed', label: 'Verified', color: 'bg-success' },
   { key: 'passed', label: 'Passed', color: 'bg-stage-passed' },
   { key: 'closed', label: 'Closed', color: 'bg-success' },
 ];
@@ -216,8 +216,8 @@ export default function Investors() {
   return (
     <div className="p-4 md:p-6">
       <PageHeader
-        title={companyName ? `${companyName} Investor Pipeline` : 'Investor Pipeline'}
-        description="Track your fundraising progress"
+        title={companyName ? `${companyName} Email Accounts` : 'Email Accounts'}
+        description="Manage your email accounts and outreach pipeline"
         actions={
           <div className="flex gap-2">
             {selectedIds.size > 0 && (

@@ -44,7 +44,7 @@ export default function BrokersPage() {
     <div className="p-4 md:p-6">
       <PageHeader
         title="Email Accounts"
-        description="Manage your broker relationships and deal flow"
+        description="Manage your sender accounts and email providers"
         actions={
           <Button size="sm" onClick={() => setShowAdd(true)}>
             <Plus className="w-4 h-4 mr-1" /> Add Broker

@@ -132,7 +132,7 @@ export default function CapTable() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
-      toast.success('Fundraising goal updated');
+      toast.success('Send limit updated');
       setGoalModalOpen(false);
     },
     onError: () => {
@@ -421,7 +421,7 @@ export default function CapTable() {
       <div className="p-4 md:p-6">
         <PageHeader
           title="Deliverability"
-          description="Track your fundraising progress"
+          description="Track email health and sender reputation"
         />
         <div className="flex items-center justify-center h-64">
           <div className="animate-pulse text-muted-foreground">Loading...</div>
@@ -436,7 +436,7 @@ export default function CapTable() {
       <div className="p-4 md:p-6">
         <PageHeader
           title="Deliverability"
-          description="Track your fundraising progress"
+          description="Track email health and sender reputation"
           actions={
             <Button onClick={handleAddEntry} size="sm">
               <Plus className="w-4 h-4 mr-2" />
@@ -480,7 +480,7 @@ export default function CapTable() {
     <div className="p-4 md:p-6 space-y-6">
       <PageHeader
         title={companyName ? `${companyName} Cap Table` : 'Cap Table'}
-        description="Track your fundraising progress"
+        description="Track email health and sender reputation"
         actions={
           <div className="flex gap-2">
             <Button onClick={handleAddEntry} size="sm">

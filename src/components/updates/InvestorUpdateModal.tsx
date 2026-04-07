@@ -18,7 +18,7 @@ interface InvestorUpdateModalProps {
 }
 
 export function InvestorUpdateModal({ open, onOpenChange }: InvestorUpdateModalProps) {
-  const [title, setTitle] = useState('Monthly Investor Update');
+  const [title, setTitle] = useState('Monthly Account Update');
   const [content, setContent] = useState('');
   const [customNotes, setCustomNotes] = useState('');
   const [step, setStep] = useState<'generate' | 'edit'>('generate');
@@ -130,7 +130,7 @@ export function InvestorUpdateModal({ open, onOpenChange }: InvestorUpdateModalP
     setStep('generate');
     setContent('');
     setCustomNotes('');
-    setTitle('Monthly Investor Update');
+    setTitle('Monthly Account Update');
     setAttachedDocIds([]);
     setManualFiles([]);
   };
@@ -141,7 +141,7 @@ export function InvestorUpdateModal({ open, onOpenChange }: InvestorUpdateModalP
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-primary" />
-            {step === 'generate' ? 'Generate Investor Update' : 'Edit & Send Update'}
+            {step === 'generate' ? 'Generate Account Update' : 'Edit & Send Update'}
           </DialogTitle>
         </DialogHeader>
 
@@ -153,7 +153,7 @@ export function InvestorUpdateModal({ open, onOpenChange }: InvestorUpdateModalP
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="mt-1.5"
-                placeholder="Monthly Investor Update - February 2026"
+                placeholder="Monthly Account Update - February 2026"
               />
             </div>
             <div>

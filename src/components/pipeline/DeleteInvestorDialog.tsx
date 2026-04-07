@@ -37,7 +37,7 @@ export function DeleteInvestorDialog({ open, onOpenChange, investor }: DeleteInv
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete Investor</AlertDialogTitle>
+          <AlertDialogTitle>Delete Account</AlertDialogTitle>
           <AlertDialogDescription>
             Are you sure you want to delete <strong>{investor?.name}</strong> from your pipeline? This action cannot be undone.
           </AlertDialogDescription>

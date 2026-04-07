@@ -71,7 +71,7 @@ export function CommitmentAmountModal({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Enter Commitment Amount</DialogTitle>
+          <DialogTitle>Enter Send Volume</DialogTitle>
           <DialogDescription>
             Moving <span className="font-medium text-foreground">{investor.name}</span>
             {investor.organization && (
@@ -84,7 +84,7 @@ export function CommitmentAmountModal({
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="commitment-amount">Commitment Amount</Label>
+              <Label htmlFor="commitment-amount">Send Volume</Label>
               <div className="relative">
                 <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
