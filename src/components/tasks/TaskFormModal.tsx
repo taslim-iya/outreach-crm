@@ -55,13 +55,13 @@ export function TaskFormModal({ open, onOpenChange, onSubmit, task }: TaskFormMo
     if (task) {
       reset({
         title: task.title,
-        description: (task as any).description || '',
+        description: task.description || '',
         priority: task.priority || 'medium',
         due_date: task.due_date || '',
         contact_id: task.contact_id || '',
         company_id: task.company_id || '',
-        investor_deal_id: (task as any).investor_deal_id || '',
-        recurrence: (task as any).recurrence || '',
+        investor_deal_id: task.investor_deal_id || '',
+        recurrence: task.recurrence || '',
       });
     } else {
       reset({

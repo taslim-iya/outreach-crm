@@ -30,14 +30,14 @@ export function BrandLogo({
   const { settings, getAsset, getSiteTitle, getSiteSubtitle } = useBrandSettings();
   const [imgError, setImgError] = useState(false);
 
-  const urlMap: Record<string, string> = {
+  const urlMap = {
     full: 'logo_full_url',
     mark: 'logo_mark_url',
     light: 'logo_light_url',
     dark: 'logo_dark_url',
-  };
+  } as const;
 
-  const logoUrl = getAsset(urlMap[variant] as any);
+  const logoUrl = getAsset(urlMap[variant]);
 
   if (logoUrl && !imgError) {
     return (

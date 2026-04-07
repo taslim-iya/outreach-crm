@@ -250,7 +250,7 @@ export function BulkEmailModal({ open, onOpenChange, investors }: BulkEmailModal
         const nextStage = stageAdvancement[investor.stage];
         if (nextStage) {
           try {
-            await updateStage.mutateAsync({ id: investor.id, stage: nextStage as any });
+            await updateStage.mutateAsync({ id: investor.id, stage: nextStage as InvestorStage });
           } catch {
             // silently fail stage update
           }
@@ -298,7 +298,7 @@ export function BulkEmailModal({ open, onOpenChange, investors }: BulkEmailModal
           const nextStage = stageAdvancement[investor.stage];
           if (nextStage) {
             try {
-              await updateStage.mutateAsync({ id: investor.id, stage: nextStage as any });
+              await updateStage.mutateAsync({ id: investor.id, stage: nextStage as InvestorStage });
             } catch {
               // silently fail stage update
             }

@@ -117,8 +117,8 @@ export function DeduplicateContactsDialog({ open, onOpenChange, contacts }: Prop
       await queryClient.invalidateQueries({ queryKey: ['contacts'] });
       toast.success(`Merged ${merged} duplicate contact${merged !== 1 ? 's' : ''} across ${groups.length} group${groups.length !== 1 ? 's' : ''}`);
       setDone(true);
-    } catch (e: any) {
-      toast.error('Failed to merge some contacts: ' + e.message);
+    } catch (e: unknown) {
+      toast.error('Failed to merge some contacts: ' + (e instanceof Error ? e.message : 'Unknown error'));
     } finally {
       setMerging(false);
     }
