@@ -41,6 +41,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { AIMessageGenerator } from '@/components/ai/AIMessageGenerator';
 
 interface SmartComposeModalProps {
   open: boolean;
@@ -313,7 +314,14 @@ export function SmartComposeModal({
           </div>
 
           <div>
-            <Label htmlFor="body">Message</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="body">Message</Label>
+              <AIMessageGenerator
+                onInsert={(text) => setBody(text)}
+                contactName={investorName}
+                contactCompany={companyName}
+              />
+            </div>
             <Textarea
               id="body"
               placeholder="Write your message or generate with AI..."

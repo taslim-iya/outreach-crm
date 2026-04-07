@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { User, Mail, Bell, Shield, Database, Loader2, Link2, Check, RefreshCw, DollarSign, Upload, X, ImageIcon, Download } from 'lucide-react';
+import { User, Mail, Bell, Shield, Database, Loader2, Link2, Check, RefreshCw, DollarSign, Upload, X, ImageIcon, Download, Sparkles, Eye, EyeOff } from 'lucide-react';
 import { useUserIntegrations, useDisconnectIntegration } from '@/hooks/useUserIntegrations';
 import { useSyncIntegration } from '@/hooks/useSyncIntegration';
 import { useAuth } from '@/hooks/useAuth';
@@ -22,6 +22,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query';
 import { useUploadBrandAsset, useRemoveBrandAsset, useBrandSettings } from '@/hooks/useBrandSettings';
+import { useAISettings, useUpdateAISettings } from '@/hooks/useAI';
+import type { AISettings } from '@/hooks/useAI';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const CURRENCIES = [
   { code: 'USD', symbol: '$', name: 'US Dollar' },
@@ -72,6 +75,13 @@ export default function Settings() {
   // Export data state
   const [isExporting, setIsExporting] = useState(false);
 
+  // AI Settings
+  const { data: aiSettings, isLoading: aiLoading } = useAISettings();
+  const updateAISettings = useUpdateAISettings();
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [aiForm, setAIForm] = useState<Partial<AISettings>>({});
+  const [aiFormInitialized, setAIFormInitialized] = useState(false);
+
   // Profile form state
   const [displayName, setDisplayName] = useState('');
   const [companyName, setCompanyName] = useState('');
@@ -101,6 +111,79 @@ export default function Settings() {
       setDisplayName(user.user_metadata?.full_name || '');
     }
   }, [profile, user]);
+
+  // Sync AI form state when settings load
+  useEffect(() => {
+    if (aiSettings && !aiFormInitialized) {
+      setAIForm({
+        api_key_encrypted: aiSettings.api_key_encrypted || '',
+        model: aiSettings.model || 'claude-sonnet-4-20250514',
+        enabled: aiSettings.enabled ?? true,
+        ai_message_generator: aiSettings.ai_message_generator ?? true,
+        ai_followup_intelligence: aiSettings.ai_followup_intelligence ?? true,
+        ai_auto_responder: aiSettings.ai_auto_responder ?? false,
+        ai_lead_qualification: aiSettings.ai_lead_qualification ?? true,
+        ai_meeting_scheduler: aiSettings.ai_meeting_scheduler ?? true,
+        ai_sequence_optimizer: aiSettings.ai_sequence_optimizer ?? true,
+        ai_stage_manager: aiSettings.ai_stage_manager ?? true,
+        ai_subject_tester: aiSettings.ai_subject_tester ?? true,
+        ai_daily_briefing: aiSettings.ai_daily_briefing ?? true,
+        ai_task_suggestions: aiSettings.ai_task_suggestions ?? true,
+        auto_response_tone: aiSettings.auto_response_tone || 'professional',
+        auto_response_send_mode: aiSettings.auto_response_send_mode || 'review',
+        blackout_start_hour: aiSettings.blackout_start_hour ?? 22,
+        blackout_end_hour: aiSettings.blackout_end_hour ?? 7,
+        response_language: aiSettings.response_language || 'English',
+        working_hours_start: aiSettings.working_hours_start ?? 9,
+        working_hours_end: aiSettings.working_hours_end ?? 17,
+        working_days: aiSettings.working_days || ['mon', 'tue', 'wed', 'thu', 'fri'],
+        timezone: aiSettings.timezone || 'America/New_York',
+      });
+      setAIFormInitialized(true);
+    } else if (!aiSettings && !aiLoading && !aiFormInitialized) {
+      setAIForm({
+        api_key_encrypted: '',
+        model: 'claude-sonnet-4-20250514',
+        enabled: true,
+        ai_message_generator: true,
+        ai_followup_intelligence: true,
+        ai_auto_responder: false,
+        ai_lead_qualification: true,
+        ai_meeting_scheduler: true,
+        ai_sequence_optimizer: true,
+        ai_stage_manager: true,
+        ai_subject_tester: true,
+        ai_daily_briefing: true,
+        ai_task_suggestions: true,
+        auto_response_tone: 'professional',
+        auto_response_send_mode: 'review',
+        blackout_start_hour: 22,
+        blackout_end_hour: 7,
+        response_language: 'English',
+        working_hours_start: 9,
+        working_hours_end: 17,
+        working_days: ['mon', 'tue', 'wed', 'thu', 'fri'],
+        timezone: 'America/New_York',
+      });
+      setAIFormInitialized(true);
+    }
+  }, [aiSettings, aiLoading, aiFormInitialized]);
+
+  const handleSaveAISettings = () => {
+    updateAISettings.mutate(aiForm);
+  };
+
+  const updateAIForm = (updates: Partial<AISettings>) => {
+    setAIForm(prev => ({ ...prev, ...updates }));
+  };
+
+  const toggleWorkingDay = (day: string) => {
+    const current = aiForm.working_days || [];
+    const updated = current.includes(day)
+      ? current.filter(d => d !== day)
+      : [...current, day];
+    updateAIForm({ working_days: updated });
+  };
 
   // Update profile mutation (display name + company name)
   const updateProfile = useMutation({
@@ -767,6 +850,258 @@ export default function Settings() {
             <p className="text-xs text-muted-foreground">
               Download all your contacts, deals, tasks, and notes as CSV
             </p>
+          </CardContent>
+        </Card>
+
+        {/* AI Configuration */}
+        <Card className="goldman-card">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2 font-semibold">
+              <Sparkles className="w-4 h-4 text-primary" />
+              AI Configuration
+            </CardTitle>
+            <CardDescription>Configure AI-powered features using the Anthropic Claude API</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {aiLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <>
+                {/* API Key */}
+                <div className="space-y-2">
+                  <Label>Anthropic API Key</Label>
+                  <div className="relative">
+                    <Input
+                      type={showApiKey ? 'text' : 'password'}
+                      value={aiForm.api_key_encrypted || ''}
+                      onChange={(e) => updateAIForm({ api_key_encrypted: e.target.value })}
+                      placeholder="sk-ant-..."
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKey(!showApiKey)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Enter your Anthropic API key. Get one at console.anthropic.com</p>
+                </div>
+
+                {/* Model Selection */}
+                <div className="space-y-2">
+                  <Label>Model</Label>
+                  <Select
+                    value={aiForm.model || 'claude-sonnet-4-20250514'}
+                    onValueChange={(value) => updateAIForm({ model: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select model" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="claude-haiku-4-5-20251001">Haiku - Fast &amp; cheap</SelectItem>
+                      <SelectItem value="claude-sonnet-4-20250514">Sonnet - Balanced</SelectItem>
+                      <SelectItem value="claude-opus-4-20250514">Opus - Most capable</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Master Toggle */}
+                <div className="flex items-center justify-between py-2 border-b">
+                  <div>
+                    <p className="text-sm font-medium">Enable AI Features</p>
+                    <p className="text-xs text-muted-foreground">Master toggle for all AI functionality</p>
+                  </div>
+                  <Switch
+                    checked={aiForm.enabled ?? true}
+                    onCheckedChange={(v) => updateAIForm({ enabled: v })}
+                  />
+                </div>
+
+                {/* Feature Toggles */}
+                <div className="space-y-1">
+                  <Label className="text-sm font-medium">Feature Toggles</Label>
+                  <div className="space-y-3 pt-2">
+                    {[
+                      { key: 'ai_message_generator' as const, label: 'AI Message Generator', desc: 'AI-powered email drafting' },
+                      { key: 'ai_followup_intelligence' as const, label: 'AI Follow-up Intelligence', desc: 'Smart follow-up timing and content' },
+                      { key: 'ai_auto_responder' as const, label: 'AI Auto-Responder', desc: 'Automatically draft responses to incoming emails' },
+                      { key: 'ai_lead_qualification' as const, label: 'AI Lead Qualification', desc: 'AI scoring and qualification of leads' },
+                      { key: 'ai_meeting_scheduler' as const, label: 'AI Meeting Scheduler', desc: 'AI-assisted meeting scheduling' },
+                      { key: 'ai_sequence_optimizer' as const, label: 'AI Sequence Optimizer', desc: 'Optimize email sequence timing and content' },
+                      { key: 'ai_stage_manager' as const, label: 'AI CRM Stage Manager', desc: 'Automatic deal stage progression suggestions' },
+                      { key: 'ai_subject_tester' as const, label: 'AI Subject Line Tester', desc: 'AI analysis and optimization of subject lines' },
+                      { key: 'ai_daily_briefing' as const, label: 'AI Daily Briefing', desc: 'AI-generated daily CRM insights' },
+                      { key: 'ai_task_suggestions' as const, label: 'AI Task Suggestions', desc: 'AI-suggested tasks based on CRM activity' },
+                    ].map(({ key, label, desc }) => (
+                      <div key={key} className="flex items-center justify-between py-1">
+                        <div>
+                          <p className="text-sm">{label}</p>
+                          <p className="text-xs text-muted-foreground">{desc}</p>
+                        </div>
+                        <Switch
+                          checked={(aiForm[key] as boolean) ?? true}
+                          onCheckedChange={(v) => updateAIForm({ [key]: v } as Partial<AISettings>)}
+                          disabled={!aiForm.enabled}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Auto-Responder Settings (shown when ai_auto_responder enabled) */}
+                {aiForm.ai_auto_responder && aiForm.enabled && (
+                <div className="space-y-4 border-t pt-4">
+                  <Label className="text-sm font-medium">Auto-Responder Settings</Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-xs">Tone</Label>
+                      <Select
+                        value={aiForm.auto_response_tone || 'professional'}
+                        onValueChange={(value) => updateAIForm({ auto_response_tone: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="professional">Professional</SelectItem>
+                          <SelectItem value="friendly">Friendly</SelectItem>
+                          <SelectItem value="concise">Concise</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Send Mode</Label>
+                      <Select
+                        value={aiForm.auto_response_send_mode || 'review'}
+                        onValueChange={(value) => updateAIForm({ auto_response_send_mode: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="auto">Auto-send</SelectItem>
+                          <SelectItem value="review">Queue for review</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-xs">Blackout Start Hour</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={23}
+                        value={aiForm.blackout_start_hour ?? 22}
+                        onChange={(e) => updateAIForm({ blackout_start_hour: parseInt(e.target.value) || 0 })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Blackout End Hour</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={23}
+                        value={aiForm.blackout_end_hour ?? 7}
+                        onChange={(e) => updateAIForm({ blackout_end_hour: parseInt(e.target.value) || 0 })}
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">No auto-responses will be sent during blackout hours</p>
+                </div>
+                )}
+
+                {/* Meeting Scheduler Settings */}
+                <div className="space-y-4 border-t pt-4">
+                  <Label className="text-sm font-medium">Meeting Scheduler Settings</Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-xs">Working Hours Start</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={23}
+                        value={aiForm.working_hours_start ?? 9}
+                        onChange={(e) => updateAIForm({ working_hours_start: parseInt(e.target.value) || 0 })}
+                        disabled={!aiForm.ai_meeting_scheduler || !aiForm.enabled}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Working Hours End</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={23}
+                        value={aiForm.working_hours_end ?? 17}
+                        onChange={(e) => updateAIForm({ working_hours_end: parseInt(e.target.value) || 0 })}
+                        disabled={!aiForm.ai_meeting_scheduler || !aiForm.enabled}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Working Days</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { value: 'mon', label: 'Mon' },
+                        { value: 'tue', label: 'Tue' },
+                        { value: 'wed', label: 'Wed' },
+                        { value: 'thu', label: 'Thu' },
+                        { value: 'fri', label: 'Fri' },
+                        { value: 'sat', label: 'Sat' },
+                        { value: 'sun', label: 'Sun' },
+                      ].map(({ value, label }) => (
+                        <label key={value} className="flex items-center gap-1.5 text-sm">
+                          <Checkbox
+                            checked={(aiForm.working_days || []).includes(value)}
+                            onCheckedChange={() => toggleWorkingDay(value)}
+                            disabled={!aiForm.ai_meeting_scheduler || !aiForm.enabled}
+                          />
+                          {label}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Timezone</Label>
+                    <Input
+                      value={aiForm.timezone || 'America/New_York'}
+                      onChange={(e) => updateAIForm({ timezone: e.target.value })}
+                      placeholder="America/New_York"
+                      disabled={!aiForm.ai_meeting_scheduler || !aiForm.enabled}
+                    />
+                  </div>
+                </div>
+
+                {/* Response Language */}
+                <div className="space-y-2 border-t pt-4">
+                  <Label>Response Language</Label>
+                  <Input
+                    value={aiForm.response_language || 'English'}
+                    onChange={(e) => updateAIForm({ response_language: e.target.value })}
+                    placeholder="English"
+                    disabled={!aiForm.enabled}
+                  />
+                  <p className="text-xs text-muted-foreground">Language for AI-generated content</p>
+                </div>
+
+                {/* Save Button */}
+                <Button
+                  className="gradient-primary text-primary-foreground"
+                  onClick={handleSaveAISettings}
+                  disabled={updateAISettings.isPending}
+                >
+                  {updateAISettings.isPending ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</>
+                  ) : (
+                    'Save AI Settings'
+                  )}
+                </Button>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>

@@ -40,6 +40,9 @@ import {
 import { formatDistanceToNow, format, isToday, isYesterday, isThisYear } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { AIMessageGenerator } from '@/components/ai/AIMessageGenerator';
+import { AIFollowupIntelligence } from '@/components/ai/AIFollowupIntelligence';
+import { AIMeetingScheduler } from '@/components/ai/AIMeetingScheduler';
 
 type FilterTab = 'all' | 'unread' | 'sent' | 'starred';
 
@@ -609,6 +612,26 @@ export default function Inbox() {
                             '<p class="text-muted-foreground italic">No content available</p>',
                         }}
                       />
+                      {selectedEmail.direction !== 'outbound' && (
+                        <div className="mt-4 pt-4 border-t">
+                          <AIFollowupIntelligence
+                            emailBody={selectedEmail.body_preview || selectedEmail.body_html || ''}
+                            emailSubject={selectedEmail.subject || undefined}
+                            contactName={selectedEmail.from_name || undefined}
+                            onActionTaken={(action) => {
+                              toast.success(`Action noted: ${action}`);
+                            }}
+                          />
+                          <div className="mt-3">
+                            <AIMeetingScheduler
+                              emailBody={selectedEmail.body_preview || selectedEmail.body_html || ''}
+                              contactName={selectedEmail.from_name || selectedEmail.from_email || 'Unknown'}
+                              contactEmail={selectedEmail.from_email || undefined}
+                              contactId={selectedEmail.contact_id || undefined}
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </ScrollArea>
 
@@ -635,6 +658,10 @@ export default function Inbox() {
                           autoFocus
                         />
                         <div className="flex items-center gap-2 justify-end">
+                          <AIMessageGenerator
+                            onInsert={(text) => setReplyText(text)}
+                            contactName={selectedEmail?.from_name || undefined}
+                          />
                           <Button
                             variant="ghost"
                             size="sm"

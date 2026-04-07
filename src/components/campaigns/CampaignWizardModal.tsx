@@ -33,6 +33,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useCreateCampaign, useAddCampaignRecipients, useCreateCampaignStep } from '@/hooks/useCampaigns';
+import { AISubjectLineTester } from '@/components/ai/AISubjectLineTester';
 import { useContacts, Contact } from '@/hooks/useContacts';
 import { toast } from 'sonner';
 
@@ -360,7 +361,10 @@ export function CampaignWizardModal({ open, onOpenChange }: CampaignWizardModalP
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="subject-a">Subject Line (Variant A) *</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="subject-a">Subject Line (Variant A) *</Label>
+                    <AISubjectLineTester subject={subject} onSelectSubject={setSubject} />
+                  </div>
                   <Input
                     id="subject-a"
                     value={subject}
@@ -403,7 +407,10 @@ export function CampaignWizardModal({ open, onOpenChange }: CampaignWizardModalP
                 {showVariantB && (
                   <>
                     <div className="space-y-2">
-                      <Label htmlFor="subject-b">Subject Line (Variant B)</Label>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="subject-b">Subject Line (Variant B)</Label>
+                        <AISubjectLineTester subject={subjectB} onSelectSubject={setSubjectB} />
+                      </div>
                       <Input
                         id="subject-b"
                         value={subjectB}

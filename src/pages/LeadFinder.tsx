@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useLeads, useLeadsCount, useCreateLead, useDeleteLead, useBulkDeleteLeads, useLeadSearches, useSaveLeadSearch, useDeleteLeadSearch, useConvertLeadToContact, Lead, LeadInsert } from '@/hooks/useLeads';
 import { usePagination } from '@/hooks/usePagination';
 import { PaginationControls } from '@/components/ui/pagination-controls';
@@ -16,8 +16,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, Plus, Upload, Download, MoreHorizontal, UserPlus, Trash2, Filter, Save, X, ChevronDown, ChevronRight } from 'lucide-react';
+import { Search, Plus, Upload, Download, MoreHorizontal, UserPlus, Trash2, Filter, Save, X, ChevronDown, ChevronRight, Target } from 'lucide-react';
 import { toast } from 'sonner';
+import { AILeadQualification } from '@/components/ai/AILeadQualification';
 
 const INDUSTRIES = ['Technology', 'Healthcare', 'Finance', 'Real Estate', 'Manufacturing', 'Retail', 'Education', 'Legal', 'Consulting', 'Other'];
 const COMPANY_SIZES = ['1-10', '11-50', '51-200', '201-500', '501-1000', '1001-5000', '5000+'];
@@ -68,6 +69,7 @@ export default function LeadFinder() {
   const [searchName, setSearchName] = useState('');
   const [showFilters, setShowFilters] = useState(true);
   const [sortBy, setSortBy] = useState('newest');
+  const [qualifyingLeadId, setQualifyingLeadId] = useState<string | null>(null);
 
   const { data: leads, isLoading } = useLeads({ ...appliedFilters, page, pageSize });
   const { data: totalCount = 0 } = useLeadsCount(appliedFilters);
@@ -345,7 +347,8 @@ export default function LeadFinder() {
               </thead>
               <tbody>
                 {sortedLeads.map(lead => (
-                  <tr key={lead.id} className="border-b hover:bg-muted/30 transition-colors">
+                  <React.Fragment key={lead.id}>
+                  <tr className="border-b hover:bg-muted/30 transition-colors">
                     <td className="p-3"><Checkbox checked={selectedIds.has(lead.id)} onCheckedChange={() => toggleSelect(lead.id)} /></td>
                     <td className="p-3 font-medium text-sm">{[lead.first_name, lead.last_name].filter(Boolean).join(' ') || '—'}</td>
                     <td className="p-3 text-sm text-muted-foreground">{lead.email || '—'}</td>
@@ -358,12 +361,30 @@ export default function LeadFinder() {
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => setQualifyingLeadId(qualifyingLeadId === lead.id ? null : lead.id)}><Target className="h-4 w-4 mr-2" /> AI Qualify</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => convertToContact.mutate(lead.id)}><UserPlus className="h-4 w-4 mr-2" /> Convert to Contact</DropdownMenuItem>
                           <DropdownMenuItem className="text-destructive" onClick={() => { if (confirm('Delete this lead?')) deleteLead.mutate(lead.id); }}><Trash2 className="h-4 w-4 mr-2" /> Delete</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </td>
                   </tr>
+                  {qualifyingLeadId === lead.id && (
+                    <tr className="border-b bg-muted/20">
+                      <td colSpan={9} className="p-3">
+                        <AILeadQualification
+                          leadName={[lead.first_name, lead.last_name].filter(Boolean).join(' ') || 'Unknown'}
+                          leadEmail={lead.email || undefined}
+                          leadTitle={lead.title || undefined}
+                          leadCompany={lead.company || undefined}
+                          leadIndustry={lead.industry || undefined}
+                          leadScore={lead.score}
+                          entityId={lead.id}
+                          onQualified={() => setQualifyingLeadId(null)}
+                        />
+                      </td>
+                    </tr>
+                  )}
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>

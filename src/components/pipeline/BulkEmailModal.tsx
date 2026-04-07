@@ -36,6 +36,7 @@ import {
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { InvestorDeal, useUpdateInvestorStage } from '@/hooks/useInvestorDeals';
+import { AIMessageGenerator } from '@/components/ai/AIMessageGenerator';
 
 interface BulkEmailModalProps {
   open: boolean;
@@ -434,7 +435,10 @@ export function BulkEmailModal({ open, onOpenChange, investors }: BulkEmailModal
               </div>
 
               <div>
-                <Label htmlFor="bulk-body">Message</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="bulk-body">Message</Label>
+                  <AIMessageGenerator onInsert={(text) => setBody(text)} />
+                </div>
                 <Textarea
                   id="bulk-body"
                   placeholder="Write your message... Use {{first_name}}, {{name}}, {{organization}} for personalization"

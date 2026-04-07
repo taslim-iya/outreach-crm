@@ -5,6 +5,7 @@ import { exportToCSV } from '@/lib/csv-export';
 import { Button as BulkButton } from '@/components/ui/button';
 import { isToday, isFuture, isPast, startOfDay, addDays, addWeeks, addMonths } from 'date-fns';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { AITaskSuggestions } from '@/components/ai/AITaskSuggestions';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TaskRow } from '@/components/tasks/TaskRow';
@@ -214,6 +215,8 @@ export default function Tasks() {
           </div>
         )}
       </div>
+
+      <AITaskSuggestions />
 
       <div className="bg-card rounded-lg border border-border overflow-hidden">
         {isLoading ? (

@@ -31,6 +31,8 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { AIMessageGenerator } from '@/components/ai/AIMessageGenerator';
+import { AISubjectLineTester } from '@/components/ai/AISubjectLineTester';
 
 interface ComposeEmailModalProps {
   open: boolean;
@@ -139,7 +141,10 @@ export function ComposeEmailModal({
             />
           </div>
           <div>
-            <Label htmlFor="subject">Subject</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="subject">Subject</Label>
+              <AISubjectLineTester subject={subject} onSelectSubject={setSubject} />
+            </div>
             <Input
               id="subject"
               placeholder="Email subject"
@@ -148,7 +153,10 @@ export function ComposeEmailModal({
             />
           </div>
           <div>
-            <Label htmlFor="body">Message</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="body">Message</Label>
+              <AIMessageGenerator onInsert={(text) => setBody(text)} />
+            </div>
             <Textarea
               id="body"
               placeholder="Write your message..."

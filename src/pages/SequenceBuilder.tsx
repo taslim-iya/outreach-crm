@@ -11,6 +11,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
+import { AIMessageGenerator } from '@/components/ai/AIMessageGenerator';
+import { AISubjectLineTester } from '@/components/ai/AISubjectLineTester';
+import { AISequenceOptimizer } from '@/components/ai/AISequenceOptimizer';
 import {
   useSequence,
   useUpdateSequence,
@@ -580,6 +583,32 @@ export default function SequenceBuilder() {
 
         {/* ── Right Sidebar - Enrollments ─────────────────────────────────── */}
         <div className="space-y-4">
+          {/* AI Sequence Optimizer */}
+          {steps.length > 0 && (
+            <AISequenceOptimizer
+              steps={steps.map(s => ({
+                step_order: s.step_order,
+                step_type: s.step_type,
+                subject: s.subject || undefined,
+                body_html: s.body_html || undefined,
+                delay_amount: s.delay_amount || undefined,
+                delay_unit: s.delay_unit || undefined,
+              }))}
+              sequenceName={sequence.name}
+              onApplyOptimization={(stepNumber, changes) => {
+                const step = steps.find(s => s.step_order === stepNumber);
+                if (step && id) {
+                  const updates: Record<string, unknown> = {
+                    id: step.id,
+                    sequence_id: id,
+                  };
+                  if (changes.suggestedSubject) updates.subject = changes.suggestedSubject;
+                  updateStep.mutate(updates as Parameters<typeof updateStep.mutate>[0]);
+                }
+              }}
+            />
+          )}
+
           {/* Stats */}
           <Card>
             <CardContent className="p-4">
@@ -692,7 +721,13 @@ export default function SequenceBuilder() {
             {stepForm.step_type === 'email' && (
               <div className="space-y-3">
                 <div>
-                  <Label htmlFor="step-subject">Subject</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="step-subject">Subject</Label>
+                    <AISubjectLineTester
+                      subject={stepForm.subject}
+                      onSelectSubject={(s) => setStepForm((f) => ({ ...f, subject: s }))}
+                    />
+                  </div>
                   <Input
                     id="step-subject"
                     placeholder="Email subject line..."
@@ -702,7 +737,12 @@ export default function SequenceBuilder() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="step-body">Body</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="step-body">Body</Label>
+                    <AIMessageGenerator
+                      onInsert={(text) => setStepForm((f) => ({ ...f, body_html: text }))}
+                    />
+                  </div>
                   <Textarea
                     id="step-body"
                     placeholder="Write your email content here... HTML is supported."

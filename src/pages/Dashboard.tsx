@@ -2,6 +2,7 @@ import { MetricCard } from '@/components/dashboard/MetricCard';
 import { PipelinePreview } from '@/components/dashboard/PipelinePreview';
 import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
 import { TaskList } from '@/components/dashboard/TaskList';
+import { AIBriefingWidget } from '@/components/ai/AIBriefingWidget';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
 import { useAppMode } from '@/hooks/useAppMode';
@@ -92,6 +93,7 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <TaskList />
+        <AIBriefingWidget />
       </div>
 
       <div className="mt-6 flex items-center gap-4 text-sm text-muted-foreground border-t pt-4">
