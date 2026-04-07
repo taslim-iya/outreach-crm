@@ -79,6 +79,7 @@ const Index = () => {
   const [view, setView] = useState<ViewMode>("grid");
   const [locationLabel, setLocationLabel] = useState<string>("");
   const [lastSearchCity, setLastSearchCity] = useState<string>("");
+  const [resultSource, setResultSource] = useState<"live" | "cached" | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerRefreshKey, setDrawerRefreshKey] = useState(0);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -104,11 +105,14 @@ const Index = () => {
     setBusinesses([]);
     setLastSearchCity(city);
 
+    setResultSource(null);
+
     // Check cache first
     const cached = await getCachedSearch(city, category, mode);
     if (cached && cached.businesses.length > 0) {
       setBusinesses(cached.businesses);
       if (cached.location) setLocationLabel(cached.location);
+      setResultSource("cached");
       setIsLoading(false);
       toast({
         title: `Loaded ${cached.businesses.length} cached leads`,
@@ -120,6 +124,7 @@ const Index = () => {
     const result = await findBusinessesWithoutWebsites(city, category, mode);
 
     setIsLoading(false);
+    setResultSource("live");
 
     if (result.error) {
       toast({ title: "Search failed", description: result.error, variant: "destructive" });
@@ -164,6 +169,7 @@ const Index = () => {
     setBusinesses(imported);
     setHasSearched(true);
     setLocationLabel(`CSV: ${fileName}`);
+    setResultSource(null);
     await saveSearchCache(`csv:${fileName}`, "All Categories", "no_website", imported, `CSV: ${fileName}`, "csv_upload");
     refreshHistory();
   };
@@ -175,6 +181,7 @@ const Index = () => {
       setLocationLabel(data.location ?? `${data.city} · ${data.category}`);
       setHasSearched(true);
       setShowHistory(false);
+      setResultSource("cached");
       toast({ title: `Loaded ${data.businesses.length} leads`, description: `From ${entry.source === "csv_upload" ? "CSV upload" : "search"} on ${new Date(entry.created_at).toLocaleDateString()}` });
     }
   };
@@ -183,6 +190,7 @@ const Index = () => {
     setBusinesses(demoBiz);
     setHasSearched(true);
     setLocationLabel("Demo Data · Austin, TX");
+    setResultSource(null);
     toast({ title: `Loaded ${demoBiz.length} demo businesses`, description: "Explore the app with sample data" });
   };
 
@@ -282,11 +290,32 @@ const Index = () => {
         {/* Results section */}
         {(hasSearched || businesses.length > 0) && (
           <div className="space-y-5">
-            {/* Location banner */}
-            {locationLabel && !isLoading && (
-              <p className="text-xs text-muted-foreground font-mono">
-                Results for: <span className="text-cyan">{locationLabel}</span>
-              </p>
+            {/* Location banner + result metadata */}
+            {!isLoading && (locationLabel || businesses.length > 0) && (
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-3">
+                  {locationLabel && (
+                    <p className="text-xs text-muted-foreground font-mono">
+                      Results for: <span className="text-cyan">{locationLabel}</span>
+                    </p>
+                  )}
+                  {businesses.length > 0 && (
+                    <span className="text-xs font-mono font-medium text-foreground bg-secondary px-2 py-0.5 rounded-full">
+                      {businesses.length} businesses
+                    </span>
+                  )}
+                </div>
+                {resultSource && (
+                  <span className={`inline-flex items-center gap-1.5 text-xs font-mono px-2 py-0.5 rounded-full border ${
+                    resultSource === "live"
+                      ? "text-success bg-success/10 border-success/30"
+                      : "text-muted-foreground bg-secondary border-border"
+                  }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${resultSource === "live" ? "bg-success animate-pulse" : "bg-muted-foreground"}`} />
+                    {resultSource === "live" ? "Live results" : "Cached"}
+                  </span>
+                )}
+              </div>
             )}
 
             {/* Stats */}

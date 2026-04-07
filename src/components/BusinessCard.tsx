@@ -140,21 +140,33 @@ export const BusinessCard = ({ business, index, onLeadSaved }: BusinessCardProps
 
       {/* Details */}
       <div className="space-y-2.5 mb-4">
-        {/* Address */}
+        {/* Address — links to Google Maps */}
         <div className="flex items-start gap-2.5">
           <MapPin size={13} className="text-muted-foreground mt-0.5 shrink-0" />
-          <span className="text-xs text-muted-foreground leading-tight">
+          <a
+            href={`https://maps.google.com/?q=${encodeURIComponent(`${business.address}, ${business.city}, ${business.state}`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-muted-foreground leading-tight hover:text-cyan hover:underline transition-colors"
+          >
             {business.address}, {business.city}, {business.state}
-          </span>
+          </a>
         </div>
 
-        {/* Phone */}
+        {/* Phone — links to tel: */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <Phone size={13} className="text-muted-foreground shrink-0" />
-            <span className="text-xs font-mono text-foreground">
-              {business.phone || "—"}
-            </span>
+            {business.phone ? (
+              <a
+                href={`tel:${business.phone}`}
+                className="text-xs font-mono text-foreground hover:text-cyan hover:underline transition-colors"
+              >
+                {business.phone}
+              </a>
+            ) : (
+              <span className="text-xs font-mono text-foreground">—</span>
+            )}
           </div>
           {business.phone && (
             <button
