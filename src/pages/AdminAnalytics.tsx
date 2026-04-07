@@ -46,8 +46,8 @@ export default function AdminAnalytics({ embedded }: { embedded?: boolean }) {
 
   // Recent opened emails
   const openedEmails = (emails || [])
-    .filter((e: any) => e.direction === 'outbound' && (e as any).open_count > 0)
-    .sort((a: any, b: any) => new Date((b as any).last_opened_at || 0).getTime() - new Date((a as any).last_opened_at || 0).getTime())
+    .filter((e) => e.direction === 'outbound' && (e.open_count || 0) > 0)
+    .sort((a, b) => new Date(a.last_opened_at || 0).getTime() - new Date(b.last_opened_at || 0).getTime())
     .slice(0, 15);
 
   // Task completion rate

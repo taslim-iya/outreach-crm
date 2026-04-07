@@ -109,7 +109,7 @@ function MetadataSection() {
   });
 
   const handleSave = () => {
-    updateMutation.mutate(form as any);
+    updateMutation.mutate(form as Partial<BrandSettings>);
   };
 
   return (

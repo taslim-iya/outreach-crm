@@ -38,7 +38,7 @@ export function TaskFormModal({ open, onOpenChange, onSubmit, task }: TaskFormMo
   const { data: deals = [] } = useDeals();
   const { mode } = useAppMode();
 
-  const { register, handleSubmit, reset, setValue, watch } = useForm<TaskFormData>({
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<TaskFormData>({
     defaultValues: {
       title: '',
       description: '',
@@ -55,13 +55,13 @@ export function TaskFormModal({ open, onOpenChange, onSubmit, task }: TaskFormMo
     if (task) {
       reset({
         title: task.title,
-        description: (task as any).description || '',
+        description: task.description || '',
         priority: task.priority || 'medium',
         due_date: task.due_date || '',
         contact_id: task.contact_id || '',
         company_id: task.company_id || '',
-        investor_deal_id: (task as any).investor_deal_id || '',
-        recurrence: (task as any).recurrence || '',
+        investor_deal_id: task.investor_deal_id || '',
+        recurrence: task.recurrence || '',
       });
     } else {
       reset({
@@ -101,7 +101,8 @@ export function TaskFormModal({ open, onOpenChange, onSubmit, task }: TaskFormMo
         <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
           <div>
             <Label htmlFor="title">Title</Label>
-            <Input id="title" {...register('title', { required: true })} placeholder="Task title" />
+            <Input id="title" {...register('title', { required: 'Title is required' })} placeholder="Task title" />
+            {errors.title && <p className="text-sm text-destructive mt-1">{errors.title.message}</p>}
           </div>
 
           <div>

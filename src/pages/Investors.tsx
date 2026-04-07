@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { InvestorFormModal } from '@/components/pipeline/InvestorFormModal';
 import { DeleteInvestorDialog } from '@/components/pipeline/DeleteInvestorDialog';
 import { CommitmentAmountModal } from '@/components/pipeline/CommitmentAmountModal';
@@ -10,7 +10,9 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useInvestorDeals, InvestorDeal, InvestorStage, useUpdateInvestorStage, useUpdateInvestorStageWithCommitment, useUpdateInvestorDeal } from '@/hooks/useInvestorDeals';
+import { useInvestorDeals, InvestorDeal, InvestorStage, useUpdateInvestorStage, useUpdateInvestorStageWithCommitment, useUpdateInvestorDeal, useInvestorDealsCount } from '@/hooks/useInvestorDeals';
+import { usePagination } from '@/hooks/usePagination';
+import { PaginationControls } from '@/components/ui/pagination-controls';
 import { EditableCell } from '@/components/ui/EditableCell';
 import { Plus, Search, Loader2, TrendingUp, FileText, Mail, Pencil, Trash2, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -56,16 +58,28 @@ const stageColors: Record<InvestorStage, string> = {
 
 export default function Investors() {
   const { user } = useAuth();
-  const { data: investors = [], isLoading } = useInvestorDeals();
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [stageFilter, setStageFilter] = useState<string>('all');
+  const { page, pageSize, setPage, setPageSize } = usePagination();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery, setPage]);
+
+  const { data: investors = [], isLoading } = useInvestorDeals({ search: debouncedSearch, page, pageSize });
+  const { data: totalCount = 0 } = useInvestorDealsCount(debouncedSearch);
   const updateStage = useUpdateInvestorStage();
   const updateStageWithCommitment = useUpdateInvestorStageWithCommitment();
   const updateInvestor = useUpdateInvestorDeal();
 
   const handleInlineEdit = useCallback(async (id: string, field: string, value: string) => {
     try {
-      const update: any = { id };
+      const update: Record<string, unknown> = { id };
       if (field === 'commitment_amount') {
         update[field] = value ? parseFloat(value) : null;
       } else {
@@ -118,21 +132,16 @@ export default function Investors() {
   }, [sortField]);
 
   const filtered = useMemo(() => {
+    // Search is now server-side; only apply client-side stage filter and sorting
     let result = investors.filter((inv) => {
-      const matchesSearch =
-        !searchQuery ||
-        inv.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (inv.organization?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
-        ((inv as any).investor_type?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
-        ((inv as any).geography?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
       const matchesStage = stageFilter === 'all' || inv.stage === stageFilter;
-      return matchesSearch && matchesStage;
+      return matchesStage;
     });
 
     if (sortField) {
       result = [...result].sort((a, b) => {
-        const aVal = ((a as any)[sortField] ?? '') as string;
-        const bVal = ((b as any)[sortField] ?? '') as string;
+        const aVal = String((a as Record<string, unknown>)[sortField] ?? '');
+        const bVal = String((b as Record<string, unknown>)[sortField] ?? '');
         if (sortField === 'commitment_amount') {
           const aNum = (a.commitment_amount ?? 0);
           const bNum = (b.commitment_amount ?? 0);
@@ -144,7 +153,7 @@ export default function Investors() {
     }
 
     return result;
-  }, [investors, searchQuery, stageFilter, sortField, sortDir]);
+  }, [investors, stageFilter, sortField, sortDir]);
 
   const selectedInvestors = investors.filter(i => selectedIds.has(i.id));
 
@@ -343,14 +352,14 @@ export default function Investors() {
                   </TableCell>
                   <TableCell>
                     <EditableCell
-                      value={(inv as any).investor_type || ''}
+                      value={inv.investor_type || ''}
                       onSave={(v) => handleInlineEdit(inv.id, 'investor_type', v)}
                       className="text-muted-foreground"
                     />
                   </TableCell>
                   <TableCell>
                     <EditableCell
-                      value={(inv as any).geography || ''}
+                      value={inv.geography || ''}
                       onSave={(v) => handleInlineEdit(inv.id, 'geography', v)}
                       className="text-muted-foreground"
                     />
@@ -420,7 +429,14 @@ export default function Investors() {
         </Table>
       </div>
 
-      <p className="text-xs text-muted-foreground mt-2">{filtered.length} of {investors.length} investors</p>
+      <PaginationControls
+        page={page}
+        pageSize={pageSize}
+        totalCount={totalCount}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+      />
+      <p className="text-xs text-muted-foreground mt-2">{filtered.length} of {totalCount} investors</p>
 
       {/* Modals */}
       <InvestorFormModal

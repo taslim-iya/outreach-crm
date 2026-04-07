@@ -242,7 +242,7 @@ export function InvestorCard({ deal, onEdit, onDelete }: InvestorCardProps) {
           const nextStage = stageAdvancement[deal.stage];
           if (nextStage) {
             try {
-              await updateStage.mutateAsync({ id: deal.id, stage: nextStage as any });
+              await updateStage.mutateAsync({ id: deal.id, stage: nextStage as InvestorStage });
               const labels: Record<string, string> = {
                 outreach_sent: 'Warming Up',
                 follow_up: 'Active',

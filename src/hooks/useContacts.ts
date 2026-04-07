@@ -7,21 +7,65 @@ export type Contact = Tables<'contacts'>;
 export type ContactInsert = TablesInsert<'contacts'>;
 export type ContactUpdate = TablesUpdate<'contacts'>;
 
-export function useContacts() {
+interface UseContactsOptions {
+  search?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export function useContacts(options: UseContactsOptions = {}) {
+  const { search, page, pageSize } = options;
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ['contacts', user?.id],
+    queryKey: ['contacts', user?.id, search, page, pageSize],
     queryFn: async () => {
       if (!user) return [];
-      
-      const { data, error } = await supabase
+
+      let query = supabase
         .from('contacts')
         .select('*')
         .order('created_at', { ascending: false });
 
+      if (search) {
+        query = query.ilike('name', `%${search}%`);
+      }
+
+      if (page !== undefined && pageSize !== undefined) {
+        const from = (page - 1) * pageSize;
+        const to = from + pageSize - 1;
+        query = query.range(from, to);
+      }
+
+      const { data, error } = await query;
+
       if (error) throw error;
       return data as Contact[];
+    },
+    enabled: !!user,
+  });
+}
+
+export function useContactsCount(search?: string) {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['contacts', 'count', user?.id, search],
+    queryFn: async () => {
+      if (!user) return 0;
+
+      let query = supabase
+        .from('contacts')
+        .select('*', { count: 'exact', head: true });
+
+      if (search) {
+        query = query.ilike('name', `%${search}%`);
+      }
+
+      const { count, error } = await query;
+
+      if (error) throw error;
+      return count || 0;
     },
     enabled: !!user,
   });

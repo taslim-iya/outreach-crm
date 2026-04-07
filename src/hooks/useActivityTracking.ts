@@ -11,7 +11,7 @@ export function useActivityTracking() {
       await supabase.from('user_activity_log').insert([{
         user_id: user.id,
         event_type: eventType,
-        event_data: (eventData || {}) as any,
+        event_data: (eventData || {}) as Record<string, unknown>,
       }]);
     } catch {
       // Silently fail - tracking should never block UX

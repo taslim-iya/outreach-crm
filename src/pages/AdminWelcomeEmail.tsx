@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { Save } from 'lucide-react';
+import { useBrandSettings } from '@/hooks/useBrandSettings';
 
 const DEFAULT_WELCOME = {
   subject: 'Welcome to Acquire CRM',
@@ -17,14 +18,22 @@ const DEFAULT_WELCOME = {
 };
 
 export default function AdminWelcomeEmail() {
+  const { getAsset } = useBrandSettings();
+
+  // TODO: Move welcome email config from localStorage to a database table (e.g. email_templates or app_settings)
+  // so it persists across devices and is available server-side for actual email sending.
   const [welcome, setWelcome] = useState(() => {
     const saved = localStorage.getItem('welcome_email_config');
     return saved ? JSON.parse(saved) : DEFAULT_WELCOME;
   });
   const [saving, setSaving] = useState(false);
 
+  // Use brand logo if available, fall back to default
+  const logoUrl = getAsset('email_header_logo_url') || getAsset('logo_full_url') || getAsset('logo_mark_url');
+
   const handleSave = () => {
     setSaving(true);
+    // TODO: Persist to database instead of localStorage
     localStorage.setItem('welcome_email_config', JSON.stringify(welcome));
     setTimeout(() => {
       setSaving(false);
@@ -87,11 +96,13 @@ export default function AdminWelcomeEmail() {
                 Subject: {welcome.subject}
               </div>
               <div className="p-6 bg-white" style={{ fontFamily: "'Inter', sans-serif" }}>
-                <img
-                  src="https://ygreplqxqazgxkudonso.supabase.co/storage/v1/object/public/brand-assets/email-logo.png"
-                  alt="Logo"
-                  className="h-12 w-12 rounded-xl mb-6"
-                />
+                {logoUrl && (
+                  <img
+                    src={logoUrl}
+                    alt="Logo"
+                    className="h-12 w-12 rounded-xl mb-6"
+                  />
+                )}
                 <h2 className="text-xl font-semibold mb-3" style={{ color: '#1a2540', letterSpacing: '-0.02em' }}>
                   {welcome.heading}
                 </h2>

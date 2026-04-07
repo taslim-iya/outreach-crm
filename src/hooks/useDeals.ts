@@ -36,18 +36,63 @@ export interface Deal {
   brokers?: { firm: string; contact_name: string } | null;
 }
 
-export function useDeals() {
+interface UseDealsOptions {
+  search?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export function useDeals(options: UseDealsOptions = {}) {
+  const { search, page, pageSize } = options;
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ['deals', user?.id],
+    queryKey: ['deals', user?.id, search, page, pageSize],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('deals')
         .select('*, companies(name, industry), brokers(firm, contact_name)')
+        .eq('user_id', user!.id)
         .order('updated_at', { ascending: false });
+
+      if (search) {
+        query = query.ilike('name', `%${search}%`);
+      }
+
+      if (page !== undefined && pageSize !== undefined) {
+        const from = (page - 1) * pageSize;
+        const to = from + pageSize - 1;
+        query = query.range(from, to);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data as Deal[];
+    },
+    enabled: !!user,
+  });
+}
+
+export function useDealsCount(search?: string) {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['deals', 'count', user?.id, search],
+    queryFn: async () => {
+      if (!user) return 0;
+
+      let query = supabase
+        .from('deals')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      if (search) {
+        query = query.ilike('name', `%${search}%`);
+      }
+
+      const { count, error } = await query;
+      if (error) throw error;
+      return count || 0;
     },
     enabled: !!user,
   });
@@ -62,6 +107,7 @@ export function useDeal(id: string | undefined) {
       const { data, error } = await supabase
         .from('deals')
         .select('*, companies(name, industry), brokers(firm, contact_name)')
+        .eq('user_id', user!.id)
         .eq('id', id!)
         .single();
       if (error) throw error;
@@ -79,7 +125,7 @@ export function useCreateDeal() {
     mutationFn: async (deal: Partial<Deal>) => {
       const { data, error } = await supabase
         .from('deals')
-        .insert({ ...deal, user_id: user!.id } as any)
+        .insert({ ...deal, user_id: user!.id } as Record<string, unknown>)
         .select()
         .single();
       if (error) throw error;
@@ -100,7 +146,7 @@ export function useUpdateDeal() {
     mutationFn: async ({ id, ...updates }: Partial<Deal> & { id: string }) => {
       const { data, error } = await supabase
         .from('deals')
-        .update(updates as any)
+        .update(updates as Record<string, unknown>)
         .eq('id', id)
         .select()
         .single();
@@ -139,7 +185,7 @@ export function useUpdateDealStage() {
     mutationFn: async ({ id, stage }: { id: string; stage: string }) => {
       const { error } = await supabase
         .from('deals')
-        .update({ stage } as any)
+        .update({ stage })
         .eq('id', id);
       if (error) throw error;
     },

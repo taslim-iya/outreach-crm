@@ -65,7 +65,7 @@ export default function DealSourcingAnalytics() {
 
   return (
     <div className="p-4 md:p-6">
-      <PageHeader title="Sequence Analytics" description="Sequence performance, engagement metrics, and conversion rates" />
+      <PageHeader title="Deal Sourcing Analytics" description="Deal pipeline performance, sourcing metrics, and conversion rates" />
 
       {/* Top-line KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">

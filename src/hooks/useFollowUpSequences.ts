@@ -30,6 +30,7 @@ export function useFollowUpSequences(investorDealId?: string) {
       let query = supabase
         .from('follow_up_sequences')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (investorDealId) {

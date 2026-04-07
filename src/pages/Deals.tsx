@@ -1,14 +1,16 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { KanbanColumn } from '@/components/pipeline/KanbanColumn';
 import { DealCard } from '@/components/pipeline/DealCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useCompanies, useCreateCompany, Company, DealStage } from '@/hooks/useCompanies';
+import { useCompanies, useCreateCompany, useUpdateCompanyStage, Company, DealStage } from '@/hooks/useCompanies';
 import { CompanyFormModal } from '@/components/deals/CompanyFormModal';
 import { DeleteCompanyDialog } from '@/components/deals/DeleteCompanyDialog';
 import { ImportModal } from '@/components/import/ImportModal';
 import { Plus, Search, Filter, Loader2, Upload } from 'lucide-react';
+import { DragDropContext, Draggable, DropResult } from '@hello-pangea/dnd';
+import { toast } from 'sonner';
 
 const stages: { key: DealStage; label: string; color: string }[] = [
   { key: 'identified', label: 'Identified', color: 'bg-stage-cold' },
@@ -33,6 +35,20 @@ export default function Deals() {
 
   const { data: companies, isLoading, error } = useCompanies();
   const createCompany = useCreateCompany();
+  const updateStage = useUpdateCompanyStage();
+
+  const handleDragEnd = useCallback(async (result: DropResult) => {
+    const { draggableId, destination, source } = result;
+    if (!destination) return;
+    if (destination.droppableId === source.droppableId) return;
+
+    const newStage = destination.droppableId as DealStage;
+    try {
+      await updateStage.mutateAsync({ id: draggableId, stage: newStage });
+    } catch {
+      toast.error('Failed to update deal stage');
+    }
+  }, [updateStage]);
 
   const handleImportCompanies = async (records: any[]) => {
     for (const record of records) {
@@ -142,28 +158,42 @@ export default function Deals() {
             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <div className="flex gap-4 h-full min-w-max">
-            {stages.map((stage) => {
-              const stageCompanies = getCompaniesForStage(stage.key);
-              return (
-                <KanbanColumn
-                  key={stage.key}
-                  title={stage.label}
-                  count={stageCompanies.length}
-                  color={stage.color}
-                >
-                  {stageCompanies.map((company) => (
-                    <DealCard 
-                      key={company.id} 
-                      company={company}
-                      onEdit={handleEditCompany}
-                      onDelete={handleDeleteCompany}
-                    />
-                  ))}
-                </KanbanColumn>
-              );
-            })}
-          </div>
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <div className="flex gap-4 h-full min-w-max">
+              {stages.map((stage) => {
+                const stageCompanies = getCompaniesForStage(stage.key);
+                return (
+                  <KanbanColumn
+                    key={stage.key}
+                    title={stage.label}
+                    count={stageCompanies.length}
+                    color={stage.color}
+                    droppableId={stage.key}
+                  >
+                    {stageCompanies.map((company, index) => (
+                      <Draggable key={company.id} draggableId={company.id} index={index}>
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            style={provided.draggableProps.style}
+                            className={snapshot.isDragging ? 'opacity-90 shadow-lg rounded-lg' : ''}
+                          >
+                            <DealCard
+                              company={company}
+                              onEdit={handleEditCompany}
+                              onDelete={handleDeleteCompany}
+                            />
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                  </KanbanColumn>
+                );
+              })}
+            </div>
+          </DragDropContext>
         )}
       </div>
 

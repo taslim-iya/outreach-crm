@@ -18,18 +18,63 @@ export interface Broker {
   updated_at: string;
 }
 
-export function useBrokers() {
+interface UseBrokersOptions {
+  search?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export function useBrokers(options: UseBrokersOptions = {}) {
+  const { search, page, pageSize } = options;
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ['brokers', user?.id],
+    queryKey: ['brokers', user?.id, search, page, pageSize],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('brokers')
         .select('*')
+        .eq('user_id', user!.id)
         .order('firm', { ascending: true });
+
+      if (search) {
+        query = query.or(`firm.ilike.%${search}%,contact_name.ilike.%${search}%`);
+      }
+
+      if (page !== undefined && pageSize !== undefined) {
+        const from = (page - 1) * pageSize;
+        const to = from + pageSize - 1;
+        query = query.range(from, to);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data as Broker[];
+    },
+    enabled: !!user,
+  });
+}
+
+export function useBrokersCount(search?: string) {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['brokers', 'count', user?.id, search],
+    queryFn: async () => {
+      if (!user) return 0;
+
+      let query = supabase
+        .from('brokers')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      if (search) {
+        query = query.or(`firm.ilike.%${search}%,contact_name.ilike.%${search}%`);
+      }
+
+      const { count, error } = await query;
+      if (error) throw error;
+      return count || 0;
     },
     enabled: !!user,
   });
@@ -43,7 +88,7 @@ export function useCreateBroker() {
     mutationFn: async (broker: Partial<Broker>) => {
       const { data, error } = await supabase
         .from('brokers')
-        .insert({ ...broker, user_id: user!.id } as any)
+        .insert({ ...broker, user_id: user!.id } as Record<string, unknown>)
         .select()
         .single();
       if (error) throw error;
@@ -64,7 +109,7 @@ export function useUpdateBroker() {
     mutationFn: async ({ id, ...updates }: Partial<Broker> & { id: string }) => {
       const { data, error } = await supabase
         .from('brokers')
-        .update(updates as any)
+        .update(updates as Record<string, unknown>)
         .eq('id', id)
         .select()
         .single();

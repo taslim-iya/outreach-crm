@@ -114,7 +114,7 @@ export default function DealProfile() {
         description={deal.companies?.name ? `Linked to ${deal.companies.name}` : undefined}
         actions={
           <div className="flex gap-2">
-            <Select value={deal.stage} onValueChange={(v) => updateDeal.mutate({ id: deal.id, stage: v } as any)}>
+            <Select value={deal.stage} onValueChange={(v) => updateDeal.mutate({ id: deal.id, stage: v })}>
               <SelectTrigger className="w-[160px] h-9"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {DEAL_STAGES.map(s => <SelectItem key={s} value={s}>{DEAL_STAGE_LABELS[s]}</SelectItem>)}
@@ -307,7 +307,7 @@ export default function DealProfile() {
                   {['thesis', 'business_overview', 'quality_assessment', 'risks', 'key_questions', 'valuation_snapshot'].map(field => (
                     <div key={field}>
                       <Label className="text-xs capitalize text-muted-foreground">{field.replace(/_/g, ' ')}</Label>
-                      <p className="text-sm whitespace-pre-wrap mt-1">{(icMemo as any)[field] || '—'}</p>
+                      <p className="text-sm whitespace-pre-wrap mt-1">{(icMemo as Record<string, unknown>)[field] as string || '—'}</p>
                     </div>
                   ))}
                   <div>

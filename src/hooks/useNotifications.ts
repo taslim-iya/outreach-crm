@@ -30,16 +30,19 @@ export function useNotifications() {
         supabase
           .from('tasks')
           .select('id, title, due_date, priority, contacts(name), companies(name), investor_deals(name)')
+          .eq('user_id', user.id)
           .eq('completed', false)
           .lt('due_date', today)
           .order('due_date', { ascending: true }),
         supabase
           .from('contacts')
           .select('id, name, last_interaction_at')
+          .eq('user_id', user.id)
           .or(`last_interaction_at.lt.${sevenDaysAgo},last_interaction_at.is.null`),
         supabase
           .from('investor_deals')
           .select('id, name, stage, updated_at')
+          .eq('user_id', user.id)
           .in('stage', ['outreach_sent', 'follow_up', 'meeting_scheduled'])
           .lt('updated_at', fiveDaysAgo),
       ]);

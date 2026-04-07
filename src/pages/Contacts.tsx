@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { ContactFormModal } from '@/components/contacts/ContactFormModal';
 import { DeleteContactDialog } from '@/components/contacts/DeleteContactDialog';
@@ -7,10 +7,15 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useContacts, Contact, useDeleteContact, useUpdateContact } from '@/hooks/useContacts';
+import { useContacts, Contact, useDeleteContact, useUpdateContact, useContactsCount } from '@/hooks/useContacts';
+import { usePagination } from '@/hooks/usePagination';
+import { PaginationControls } from '@/components/ui/pagination-controls';
 import { EditableCell } from '@/components/ui/EditableCell';
 import { Database } from '@/integrations/supabase/types';
-import { Plus, Search, Users, Loader2, Upload, Pencil, Trash2, Merge } from 'lucide-react';
+import { Plus, Search, Users, Loader2, Upload, Pencil, Trash2, Merge, Download } from 'lucide-react';
+import { BulkActionBar } from '@/components/common/BulkActionBar';
+import { exportToCSV } from '@/lib/csv-export';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ImportModal } from '@/components/import/ImportModal';
 import { useCreateContact } from '@/hooks/useContacts';
 import { useCreateInvestorDeal } from '@/hooks/useInvestorDeals';
@@ -37,12 +42,24 @@ const warmthColors: Record<string, string> = {
 };
 
 export default function Contacts() {
-  const { data: contacts = [], isLoading } = useContacts();
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [warmthFilter, setWarmthFilter] = useState<string>('all');
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isDedupeOpen, setIsDedupeOpen] = useState(false);
+  const { page, pageSize, setPage, setPageSize } = usePagination();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery, setPage]);
+
+  const { data: contacts = [], isLoading } = useContacts({ search: debouncedSearch, page, pageSize });
+  const { data: totalCount = 0 } = useContactsCount(debouncedSearch);
   const createContact = useCreateContact();
   const createInvestorDeal = useCreateInvestorDeal();
   const deleteContact = useDeleteContact();
@@ -103,7 +120,7 @@ export default function Contacts() {
             });
           }
         } catch (e) {
-          console.error('Failed to create investor deal for contact:', e);
+          // Investor deal creation failed silently
         }
       }
     }
@@ -119,6 +136,28 @@ export default function Contacts() {
     } catch {
       toast.error('Failed to delete some contacts');
     }
+  };
+
+  const contactCSVColumns = [
+    { key: 'name' as const, label: 'Name' },
+    { key: 'email' as const, label: 'Email' },
+    { key: 'phone' as const, label: 'Phone' },
+    { key: 'organization' as const, label: 'Organization' },
+    { key: 'role' as const, label: 'Role' },
+    { key: 'contact_type' as const, label: 'Type' },
+    { key: 'geography' as const, label: 'Geography' },
+    { key: 'warmth' as const, label: 'Warmth' },
+    { key: 'tags' as const, label: 'Tags' },
+    { key: 'source' as const, label: 'Source' },
+  ];
+
+  const handleExportSelected = () => {
+    const selected = filtered.filter((c) => selectedIds.has(c.id));
+    exportToCSV(selected as Record<string, unknown>[], 'contacts-selected.csv', contactCSVColumns);
+  };
+
+  const handleExportAll = () => {
+    exportToCSV(filtered as Record<string, unknown>[], 'contacts-all.csv', contactCSVColumns);
   };
 
   const filtered = useMemo(() => {
@@ -168,6 +207,9 @@ export default function Contacts() {
                 <Trash2 className="w-4 h-4 mr-1" /> Delete {selectedIds.size}
               </Button>
             )}
+            <Button variant="outline" size="sm" onClick={handleExportAll}>
+              <Download className="w-4 h-4 mr-1" /> Export All
+            </Button>
             <Button variant="outline" size="sm" onClick={() => setIsDedupeOpen(true)}>
               <Merge className="w-4 h-4 mr-1" /> Deduplicate
             </Button>
@@ -222,7 +264,7 @@ export default function Contacts() {
           <TableHeader>
             <TableRow>
               <TableHead className="w-10">
-                <input type="checkbox" checked={selectedIds.size === filtered.length && filtered.length > 0} onChange={toggleSelectAll} className="rounded" />
+                <Checkbox checked={selectedIds.size === filtered.length && filtered.length > 0} onCheckedChange={toggleSelectAll} />
               </TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Organization</TableHead>
@@ -248,7 +290,7 @@ export default function Contacts() {
               filtered.map((c) => (
                 <TableRow key={c.id} className="group">
                   <TableCell>
-                    <input type="checkbox" checked={selectedIds.has(c.id)} onChange={() => toggleSelect(c.id)} className="rounded" />
+                    <Checkbox checked={selectedIds.has(c.id)} onCheckedChange={() => toggleSelect(c.id)} />
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col">
@@ -328,13 +370,27 @@ export default function Contacts() {
         </Table>
       </div>
 
-      <p className="text-xs text-muted-foreground mt-2">{filtered.length} of {contacts.length} contacts</p>
+      <PaginationControls
+        page={page}
+        pageSize={pageSize}
+        totalCount={totalCount}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+      />
+      <p className="text-xs text-muted-foreground mt-2">{filtered.length} of {totalCount} contacts</p>
 
       {/* Modals */}
       <ContactFormModal open={isFormOpen} onOpenChange={setIsFormOpen} contact={selectedContact} />
       <DeleteContactDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen} contact={selectedContact} />
       <ImportModal open={isImportOpen} onOpenChange={setIsImportOpen} entityType="contacts" onImport={handleImportContacts} />
       <DeduplicateContactsDialog open={isDedupeOpen} onOpenChange={setIsDedupeOpen} contacts={contacts} />
+
+      <BulkActionBar
+        selectedCount={selectedIds.size}
+        onClearSelection={() => setSelectedIds(new Set())}
+        onDelete={handleBulkDelete}
+        onExport={handleExportSelected}
+      />
     </div>
   );
 }
