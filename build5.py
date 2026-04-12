@@ -500,14 +500,17 @@ async function updateUserRole(uid, nextRole){
 // ===== THEME =====
 function applyTheme(){
   document.documentElement.setAttribute('data-theme', state.theme);
-  $('#themeIconDark').style.display = state.theme==='dark' ? 'block' : 'none';
-  $('#themeIconLight').style.display = state.theme==='light' ? 'block' : 'none';
+  const show = (id, on) => { const el = document.getElementById(id); if(el) el.style.display = on ? 'block' : 'none'; };
+  show('themeIconDark',      state.theme==='dark');
+  show('themeIconLight',     state.theme==='light');
+  show('authThemeIconDark',  state.theme==='dark');
+  show('authThemeIconLight', state.theme==='light');
 }
 function toggleTheme(){
   state.theme = state.theme==='dark' ? 'light' : 'dark';
   localStorage.setItem('eta-theme', state.theme);
   applyTheme();
-  toast('Theme switched', `Now using ${state.theme} mode`);
+  if(state.profile) toast('Theme switched', `Now using ${state.theme} mode`);
 }
 
 // ===== USER MENU =====
@@ -598,7 +601,12 @@ function switchSection(name){
 }
 
 $$('.nav-item').forEach(n=>n.addEventListener('click',()=>switchSection(n.dataset.nav)));
-$('#themeToggle').addEventListener('click', toggleTheme);
+{
+  const tt = document.getElementById('themeToggle');
+  if(tt) tt.addEventListener('click', toggleTheme);
+  const att = document.getElementById('authThemeToggle');
+  if(att) att.addEventListener('click', toggleTheme);
+}
 
 // ===== AUTH FLOW =====
 let authTab = 'signin';
