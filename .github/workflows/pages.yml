@@ -1,0 +1,61 @@
+name: Deploy to GitHub Pages
+
+# Triggers a Pages deploy on every push to main. The Cambridge ETA
+# platform is a single static index.html, so we just upload the repo
+# root and let Pages serve it.
+#
+# To enable this for the first time:
+#   1. Push this workflow to main (already done).
+#   2. Go to Settings → Pages in the repo.
+#   3. Under "Build and deployment", set Source to "GitHub Actions".
+#   4. Wait ~60s — the deployment appears under Actions → Deploy to GitHub Pages.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Stage static site
+        run: |
+          mkdir -p _site
+          cp index.html _site/
+          # Add a 404 fallback pointing at the SPA entry so deep links work
+          cp index.html _site/404.html
+          # Optional: a .nojekyll marker so Pages doesn't process it
+          touch _site/.nojekyll
+          ls -la _site/
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./_site
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
