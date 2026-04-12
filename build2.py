@@ -3,6 +3,7 @@
 
 BODY = r"""
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</div><!-- close the .app wrapper opened in HEAD so boot/auth are siblings of .app, not descendants (display:none would hide them otherwise) -->
 
 <!-- Boot overlay (while we resolve session) -->
 <div class="boot-overlay show" id="bootOverlay">
@@ -33,6 +34,7 @@ BODY = r"""
   </div>
 </div>
 
+<div class="app"><!-- reopen .app wrapper; sidebar + main live inside -->
 <aside class="sidebar">
   <div class="brand">
     <div class="brand-mark">E</div>
@@ -105,6 +107,9 @@ BODY = r"""
         </button>
         <div class="user-menu" id="userMenu"></div>
       </div>
+      <button class="icon-btn ai-btn" title="Ask the AI assistant" id="aiBtn">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.09 5.26L20 8l-4.5 3.5L17 18l-5-3-5 3 1.5-6.5L4 8l5.91-.74L12 2z"/></svg>
+      </button>
       <button class="icon-btn" title="Toggle theme" id="themeToggle">
         <svg id="themeIconDark" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         <svg id="themeIconLight" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -140,6 +145,33 @@ BODY = r"""
     <div id="modalBody"></div>
   </div>
 </div>
+
+<!-- AI chat drawer -->
+<div class="ai-drawer-back" id="aiDrawerBack" onclick="closeAiDrawer()"></div>
+<aside class="ai-drawer" id="aiDrawer" aria-hidden="true">
+  <div class="ai-drawer-head">
+    <div class="avatar">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.09 5.26L20 8l-4.5 3.5L17 18l-5-3-5 3 1.5-6.5L4 8l5.91-.74L12 2z"/></svg>
+    </div>
+    <div>
+      <div class="title">AI assistant</div>
+      <div class="sub">Powered by Claude Sonnet 4.6</div>
+    </div>
+    <button class="icon-btn close" onclick="closeAiDrawer()" title="Close">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="ai-messages" id="aiMessages"></div>
+  <div class="ai-composer">
+    <div class="ai-suggestions" id="aiSuggestions"></div>
+    <div class="ai-composer-row">
+      <textarea id="aiInput" placeholder="Ask me to add a task, schedule an event, update permissions..." rows="1"></textarea>
+      <button class="ai-send" id="aiSend" onclick="sendAiMessage()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+</aside>
 
 <div class="toast" id="toast">
   <div class="toast-icon">

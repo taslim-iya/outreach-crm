@@ -606,6 +606,25 @@ $$('.nav-item').forEach(n=>n.addEventListener('click',()=>switchSection(n.datase
   if(tt) tt.addEventListener('click', toggleTheme);
   const att = document.getElementById('authThemeToggle');
   if(att) att.addEventListener('click', toggleTheme);
+  const aib = document.getElementById('aiBtn');
+  if(aib) aib.addEventListener('click', openAiDrawer);
+  const aii = document.getElementById('aiInput');
+  if(aii){
+    aii.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter' && !e.shiftKey){
+        e.preventDefault();
+        sendAiMessage();
+      }
+    });
+    // auto-grow
+    aii.addEventListener('input', () => {
+      aii.style.height = 'auto';
+      aii.style.height = Math.min(140, aii.scrollHeight) + 'px';
+    });
+  }
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape') closeAiDrawer();
+  });
 }
 
 // ===== AUTH FLOW =====
@@ -716,6 +735,426 @@ async function onSignedIn(session){
   // Default to dashboard if previous section no longer allowed
   const target = canAccess(state.section) ? state.section : 'dashboard';
   switchSection(target);
+}
+
+// ============================================================
+// ===== AI ASSISTANT (Claude tool-use via browser API) =======
+// ============================================================
+
+const AI_MODEL = 'claude-sonnet-4-5';  // Change to 'claude-opus-4-5' for Opus, or any current Anthropic model ID
+const AI_STORAGE_KEY = 'eta-ai-key';
+const aiState = {
+  history: [],   // Claude messages format
+  busy: false,
+};
+
+const AI_TOOLS = [
+  {
+    name: 'list_team',
+    description: 'List all app users (the operational team running the club platform), with their emails, roles and current permissions. Use this if you need to look up who to assign something to.',
+    input_schema: { type: 'object', properties: {} }
+  },
+  {
+    name: 'create_task',
+    description: 'Create a task and optionally assign it to a team member by email. If the user names someone, look up the matching email from the team list in the system prompt.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        title:          { type: 'string', description: 'Short task description' },
+        assignee_email: { type: 'string', description: 'Email of the team member to assign to. Optional; defaults to the current user.' },
+        due_date:       { type: 'string', description: 'ISO date YYYY-MM-DD. Optional.' },
+        priority:       { type: 'string', enum: ['High','Medium','Low'], description: 'Defaults to Medium if not specified' },
+        project:        { type: 'string', description: 'Project or event the task belongs to. Optional.' }
+      },
+      required: ['title']
+    }
+  },
+  {
+    name: 'create_event',
+    description: 'Schedule an event on the club calendar.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        title:       { type: 'string' },
+        date:        { type: 'string', description: 'ISO date YYYY-MM-DD' },
+        time:        { type: 'string', description: '24h HH:MM' },
+        venue:       { type: 'string' },
+        description: { type: 'string' },
+        capacity:    { type: 'integer' }
+      },
+      required: ['title','date']
+    }
+  },
+  {
+    name: 'add_club_member',
+    description: 'Add someone to the Cambridge ETA club members directory (an actual club member, not an operational team user).',
+    input_schema: {
+      type: 'object',
+      properties: {
+        name:    { type: 'string' },
+        email:   { type: 'string' },
+        role:    { type: 'string', description: 'e.g. Investor, Founder, Searcher, Mentor' },
+        chapter: { type: 'string', description: 'Cambridge college, e.g. Jesus College' },
+        tier:    { type: 'string', enum: ['Platinum','Gold','Silver'] },
+        status:  { type: 'string', enum: ['Active','Pending'] }
+      },
+      required: ['name']
+    }
+  },
+  {
+    name: 'write_note',
+    description: 'Write a note. visibility=private is only visible to you, public is visible to the whole team, direct must include target_email.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        title:        { type: 'string' },
+        content:      { type: 'string' },
+        visibility:   { type: 'string', enum: ['private','public','direct'] },
+        target_email: { type: 'string', description: 'Required when visibility is "direct"' }
+      },
+      required: ['title','content','visibility']
+    }
+  },
+  {
+    name: 'update_team_member',
+    description: 'Update a team member\'s role and/or permissions. Owner-only. Permissions are a subset of [dashboard, events, tasks, crm, notes].',
+    input_schema: {
+      type: 'object',
+      properties: {
+        target_email: { type: 'string' },
+        new_role:     { type: 'string', description: 'New role label' },
+        permissions:  { type: 'array', items: { type: 'string' }, description: 'New full permission list (replaces existing)' }
+      },
+      required: ['target_email']
+    }
+  }
+];
+
+function aiSystemPrompt(){
+  const today = new Date().toISOString().slice(0,10);
+  const me = currentUser();
+  const team = state.users.map(u =>
+    `- ${u.name} <${u.email}> · role=${u.role} · permissions=[${(u.permissions||[]).join(', ')}]`
+  ).join('\n');
+  const ownerNote = isOwner()
+    ? 'The current user is the Owner, so you may call update_team_member.'
+    : 'The current user is NOT the Owner. Do not call update_team_member.';
+  return `You are the AI assistant for the Cambridge ETA Club Management Platform.
+
+You help ${me.name} (${me.role}) run the club by creating events, tasks, notes, members, and updating team settings through the tools provided.
+
+Today is ${today}.
+${ownerNote}
+
+Current operational team (app users):
+${team || '(only the current user so far)'}
+
+Rules:
+- When the user asks for something, pick the right tool and call it directly. Don't narrate the steps.
+- Resolve people by name to their email from the team list above. If ambiguous, ask a single short clarifying question.
+- For relative dates (tomorrow, Friday, next week, "in two weeks"), compute the concrete YYYY-MM-DD.
+- If a required field is missing and you can't reasonably infer it, ask one concise question.
+- After a tool succeeds, confirm briefly in one sentence. No bullet lists, no restating everything.
+- Never invent people, emails, colleges or dates. If you don't know, ask.
+- Be confident and concise — this is a management tool, not casual chat.`;
+}
+
+async function callClaude(apiKey, messages){
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: AI_MODEL,
+      max_tokens: 1024,
+      system: aiSystemPrompt(),
+      tools: AI_TOOLS,
+      messages,
+    })
+  });
+  if(!res.ok){
+    const text = await res.text();
+    throw new Error(`Claude API ${res.status}: ${text.slice(0,200)}`);
+  }
+  return await res.json();
+}
+
+// ===== TOOL IMPLEMENTATIONS =====
+function aiUserByEmail(email){
+  if(!email) return null;
+  return state.users.find(u => (u.email || '').toLowerCase() === email.toLowerCase());
+}
+
+async function toolCreateTask(input){
+  const assignee = input.assignee_email ? aiUserByEmail(input.assignee_email) : currentUser();
+  if(input.assignee_email && !assignee) return { error: `No team member with email ${input.assignee_email}.` };
+  const payload = {
+    title: input.title,
+    due_date: input.due_date || null,
+    priority: input.priority || 'Medium',
+    assignee_id: assignee ? assignee.id : currentUserId(),
+    project: input.project || null,
+    done: false,
+    created_by: currentUserId(),
+  };
+  const { data, error } = await sb.from('eta_tasks').insert(payload).select().single();
+  if(error) return { error: error.message };
+  state.tasks.push(mapTask(data));
+  renderTasks(); renderDashboard();
+  return { ok: `Created task "${input.title}" assigned to ${assignee ? assignee.name : 'you'}.` };
+}
+
+async function toolCreateEvent(input){
+  const payload = {
+    title: input.title,
+    event_date: input.date,
+    event_time: input.time || null,
+    venue: input.venue || null,
+    description: input.description || null,
+    capacity: input.capacity || 50,
+    attendees: 0,
+    status: 'Open',
+    created_by: currentUserId(),
+  };
+  const { data, error } = await sb.from('eta_events').insert(payload).select().single();
+  if(error) return { error: error.message };
+  state.events.push(mapEvent(data));
+  renderEvents(); renderDashboard();
+  return { ok: `Scheduled "${input.title}" for ${input.date}${input.time?' at '+input.time:''}.` };
+}
+
+async function toolAddClubMember(input){
+  const payload = {
+    name: input.name,
+    email: input.email || null,
+    role: input.role || null,
+    chapter: input.chapter || null,
+    tier: input.tier || 'Silver',
+    status: input.status || 'Active',
+    created_by: currentUserId(),
+  };
+  const { data, error } = await sb.from('eta_members').insert(payload).select().single();
+  if(error) return { error: error.message };
+  state.members.push(mapMember(data));
+  renderCrm(); renderDashboard();
+  return { ok: `Added ${input.name} to the members directory.` };
+}
+
+async function toolWriteNote(input){
+  let target = null;
+  if(input.visibility === 'direct'){
+    if(!input.target_email) return { error: 'Direct notes require target_email.' };
+    target = aiUserByEmail(input.target_email);
+    if(!target) return { error: `No team member with email ${input.target_email}.` };
+  }
+  const payload = {
+    author_id: currentUserId(),
+    target_user_id: target ? target.id : null,
+    visibility: input.visibility,
+    title: input.title,
+    content: input.content,
+    pinned: false,
+  };
+  const { data, error } = await sb.from('eta_notes').insert(payload).select().single();
+  if(error) return { error: error.message };
+  state.notes.unshift(mapNote(data));
+  renderNotes(); renderDashboard();
+  const audience = input.visibility === 'direct' ? `to ${target.name}` :
+                   input.visibility === 'public' ? 'to the whole team' :
+                   'as a private note';
+  return { ok: `Saved "${input.title}" ${audience}.` };
+}
+
+async function toolUpdateTeamMember(input){
+  if(!isOwner()) return { error: 'Only the Owner can update team members.' };
+  const target = aiUserByEmail(input.target_email);
+  if(!target) return { error: `No team member with email ${input.target_email}.` };
+  const patch = {};
+  if(input.new_role) patch.role = input.new_role;
+  if(Array.isArray(input.permissions)) patch.permissions = input.permissions;
+  if(!Object.keys(patch).length) return { error: 'Nothing to update.' };
+  const { error } = await sb.from('eta_users').update(patch).eq('id', target.id);
+  if(error) return { error: error.message };
+  Object.assign(target, patch);
+  renderTeam();
+  const bits = [];
+  if(patch.role) bits.push(`role → ${patch.role}`);
+  if(patch.permissions) bits.push(`permissions → [${patch.permissions.join(', ')}]`);
+  return { ok: `Updated ${target.name}: ${bits.join(', ')}.` };
+}
+
+function toolListTeam(){
+  const rows = state.users.map(u =>
+    `${u.name} <${u.email}> · ${u.role} · [${(u.permissions||[]).join(', ')}]`
+  );
+  return { ok: rows.join('\n') };
+}
+
+async function executeTool(name, input){
+  try {
+    switch(name){
+      case 'create_task':        return await toolCreateTask(input);
+      case 'create_event':       return await toolCreateEvent(input);
+      case 'add_club_member':    return await toolAddClubMember(input);
+      case 'write_note':         return await toolWriteNote(input);
+      case 'update_team_member': return await toolUpdateTeamMember(input);
+      case 'list_team':          return toolListTeam();
+      default:                   return { error: `Unknown tool ${name}` };
+    }
+  } catch(e){
+    return { error: e.message || String(e) };
+  }
+}
+
+// ===== CHAT UI =====
+function openAiDrawer(){
+  const key = localStorage.getItem(AI_STORAGE_KEY);
+  $('#aiDrawer').classList.add('open');
+  $('#aiDrawer').setAttribute('aria-hidden','false');
+  $('#aiDrawerBack').classList.add('open');
+  if(!key){
+    renderAiSetup();
+  } else if(aiState.history.length === 0){
+    renderAiIntro();
+  }
+  setTimeout(() => { const i = document.getElementById('aiInput'); if(i) i.focus(); }, 320);
+}
+function closeAiDrawer(){
+  $('#aiDrawer').classList.remove('open');
+  $('#aiDrawer').setAttribute('aria-hidden','true');
+  $('#aiDrawerBack').classList.remove('open');
+}
+function renderAiSetup(){
+  const container = $('#aiMessages');
+  container.innerHTML = `
+    <div class="ai-setup">
+      <h4>Connect the AI assistant</h4>
+      <p>The assistant uses your own Anthropic API key, stored only on this device. Get one free at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>.</p>
+      <input class="input" id="aiKeyInput" type="password" placeholder="sk-ant-..."/>
+      <button class="btn btn-primary" style="width:100%" onclick="saveAiKey()">Save key</button>
+    </div>
+  `;
+  $('#aiSuggestions').innerHTML = '';
+}
+function saveAiKey(){
+  const key = $('#aiKeyInput').value.trim();
+  if(!key.startsWith('sk-ant-')){ toast('Invalid key','Anthropic keys start with sk-ant-'); return; }
+  localStorage.setItem(AI_STORAGE_KEY, key);
+  aiState.history = [];
+  renderAiIntro();
+  toast('AI connected','You can now chat with the assistant');
+}
+function renderAiIntro(){
+  const me = currentUser();
+  const container = $('#aiMessages');
+  container.innerHTML = '';
+  addAiMsg('assistant', `Hi ${me ? me.name.split(' ')[0] : 'there'} — tell me what you'd like to add and I'll take care of it. For example:`);
+  const suggestions = isOwner()
+    ? ['Add a task for Priya to confirm speakers by Friday', 'Schedule a fireside at Trinity next Tuesday 7pm', 'Write a public note: AGM is April 30', 'Make Marcus the Finance Lead with events + tasks']
+    : ['Add a task for me to draft the newsletter by Friday', 'Write a private note about follow-ups', 'Schedule a meeting prep session tomorrow at 9am'];
+  $('#aiSuggestions').innerHTML = suggestions.map(s => `<div class="ai-suggestion" onclick="useSuggestion(this)">${esc(s)}</div>`).join('');
+}
+function useSuggestion(el){
+  $('#aiInput').value = el.textContent;
+  $('#aiInput').focus();
+}
+function addAiMsg(role, text, toolChip){
+  const container = $('#aiMessages');
+  const wrap = document.createElement('div');
+  wrap.className = `ai-msg ${role}`;
+  const initialsHtml = role === 'user'
+    ? `<div class="avatar">${initials((currentUser()||{name:'You'}).name)}</div>`
+    : `<div class="avatar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.09 5.26L20 8l-4.5 3.5L17 18l-5-3-5 3 1.5-6.5L4 8l5.91-.74L12 2z"/></svg></div>`;
+  wrap.innerHTML = `${initialsHtml}<div class="bubble">${esc(text)}${toolChip || ''}</div>`;
+  container.appendChild(wrap);
+  container.scrollTop = container.scrollHeight;
+  return wrap;
+}
+function addAiTyping(){
+  const container = $('#aiMessages');
+  const wrap = document.createElement('div');
+  wrap.className = 'ai-msg assistant';
+  wrap.id = '__ai_typing__';
+  wrap.innerHTML = `<div class="avatar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.09 5.26L20 8l-4.5 3.5L17 18l-5-3-5 3 1.5-6.5L4 8l5.91-.74L12 2z"/></svg></div><div class="bubble"><div class="ai-typing"><span></span><span></span><span></span></div></div>`;
+  container.appendChild(wrap);
+  container.scrollTop = container.scrollHeight;
+}
+function removeAiTyping(){
+  const t = document.getElementById('__ai_typing__');
+  if(t) t.remove();
+}
+
+async function sendAiMessage(){
+  if(aiState.busy) return;
+  const input = $('#aiInput');
+  const text = input.value.trim();
+  if(!text) return;
+  const key = localStorage.getItem(AI_STORAGE_KEY);
+  if(!key){ renderAiSetup(); return; }
+  input.value = '';
+  $('#aiSuggestions').innerHTML = '';
+  addAiMsg('user', text);
+  aiState.history.push({ role: 'user', content: [{ type: 'text', text }] });
+  aiState.busy = true;
+  $('#aiSend').disabled = true;
+  addAiTyping();
+
+  try {
+    let iterations = 0;
+    while(iterations < 6){
+      iterations++;
+      const response = await callClaude(key, aiState.history);
+      removeAiTyping();
+      const assistantContent = response.content || [];
+      aiState.history.push({ role: 'assistant', content: assistantContent });
+
+      // Emit any natural-language text blocks
+      for(const block of assistantContent){
+        if(block.type === 'text' && block.text.trim()){
+          addAiMsg('assistant', block.text.trim());
+        }
+      }
+
+      if(response.stop_reason !== 'tool_use') break;
+
+      // Execute all tool_use blocks and send results back
+      const toolResults = [];
+      for(const block of assistantContent){
+        if(block.type !== 'tool_use') continue;
+        const result = await executeTool(block.name, block.input || {});
+        const chipHtml = result.error
+          ? `<div class="ai-tool-chip err">⚠ ${esc(block.name)}: ${esc(result.error)}</div>`
+          : `<div class="ai-tool-chip">✓ ${esc(block.name)}</div>`;
+        // Show a chip under the last assistant bubble
+        const lastBubble = $('#aiMessages').querySelector('.ai-msg.assistant:last-child .bubble');
+        if(lastBubble){
+          const span = document.createElement('div');
+          span.innerHTML = chipHtml;
+          lastBubble.appendChild(span.firstChild);
+        } else {
+          addAiMsg('assistant', '', chipHtml);
+        }
+        toolResults.push({
+          type: 'tool_result',
+          tool_use_id: block.id,
+          content: result.error ? `ERROR: ${result.error}` : `OK: ${result.ok}`,
+          is_error: !!result.error,
+        });
+      }
+      aiState.history.push({ role: 'user', content: toolResults });
+      addAiTyping();
+    }
+  } catch(e){
+    removeAiTyping();
+    addAiMsg('assistant', `Sorry — I ran into an error: ${e.message || e}`);
+  }
+
+  aiState.busy = false;
+  $('#aiSend').disabled = false;
 }
 
 // ===== BOOT =====
