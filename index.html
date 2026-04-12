@@ -137,7 +137,8 @@ input,select,textarea{font-family:inherit}
 a{color:inherit;text-decoration:none}
 
 /* ===== LAYOUT ===== */
-.app{display:flex;height:100vh;position:relative;z-index:1}
+.app{display:none;height:100vh;position:relative;z-index:1}
+.app.ready{display:flex}
 .sidebar{
   width:260px;flex-shrink:0;
   background:linear-gradient(180deg,rgba(15,13,35,0.92),rgba(10,9,22,0.92));
@@ -527,6 +528,61 @@ a{color:inherit;text-decoration:none}
 }
 .team-row:last-child{border-bottom:none}
 
+/* ===== AUTH SCREEN ===== */
+.auth-wrap{
+  position:fixed;inset:0;z-index:1000;
+  display:none;align-items:center;justify-content:center;
+  background:radial-gradient(900px 600px at 50% -10%, rgba(138,99,255,0.2), transparent 60%),
+             radial-gradient(700px 500px at 50% 110%, rgba(106,61,255,0.14), transparent 60%),
+             var(--bg-0);
+  padding:20px;
+}
+.auth-wrap.show{display:flex;animation:fadeIn 0.3s ease}
+.auth-card{
+  width:100%;max-width:440px;
+  background:linear-gradient(180deg,#13112b,#0d0c1f);
+  border:1px solid var(--border-strong);
+  border-radius:18px;padding:40px 36px;
+  box-shadow:0 40px 120px -20px rgba(80,40,200,0.45);
+  position:relative;
+}
+[data-theme="light"] .auth-card{background:#ffffff}
+.auth-logo{
+  width:56px;height:56px;border-radius:16px;
+  background:linear-gradient(135deg,#8a63ff 0%,#6a3dff 50%,#3a1f9e 100%);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Space Grotesk';font-weight:700;font-size:24px;color:white;
+  box-shadow:0 14px 40px -10px rgba(138,99,255,0.6),inset 0 1px 0 rgba(255,255,255,0.3);
+  margin:0 auto 22px;
+}
+.auth-card h2{font-size:22px;text-align:center;margin-bottom:6px;font-family:'Space Grotesk'}
+.auth-card .auth-sub{font-size:12.5px;color:var(--text-muted);text-align:center;margin-bottom:26px}
+.auth-tabs{display:flex;gap:4px;background:rgba(138,99,255,0.06);padding:4px;border-radius:10px;border:1px solid var(--border);margin-bottom:22px}
+.auth-tabs .tab{flex:1;text-align:center;padding:9px 14px}
+.auth-error{
+  display:none;padding:10px 14px;border-radius:10px;
+  background:rgba(255,107,138,0.12);border:1px solid rgba(255,107,138,0.3);
+  color:var(--red);font-size:12.5px;margin-bottom:14px;
+}
+.auth-error.show{display:block}
+.auth-hint{font-size:11.5px;color:var(--text-muted);text-align:center;margin-top:18px;line-height:1.5}
+.auth-submit{width:100%;justify-content:center;padding:12px 20px;margin-top:6px}
+.boot-overlay{
+  position:fixed;inset:0;z-index:999;
+  display:none;align-items:center;justify-content:center;
+  background:var(--bg-0);
+  flex-direction:column;gap:18px;
+}
+.boot-overlay.show{display:flex}
+.spinner{
+  width:36px;height:36px;border-radius:50%;
+  border:3px solid rgba(138,99,255,0.15);
+  border-top-color:var(--purple-2);
+  animation:spin 0.8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.boot-label{font-size:12.5px;color:var(--text-muted);letter-spacing:0.05em}
+
 @media (max-width:1100px){
   .grid-4{grid-template-columns:repeat(2,1fr)}
   .grid-3{grid-template-columns:repeat(2,1fr)}
@@ -540,6 +596,33 @@ a{color:inherit;text-decoration:none}
 </head>
 <body>
 <div class="app">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- Boot overlay (while we resolve session) -->
+<div class="boot-overlay show" id="bootOverlay">
+  <div class="spinner"></div>
+  <div class="boot-label">Connecting...</div>
+</div>
+
+<!-- Auth screen -->
+<div class="auth-wrap" id="authWrap">
+  <div class="auth-card">
+    <div class="auth-logo">E</div>
+    <h2>Cambridge ETA Club</h2>
+    <div class="auth-sub">Sign in to the management platform</div>
+    <div class="auth-tabs">
+      <div class="tab active" data-auth-tab="signin" onclick="setAuthTab('signin')">Sign in</div>
+      <div class="tab" data-auth-tab="signup" onclick="setAuthTab('signup')">Create account</div>
+    </div>
+    <div class="auth-error" id="authError"></div>
+    <div id="authFieldName" class="field" style="display:none"><label>Full name</label><input class="input" id="authName" placeholder="e.g. Taslim Iya"/></div>
+    <div class="field"><label>Email</label><input class="input" id="authEmail" type="email" placeholder="you@cambridge-eta.co.uk"/></div>
+    <div class="field"><label>Password</label><input class="input" id="authPassword" type="password" placeholder="At least 8 characters"/></div>
+    <button class="btn btn-primary auth-submit" id="authSubmit" onclick="handleAuthSubmit()">Sign in</button>
+    <div class="auth-hint" id="authHint">The first person to sign up becomes the Owner. Everyone else starts as a Member and the Owner grants access.</div>
+  </div>
+</div>
 
 <aside class="sidebar">
   <div class="brand">
@@ -661,55 +744,24 @@ a{color:inherit;text-decoration:none}
 
 <script>
 // ===== STATE =====
+// ===== SUPABASE CLIENT =====
+const SUPABASE_URL = 'https://ygreplqxqazgxkudonso.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlncmVwbHF4cWF6Z3hrdWRvbnNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3MDY0MTIsImV4cCI6MjA4NTI4MjQxMn0.zBJK7nL0E0RXADUFaVr6vMxpyQgMO0eauxUuFfPkCAk';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true, storageKey: 'eta-auth' }
+});
+
 const state = {
   section: 'dashboard',
   theme: localStorage.getItem('eta-theme') || 'dark',
-  currentUserId: localStorage.getItem('eta-user') || 'u1',
-  users: [
-    {id:'u1', name:'Taslim Iya',        email:'taslim@cambridge-eta.co.uk',  role:'Owner',       permissions:['*']},
-    {id:'u2', name:'Priya Raghavan',    email:'priya@cambridge-eta.co.uk',   role:'Events Lead', permissions:['dashboard','events','tasks','notes']},
-    {id:'u3', name:'Marcus Weatherby',  email:'marcus@cambridge-eta.co.uk',  role:'Finance Lead',permissions:['dashboard','tasks','notes']},
-    {id:'u4', name:'Sofia Chen',        email:'sofia@cambridge-eta.co.uk',   role:'Member Ops',  permissions:['dashboard','tasks','notes','crm']},
-  ],
-  notes: [
-    {id:'n1', authorId:'u1', targetUserId:'u2', visibility:'direct',  title:'Summit keynote priority',         content:'Priya — please lock Sarah Chen before Friday. We need three keynotes confirmed ahead of the printed programme deadline.', createdAt:'2026-04-10', pinned:true},
-    {id:'n2', authorId:'u1', targetUserId:'u3', visibility:'direct',  title:'Q1 reconciliation',               content:'Marcus, focus first on membership dues, then college dinners. Flag any discrepancies over £100 directly to me.', createdAt:'2026-04-09', pinned:false},
-    {id:'n3', authorId:'u1', targetUserId:'u4', visibility:'direct',  title:'Spring cohort onboarding',        content:'Sofia — induction packs should land this week. Double-check mentor pairings against the updated matrix.', createdAt:'2026-04-08', pinned:false},
-    {id:'n4', authorId:'u1', targetUserId:null, visibility:'public',  title:'All-hands: April priorities',     content:'Team, this month is all about the Annual Summit and the spring cohort. Everything else slots around those two. Thank you all for the hard work.', createdAt:'2026-04-07', pinned:true},
-    {id:'n5', authorId:'u2', targetUserId:null, visibility:'public',  title:'Venue notes: Jesus Upper Hall',   content:'Great acoustics but tight AV corner. Ask Tom for the new radio mic kit — the old one cuts out under pressure.', createdAt:'2026-04-06', pinned:false},
-    {id:'n6', authorId:'u2', targetUserId:null, visibility:'private', title:'Personal follow-ups',             content:'- Ping Alex about the investor panel slot\n- Check catering numbers with Priya\n- Confirm Judge AV booking',  createdAt:'2026-04-11', pinned:false},
-    {id:'n7', authorId:'u3', targetUserId:null, visibility:'public',  title:'Expenses policy reminder',        content:'Please submit expense claims within 14 days of the event. Anything older may be deferred to next term.', createdAt:'2026-04-05', pinned:false},
-  ],
-  members: [
-    {id:1, name:'Alex Thornton', email:'alex.t@cambridge-eta.co.uk', role:'Investor', chapter:'Jesus College', tier:'Platinum', status:'Active', joined:'2023-10-12'},
-    {id:2, name:'Priya Raghavan', email:'priya.r@cambridge-eta.co.uk', role:'Founder', chapter:'Trinity', tier:'Gold', status:'Active', joined:'2024-01-08'},
-    {id:3, name:'Marcus Weatherby', email:'m.weatherby@cambridge-eta.co.uk', role:'Mentor', chapter:'Kings', tier:'Platinum', status:'Active', joined:'2022-09-21'},
-    {id:4, name:'Sofia Chen', email:'sofia.c@cambridge-eta.co.uk', role:'Searcher', chapter:'Clare', tier:'Silver', status:'Pending', joined:'2024-11-03'},
-    {id:5, name:'Daniel Osei', email:'d.osei@cambridge-eta.co.uk', role:'Advisor', chapter:'St Johns', tier:'Gold', status:'Active', joined:'2023-03-14'},
-    {id:6, name:'Emma Lindqvist', email:'e.lindqvist@cambridge-eta.co.uk', role:'Founder', chapter:'Pembroke', tier:'Silver', status:'Active', joined:'2024-06-19'},
-    {id:7, name:'Rohan Mehta', email:'r.mehta@cambridge-eta.co.uk', role:'Investor', chapter:'Jesus College', tier:'Platinum', status:'Active', joined:'2021-11-01'},
-    {id:8, name:'Yuki Tanaka', email:'y.tanaka@cambridge-eta.co.uk', role:'Searcher', chapter:'Queens', tier:'Gold', status:'Active', joined:'2024-02-27'},
-  ],
-  events: [
-    {id:1, title:'Annual Search Fund Summit', date:'2026-05-14', time:'18:30', venue:'Jesus College, Upper Hall', desc:'Flagship evening convening ETA searchers, investors and founders for keynotes and structured networking.', attendees:142, capacity:180, status:'Open'},
-    {id:2, title:'Deal Workshop: CIM Deep Dive', date:'2026-04-22', time:'14:00', venue:'Judge Business School, Room W2.03', desc:'Hands-on workshop analysing real CIMs with senior operators. Limited to 24 participants.', attendees:22, capacity:24, status:'Nearly Full'},
-    {id:3, title:'Founders Fireside: Lessons from Exit', date:'2026-04-30', time:'19:00', venue:'Trinity College, Old Combination Room', desc:'Intimate fireside with three ETA operators who recently exited. Invite-only for active searchers.', attendees:18, capacity:30, status:'Open'},
-    {id:4, title:'Investor Roundtable Q2', date:'2026-05-07', time:'12:30', venue:'Kings Parade, Private Dining', desc:'Quarterly roundtable with LPs, family offices and sponsor funds active in the ETA ecosystem.', attendees:31, capacity:40, status:'Open'},
-    {id:5, title:'Cambridge ETA Black Tie Dinner', date:'2026-06-20', time:'19:30', venue:'The Pitt Building', desc:'Our signature annual black-tie gala celebrating the cohort, with a keynote from a world-class CEO.', attendees:86, capacity:200, status:'Open'},
-    {id:6, title:'New Member Induction', date:'2026-04-18', time:'17:00', venue:'Clare College, Riley Auditorium', desc:'Onboarding session for the spring cohort of new members. Platform walkthrough and mentor matching.', attendees:24, capacity:50, status:'Open'},
-  ],
-  tasks: [
-    {id:1, title:'Finalise speaker lineup for Annual Summit',   due:'2026-04-15', priority:'High',   assigneeId:'u2', done:false, project:'Annual Search Fund Summit'},
-    {id:2, title:'Send welcome packs to spring cohort',         due:'2026-04-14', priority:'High',   assigneeId:'u4', done:false, project:'New Member Induction'},
-    {id:3, title:'Reconcile Q1 membership dues',                due:'2026-04-20', priority:'Medium', assigneeId:'u3', done:false, project:'Finance'},
-    {id:4, title:'Draft investor update newsletter',            due:'2026-04-17', priority:'Medium', assigneeId:'u1', done:false, project:'Comms'},
-    {id:5, title:'Book private dining for roundtable',          due:'2026-04-10', priority:'High',   assigneeId:'u4', done:true,  project:'Investor Roundtable Q2'},
-    {id:6, title:'Update platform brand assets',                due:'2026-04-25', priority:'Low',    assigneeId:'u2', done:false, project:'Platform'},
-    {id:7, title:'Confirm AV for Founders Fireside',            due:'2026-04-28', priority:'Medium', assigneeId:'u2', done:false, project:'Founders Fireside'},
-    {id:8, title:'Renew Judge Business School booking',         due:'2026-04-12', priority:'High',   assigneeId:'u1', done:true,  project:'Deal Workshop'},
-    {id:9, title:'File VAT return for Q1',                      due:'2026-04-22', priority:'High',   assigneeId:'u3', done:false, project:'Finance'},
-    {id:10,title:'Publish April member newsletter',             due:'2026-04-18', priority:'Medium', assigneeId:'u4', done:false, project:'Comms'},
-  ],
+  session: null,
+  profile: null,   // current user's eta_users row
+  users:   [],     // all eta_users
+  events:  [],
+  tasks:   [],
+  members: [],
+  notes:   [],
+  loading: true,
 };
 
 // ===== HELPERS =====
@@ -727,28 +779,44 @@ const initials = (n) => n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCas
 const esc = (s) => String(s).replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 
 // ===== USERS / PERMISSIONS =====
-function currentUser(){ return state.users.find(u=>u.id===state.currentUserId) || state.users[0]; }
-function isOwner(){ return currentUser().role==='Owner'; }
-function userById(id){ return state.users.find(u=>u.id===id); }
+function currentUser(){ return state.profile; }
+function currentUserId(){ return state.profile ? state.profile.id : null; }
+function isOwner(){ return state.profile && state.profile.role === 'Owner'; }
+function userById(id){ return state.users.find(u => u.id === id); }
 function userName(id){ const u = userById(id); return u ? u.name : 'Unassigned'; }
 function canAccess(section){
-  const u = currentUser();
-  if(u.permissions.includes('*')) return true;
-  return u.permissions.includes(section);
+  const u = state.profile;
+  if(!u) return false;
+  if(Array.isArray(u.permissions) && (u.permissions.includes('*') || u.permissions.includes(section))) return true;
+  return false;
 }
 function visibleTasks(){
+  // RLS already restricts what we can fetch; this is just a belt-and-braces filter.
   if(isOwner()) return state.tasks;
-  return state.tasks.filter(t=>t.assigneeId===state.currentUserId);
+  return state.tasks.filter(t => t.assigneeId === currentUserId());
 }
 function notesForMe(){
-  const me = state.currentUserId;
-  return state.notes.filter(n=>n.visibility==='direct' && n.targetUserId===me);
+  const me = currentUserId();
+  return state.notes.filter(n => n.visibility === 'direct' && n.targetUserId === me);
 }
 function notesMyOwn(){
-  return state.notes.filter(n=>n.authorId===state.currentUserId);
+  return state.notes.filter(n => n.authorId === currentUserId());
 }
 function notesTeamPublic(){
-  return state.notes.filter(n=>n.visibility==='public');
+  return state.notes.filter(n => n.visibility === 'public');
+}
+
+// ===== DB -> JS SHAPE =====
+function mapUser(u){ return u; } // shapes already match
+function mapEvent(e){
+  return { ...e, date: e.event_date, time: e.event_time || '', desc: e.description || '' };
+}
+function mapTask(t){
+  return { ...t, due: t.due_date, assigneeId: t.assignee_id };
+}
+function mapMember(m){ return m; } // shapes already match
+function mapNote(n){
+  return { ...n, authorId: n.author_id, targetUserId: n.target_user_id, createdAt: n.created_at };
 }
 
 function toast(title, msg){
@@ -785,14 +853,23 @@ function renderDashboard(){
   const eventSorted = [...state.events].sort((a,b)=> new Date(a.date)-new Date(b.date)).slice(0,3);
   const recentMembers = [...state.members].slice(-4).reverse();
 
-  const chartData = [
-    {label:'Jan',v:62},{label:'Feb',v:74},{label:'Mar',v:81},{label:'Apr',v:95},
-    {label:'May',v:88},{label:'Jun',v:112},{label:'Jul',v:128}
-  ];
-  const max = Math.max(...chartData.map(d=>d.v));
+  // Build a real 7-month trailing growth chart from member joined dates
+  const now = new Date();
+  const chartData = [];
+  for(let i=6; i>=0; i--){
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    const label = d.toLocaleDateString('en-GB',{month:'short'});
+    const count = state.members.filter(m => {
+      if(!m.joined) return false;
+      const j = new Date(m.joined);
+      return j <= new Date(d.getFullYear(), d.getMonth()+1, 0);
+    }).length;
+    chartData.push({label, v:count});
+  }
+  const max = Math.max(1, ...chartData.map(d=>d.v));
   const bars = chartData.map(d=>`
-    <div class="bar" style="height:${(d.v/max)*100}%">
-      <div class="bar-value">${d.v}</div>
+    <div class="bar" style="height:${max ? (d.v/max)*100 : 0}%">
+      <div class="bar-value">${d.v||''}</div>
       <div class="bar-label">${d.label}</div>
     </div>`).join('');
 
@@ -802,13 +879,15 @@ function renderDashboard(){
   let acc = 0;
   const segs = Object.entries(tierCounts).map(([k,v])=>{
     const pct = (v/tierTotal)*100;
-    const s = `${k}|${acc}|${acc+pct}|${tierColors[k]}`;
+    const s = `${k}|${acc}|${acc+pct}|${tierColors[k] || 'var(--purple)'}`;
     acc += pct; return s;
   });
-  const grads = segs.map(s=>{
-    const [,from,to,color] = s.split('|');
-    return `${color} ${from}% ${to}%`;
-  }).join(',');
+  const grads = tierTotal === 0
+    ? 'rgba(138,99,255,0.15) 0% 100%'
+    : segs.map(s=>{
+        const [,from,to,color] = s.split('|');
+        return `${color} ${from}% ${to}%`;
+      }).join(',');
 
   const firstName = me.name.split(' ')[0];
   const heroDesc = owner
@@ -901,9 +980,11 @@ function renderDashboard(){
           </div>
         </div>
         <div class="legend">
-          ${Object.entries(tierCounts).map(([k,v])=>`
+          ${tierTotal === 0
+            ? '<div class="legend-item" style="color:var(--text-muted);font-size:11.5px">No members yet — add your first one from the Members CRM.</div>'
+            : Object.entries(tierCounts).map(([k,v])=>`
             <div class="legend-item">
-              <div class="legend-dot" style="background:${tierColors[k]}"></div>
+              <div class="legend-dot" style="background:${tierColors[k] || 'var(--purple)'}"></div>
               <span style="flex:1">${k}</span>
               <span style="color:var(--text-muted)">${v}</span>
             </div>`).join('')}
@@ -917,7 +998,7 @@ function renderDashboard(){
           <div><div class="card-title">Upcoming events</div><div class="card-sub">Next three in your calendar</div></div>
           <button class="btn btn-ghost" onclick="switchSection('events')">View all</button>
         </div>
-        ${eventSorted.map(e=>{
+        ${eventSorted.length === 0 ? '<div class="empty">No events scheduled. Create your first one from the Events tab.</div>' : eventSorted.map(e=>{
           const d = shortDate(e.date);
           return `
           <div style="display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--border)">
@@ -926,9 +1007,9 @@ function renderDashboard(){
               <div style="font-size:18px;font-weight:700;font-family:'Space Grotesk'">${d.day}</div>
             </div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:13.5px;font-weight:600;color:#fff">${esc(e.title)}</div>
-              <div style="font-size:11.5px;color:var(--text-muted);margin-top:3px">${esc(e.venue)} · ${e.time}</div>
-              <div style="margin-top:6px"><span class="tag">${e.attendees}/${e.capacity} attending</span></div>
+              <div style="font-size:13.5px;font-weight:600;color:var(--text)">${esc(e.title)}</div>
+              <div style="font-size:11.5px;color:var(--text-muted);margin-top:3px">${esc(e.venue||'')}${e.time?' · '+esc(e.time):''}</div>
+              <div style="margin-top:6px"><span class="tag">${e.attendees||0}/${e.capacity||0} attending</span></div>
             </div>
           </div>`;
         }).join('')}
@@ -938,14 +1019,14 @@ function renderDashboard(){
           <div><div class="card-title">Recent members</div><div class="card-sub">Latest additions to the club</div></div>
           <button class="btn btn-ghost" onclick="switchSection('crm')">View all</button>
         </div>
-        ${recentMembers.map(m=>`
+        ${recentMembers.length === 0 ? '<div class="empty">No members yet.</div>' : recentMembers.map(m=>`
           <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
             <div class="avatar">${initials(m.name)}</div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:13px;font-weight:600;color:#fff">${esc(m.name)}</div>
-              <div style="font-size:11.5px;color:var(--text-muted)">${esc(m.role)} · ${esc(m.chapter)}</div>
+              <div style="font-size:13px;font-weight:600;color:var(--text)">${esc(m.name)}</div>
+              <div style="font-size:11.5px;color:var(--text-muted)">${esc(m.role||'')}${m.chapter?' · '+esc(m.chapter):''}</div>
             </div>
-            <span class="tag ${m.tier==='Platinum'?'':m.tier==='Gold'?'gold':'blue'}">${m.tier}</span>
+            <span class="tag ${m.tier==='Platinum'?'':m.tier==='Gold'?'gold':'blue'}">${m.tier||''}</span>
           </div>`).join('')}
       </div>
     </div>
@@ -1012,15 +1093,14 @@ function renderTasks(){
     const prioClass = t.priority==='High'?'red':t.priority==='Medium'?'gold':'blue';
     return `
     <div class="task-row ${t.done?'done':''}">
-      <div class="checkbox ${t.done?'checked':''}" onclick="toggleTask(${t.id})"></div>
+      <div class="checkbox ${t.done?'checked':''}" onclick="toggleTask('${t.id}')"></div>
       <div class="task-info">
         <div class="task-title">${esc(t.title)}</div>
         <div class="task-meta">
-          <span>${fmtDate(t.due)}</span>
+          <span>${t.due?fmtDate(t.due):'No due date'}</span>
           <span>·</span>
           <span>${esc(userName(t.assigneeId))}</span>
-          <span>·</span>
-          <span>${esc(t.project)}</span>
+          ${t.project?`<span>·</span><span>${esc(t.project)}</span>`:''}
         </div>
       </div>
       <span class="tag ${prioClass}">${t.priority}</span>
@@ -1084,7 +1164,7 @@ function renderNotes(){
       <div class="note-body">${esc(n.content)}</div>
       <div class="note-foot">
         <span class="tag ${n.visibility==='public'?'green':n.visibility==='private'?'gold':''}">${visLabel}</span>
-        ${n.authorId===state.currentUserId ? `<button class="btn btn-ghost" style="margin-left:auto;padding:6px 12px;font-size:11px" onclick="deleteNote('${n.id}')">Delete</button>` : ''}
+        ${n.authorId===currentUserId() ? `<button class="btn btn-ghost" style="margin-left:auto;padding:6px 12px;font-size:11px" onclick="deleteNote('${n.id}')">Delete</button>` : ''}
       </div>
     </div>`;
   };
@@ -1132,7 +1212,9 @@ function renderNotes(){
   else { badge.style.display='none'; }
 }
 function switchNotesTab(t){ notesTab = t; renderNotes(); }
-function deleteNote(id){
+async function deleteNote(id){
+  const { error } = await sb.from('eta_notes').delete().eq('id', id);
+  if(error){ toast('Could not delete', error.message); return; }
   state.notes = state.notes.filter(n=>n.id!==id);
   renderNotes();
   toast('Note deleted','Removed from your notes');
@@ -1167,7 +1249,7 @@ function renderTeam(){
           </div>
         </div>
       </td>
-      <td>${esc(u.role)}</td>
+      <td>${isO ? esc(u.role) : `<input class="input" style="padding:6px 10px;font-size:12px;max-width:140px" value="${esc(u.role)}" onblur="updateUserRole('${u.id}', this.value.trim() || 'Member')"/>`}</td>
       <td style="min-width:280px">${perms}</td>
       <td style="min-width:180px">
         <div style="display:flex;align-items:center;gap:10px">
@@ -1208,25 +1290,33 @@ function renderTeam(){
   `;
 }
 
-function togglePerm(uid, perm){
+async function togglePerm(uid, perm){
   const u = userById(uid);
   if(!u || u.role==='Owner') return;
-  const i = u.permissions.indexOf(perm);
-  if(i>=0) u.permissions.splice(i,1); else u.permissions.push(perm);
+  const nextPerms = u.permissions.includes(perm)
+    ? u.permissions.filter(p => p !== perm)
+    : [...u.permissions, perm];
+  const { error } = await sb.from('eta_users').update({ permissions: nextPerms }).eq('id', uid);
+  if(error){ toast('Could not update', error.message); return; }
+  u.permissions = nextPerms;
   renderTeam();
-  toast('Permission updated', `${u.name}: ${perm} ${i>=0?'removed':'granted'}`);
+  toast('Permission updated', `${u.name}: ${perm} ${u.permissions.includes(perm)?'granted':'removed'}`);
 }
 
 function writeNoteTo(uid){
   openNewNoteModal(uid);
 }
 
-function toggleTask(id){
-  const t = state.tasks.find(x=>x.id===id);
+async function toggleTask(id){
+  const t = state.tasks.find(x => x.id === id);
   if(!t) return;
-  t.done = !t.done;
+  const next = !t.done;
+  const { error } = await sb.from('eta_tasks').update({ done: next }).eq('id', id);
+  if(error){ toast('Could not update task', error.message); return; }
+  t.done = next;
   renderTasks();
-  toast(t.done?'Task completed':'Task reopened', esc(t.title));
+  renderDashboard();
+  toast(next?'Task completed':'Task reopened', t.title);
 }
 
 // ===== CRM =====
@@ -1307,55 +1397,66 @@ function openNewEventModal(){
     </div>
   `);
 }
-function saveEvent(){
+async function saveEvent(){
   const title = $('#f_title').value.trim();
   if(!title){ toast('Missing title','Please give the event a name'); return; }
-  state.events.push({
-    id: Date.now(),
+  const payload = {
     title,
-    date: $('#f_date').value,
-    time: $('#f_time').value,
-    venue: $('#f_venue').value || 'TBC',
-    desc: $('#f_desc').value || '',
-    attendees: 0,
+    event_date: $('#f_date').value,
+    event_time: $('#f_time').value,
+    venue: $('#f_venue').value || null,
+    description: $('#f_desc').value || null,
     capacity: parseInt($('#f_cap').value,10) || 50,
+    attendees: 0,
     status: $('#f_stat').value,
-  });
+    created_by: currentUserId(),
+  };
+  const { data, error } = await sb.from('eta_events').insert(payload).select().single();
+  if(error){ toast('Could not save', error.message); return; }
+  state.events.push(mapEvent(data));
   closeModal();
   renderEvents(); renderDashboard();
-  toast('Event created', esc(title));
+  toast('Event created', title);
 }
 
 function openNewTaskModal(){
+  const today = new Date().toISOString().slice(0,10);
+  const assigneeOptions = state.users.map(u =>
+    `<option value="${u.id}" ${u.id===currentUserId()?'selected':''}>${esc(u.name)} · ${esc(u.role)}</option>`
+  ).join('');
   openModal(`
     <h3>New task</h3>
     <div class="modal-sub">Track something the club needs to get done.</div>
     <div class="field"><label>Task</label><input class="input" id="t_title"/></div>
     <div class="grid grid-2" style="gap:12px">
-      <div class="field"><label>Due</label><input class="input" id="t_due" type="date" value="2026-04-30"/></div>
+      <div class="field"><label>Due</label><input class="input" id="t_due" type="date" value="${today}"/></div>
       <div class="field"><label>Priority</label><select class="input" id="t_prio"><option>High</option><option selected>Medium</option><option>Low</option></select></div>
     </div>
-    <div class="field"><label>Owner</label><input class="input" id="t_owner" value="Taslim Iya"/></div>
-    <div class="field"><label>Project</label><input class="input" id="t_proj" value="General"/></div>
+    <div class="field"><label>Assign to</label><select class="input" id="t_assignee" ${isOwner()?'':'disabled'}>${assigneeOptions}</select></div>
+    <div class="field"><label>Project</label><input class="input" id="t_proj" placeholder="e.g. Annual Summit"/></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
       <button class="btn btn-primary" onclick="saveTask()">Add task</button>
     </div>
   `);
 }
-function saveTask(){
+async function saveTask(){
   const title = $('#t_title').value.trim();
   if(!title){ toast('Missing title','Please describe the task'); return; }
-  state.tasks.push({
-    id: Date.now(), title,
-    due: $('#t_due').value,
+  const payload = {
+    title,
+    due_date: $('#t_due').value || null,
     priority: $('#t_prio').value,
-    owner: $('#t_owner').value,
-    project: $('#t_proj').value,
-    done:false,
-  });
+    assignee_id: $('#t_assignee').value || currentUserId(),
+    project: $('#t_proj').value || null,
+    done: false,
+    created_by: currentUserId(),
+  };
+  const { data, error } = await sb.from('eta_tasks').insert(payload).select().single();
+  if(error){ toast('Could not save', error.message); return; }
+  state.tasks.push(mapTask(data));
   closeModal(); renderTasks(); renderDashboard();
-  toast('Task added', esc(title));
+  toast('Task added', title);
 }
 
 function openNewMemberModal(){
@@ -1378,20 +1479,23 @@ function openNewMemberModal(){
     </div>
   `);
 }
-function saveMember(){
+async function saveMember(){
   const name = $('#m_name').value.trim();
   if(!name){ toast('Missing name','Enter the member\'s full name'); return; }
-  state.members.push({
-    id: Date.now(), name,
-    email: $('#m_email').value || (name.toLowerCase().replace(/\s+/g,'.')+'@cambridge-eta.co.uk'),
+  const payload = {
+    name,
+    email: $('#m_email').value || null,
     role: $('#m_role').value,
-    chapter: $('#m_college').value || 'Unassigned',
+    chapter: $('#m_college').value || null,
     tier: $('#m_tier').value,
     status: $('#m_stat').value,
-    joined: new Date().toISOString().slice(0,10),
-  });
+    created_by: currentUserId(),
+  };
+  const { data, error } = await sb.from('eta_members').insert(payload).select().single();
+  if(error){ toast('Could not save', error.message); return; }
+  state.members.push(mapMember(data));
   closeModal(); renderCrm(); renderDashboard();
-  toast('Member added', esc(name));
+  toast('Member added', name);
 }
 
 // ===== NOTES MODAL =====
@@ -1400,7 +1504,7 @@ function openNewNoteModal(prefillTargetId){
   const visibilityOptions = owner
     ? '<option value="direct">Direct to a team member</option><option value="public">Public (whole team)</option><option value="private">Private (just me)</option>'
     : '<option value="private">Private (just me)</option><option value="public">Public (whole team)</option>';
-  const targetOptions = state.users.filter(u=>u.id!==state.currentUserId).map(u=>`<option value="${u.id}" ${prefillTargetId===u.id?'selected':''}>${esc(u.name)} · ${esc(u.role)}</option>`).join('');
+  const targetOptions = state.users.filter(u=>u.id!==currentUserId()).map(u=>`<option value="${u.id}" ${prefillTargetId===u.id?'selected':''}>${esc(u.name)} · ${esc(u.role)}</option>`).join('');
   openModal(`
     <h3>New note</h3>
     <div class="modal-sub">Capture a thought, guidance or briefing.</div>
@@ -1419,66 +1523,56 @@ function updateNoteVisibility(){
   const v = $('#n_vis').value;
   $('#n_target_field').style.display = v==='direct' ? 'block' : 'none';
 }
-function saveNote(){
+async function saveNote(){
   const title = $('#n_title').value.trim();
   const content = $('#n_content').value.trim();
   const vis = $('#n_vis').value;
   if(!title || !content){ toast('Missing fields','Please add a title and content'); return; }
   const target = vis==='direct' ? $('#n_target').value : null;
-  state.notes.unshift({
-    id: 'n'+Date.now(),
-    authorId: state.currentUserId,
-    targetUserId: target,
+  const payload = {
+    author_id: currentUserId(),
+    target_user_id: target,
     visibility: vis,
-    title, content,
-    createdAt: new Date().toISOString().slice(0,10),
+    title,
+    content,
     pinned: false,
-  });
+  };
+  const { data, error } = await sb.from('eta_notes').insert(payload).select().single();
+  if(error){ toast('Could not save', error.message); return; }
+  state.notes.unshift(mapNote(data));
   closeModal();
-  if(vis==='direct') notesTab='forme';
-  else if(vis==='private') notesTab='mine';
-  else notesTab='team';
+  if(vis==='direct') notesTab = 'mine';  // author always sees it in "My notes"
+  else if(vis==='private') notesTab = 'mine';
+  else notesTab = 'team';
   renderNotes(); renderDashboard();
   toast('Note saved', vis==='direct' ? `Sent to ${userName(target)}` : vis==='public' ? 'Visible to the whole team' : 'Visible only to you');
 }
 
 // ===== TEAM MEMBER MODAL =====
 function openNewTeamMemberModal(){
+  const origin = window.location.origin + window.location.pathname;
   openModal(`
-    <h3>Add team member</h3>
-    <div class="modal-sub">Grant someone access to the platform and assign their scope.</div>
-    <div class="field"><label>Full name</label><input class="input" id="tm_name"/></div>
-    <div class="field"><label>Email</label><input class="input" id="tm_email" type="email"/></div>
-    <div class="field"><label>Role</label><input class="input" id="tm_role" placeholder="e.g. Comms Lead"/></div>
-    <div class="field"><label>Permissions</label>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px">
-        ${['dashboard','events','tasks','crm','notes'].map(p=>`
-          <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;cursor:pointer">
-            <input type="checkbox" class="tm_perm" value="${p}" ${p==='dashboard'||p==='tasks'||p==='notes'?'checked':''}/>${p}
-          </label>
-        `).join('')}
-      </div>
+    <h3>Invite a team member</h3>
+    <div class="modal-sub">Team members sign themselves up, then you grant them access here.</div>
+    <div class="field">
+      <label>Sign-up link</label>
+      <input class="input" readonly value="${esc(origin)}" onclick="this.select()"/>
+    </div>
+    <div class="auth-hint" style="text-align:left;margin-top:10px">
+      Share this URL with the person you want to add. They create an account with their own email and password, then they appear in this Team view as a <b>Member</b> with basic access. From there you can edit their role and flip permissions on and off.
     </div>
     <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveTeamMember()">Add member</button>
+      <button class="btn btn-primary" onclick="closeModal()">Got it</button>
     </div>
   `);
 }
-function saveTeamMember(){
-  const name = $('#tm_name').value.trim();
-  if(!name){ toast('Missing name','Enter the team member\'s name'); return; }
-  const perms = Array.from($$('.tm_perm')).filter(c=>c.checked).map(c=>c.value);
-  state.users.push({
-    id: 'u'+Date.now(),
-    name,
-    email: $('#tm_email').value || (name.toLowerCase().replace(/\s+/g,'.')+'@cambridge-eta.co.uk'),
-    role: $('#tm_role').value || 'Team Member',
-    permissions: perms,
-  });
-  closeModal();
-  renderTeam(); renderUserSwitcher();
-  toast('Team member added', esc(name));
+async function updateUserRole(uid, nextRole){
+  const { error } = await sb.from('eta_users').update({ role: nextRole }).eq('id', uid);
+  if(error){ toast('Could not update', error.message); return; }
+  const u = userById(uid);
+  if(u) u.role = nextRole;
+  renderTeam();
+  toast('Role updated', `${u?u.name:'User'} is now ${nextRole}`);
 }
 
 // ===== THEME =====
@@ -1494,27 +1588,30 @@ function toggleTheme(){
   toast('Theme switched', `Now using ${state.theme} mode`);
 }
 
-// ===== USER SWITCHER =====
-function renderUserSwitcher(){
+// ===== USER MENU =====
+function renderUserMenu(){
   const me = currentUser();
+  if(!me) return;
   $('#chipAvatar').textContent = initials(me.name);
   $('#chipName').textContent = me.name;
   $('#chipRole').textContent = me.role;
   const menu = $('#userMenu');
   menu.innerHTML = `
-    <div class="user-menu-label">Viewing as</div>
-    ${state.users.map(u=>`
-      <div class="user-menu-item ${u.id===state.currentUserId?'current':''}" onclick="switchUser('${u.id}')">
-        <div class="avatar">${initials(u.name)}</div>
-        <div class="info">
-          <div class="name">${esc(u.name)}</div>
-          <div class="role">${esc(u.role)}</div>
-        </div>
-        <svg class="check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    <div style="padding:14px 12px 10px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border)">
+      <div class="avatar">${initials(me.name)}</div>
+      <div style="min-width:0;flex:1">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">${esc(me.name)}</div>
+        <div style="font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(me.email)}</div>
       </div>
-    `).join('')}
-    <div style="padding:10px 12px;border-top:1px solid var(--border);margin-top:6px;font-size:10.5px;color:var(--text-muted)">
-      Simulates logging in as that team member. Sections and data filter by their permissions.
+    </div>
+    <div style="padding:10px 12px;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;font-weight:600">Signed in as</div>
+    <div style="padding:0 12px 10px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <span class="tag">${esc(me.role)}</span>
+      <span style="font-size:10.5px;color:var(--text-muted)">${(me.permissions||[]).join(' · ') || 'No access'}</span>
+    </div>
+    <div class="user-menu-item" onclick="signOut()" style="border-top:1px solid var(--border);margin-top:6px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      <div class="info"><div class="name">Sign out</div><div class="role">End this session</div></div>
     </div>
   `;
 }
@@ -1522,18 +1619,14 @@ function toggleUserMenu(e){
   if(e) e.stopPropagation();
   $('#userMenu').classList.toggle('open');
 }
-function switchUser(uid){
-  state.currentUserId = uid;
-  localStorage.setItem('eta-user', uid);
-  $('#userMenu').classList.remove('open');
-  renderUserSwitcher();
-  applyPermissions();
-  renderDashboard(); renderEvents(); renderTasks(); renderCrm(); renderNotes(); renderTeam();
-  const me = currentUser();
-  // If the current section isn't allowed, fall back to dashboard
-  if(!canAccess(state.section) && state.section!=='dashboard') switchSection('dashboard');
-  else switchSection(state.section);
-  toast('Switched user', `Now viewing as ${me.name}`);
+
+async function signOut(){
+  await sb.auth.signOut();
+  state.session = null;
+  state.profile = null;
+  state.users = state.events = state.tasks = state.members = state.notes = [];
+  showAuthScreen();
+  toast('Signed out','See you soon');
 }
 document.addEventListener('click', (e)=>{
   const sw = document.getElementById('userSwitcher');
@@ -1546,7 +1639,8 @@ function applyPermissions(){
   document.querySelectorAll('.nav-item').forEach(n=>{
     const nav = n.dataset.nav;
     const ownerOnly = n.hasAttribute('data-owner-only');
-    const allowed = canAccess(nav) && (!ownerOnly || owner);
+    // Team is owner-only; Notes and Dashboard always available if authed
+    const allowed = (nav === 'team' ? owner : (canAccess(nav) || nav === 'dashboard'));
     n.style.display = allowed ? '' : 'none';
   });
 }
@@ -1584,17 +1678,132 @@ function switchSection(name){
 $$('.nav-item').forEach(n=>n.addEventListener('click',()=>switchSection(n.dataset.nav)));
 $('#themeToggle').addEventListener('click', toggleTheme);
 
+// ===== AUTH FLOW =====
+let authTab = 'signin';
+function setAuthTab(t){
+  authTab = t;
+  document.querySelectorAll('[data-auth-tab]').forEach(el => {
+    el.classList.toggle('active', el.dataset.authTab === t);
+  });
+  $('#authFieldName').style.display = t === 'signup' ? 'block' : 'none';
+  $('#authSubmit').textContent = t === 'signup' ? 'Create account' : 'Sign in';
+  $('#authError').classList.remove('show');
+}
+function showAuthError(msg){
+  const el = $('#authError');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+async function handleAuthSubmit(){
+  const email = $('#authEmail').value.trim();
+  const password = $('#authPassword').value;
+  if(!email || !password){ showAuthError('Email and password are required'); return; }
+  $('#authSubmit').disabled = true;
+  $('#authError').classList.remove('show');
+  try {
+    if(authTab === 'signup'){
+      const name = $('#authName').value.trim();
+      if(!name){ showAuthError('Please enter your full name'); $('#authSubmit').disabled = false; return; }
+      const { data, error } = await sb.auth.signUp({
+        email, password,
+        options: { data: { name } }
+      });
+      if(error){ showAuthError(error.message); $('#authSubmit').disabled = false; return; }
+      if(!data.session){
+        showAuthError('Check your email to confirm your account, then sign in.');
+        setAuthTab('signin');
+        $('#authSubmit').disabled = false;
+        return;
+      }
+      // session available immediately (email confirmation disabled)
+      await onSignedIn(data.session);
+    } else {
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if(error){ showAuthError(error.message); $('#authSubmit').disabled = false; return; }
+      await onSignedIn(data.session);
+    }
+  } catch (e){
+    showAuthError(e.message || 'Something went wrong');
+  }
+  $('#authSubmit').disabled = false;
+}
+function showAuthScreen(){
+  $('#bootOverlay').classList.remove('show');
+  $('#authWrap').classList.add('show');
+  document.querySelector('.app').classList.remove('ready');
+}
+function hideAuthScreen(){
+  $('#authWrap').classList.remove('show');
+  document.querySelector('.app').classList.add('ready');
+}
+
+// ===== DATA LOADING =====
+async function loadAll(){
+  const [users, events, tasks, members, notes] = await Promise.all([
+    sb.from('eta_users').select('*').order('created_at', {ascending:true}),
+    sb.from('eta_events').select('*').order('event_date', {ascending:true}),
+    sb.from('eta_tasks').select('*').order('due_date', {ascending:true, nullsFirst:false}),
+    sb.from('eta_members').select('*').order('created_at', {ascending:false}),
+    sb.from('eta_notes').select('*').order('created_at', {ascending:false}),
+  ]);
+  state.users   = (users.data   || []).map(mapUser);
+  state.events  = (events.data  || []).map(mapEvent);
+  state.tasks   = (tasks.data   || []).map(mapTask);
+  state.members = (members.data || []).map(mapMember);
+  state.notes   = (notes.data   || []).map(mapNote);
+  state.profile = state.users.find(u => u.id === state.session.user.id) || null;
+}
+
+async function onSignedIn(session){
+  state.session = session;
+  $('#bootOverlay').classList.add('show');
+  $('#authWrap').classList.remove('show');
+  try {
+    await loadAll();
+  } catch(e){
+    showAuthError('Could not load data: ' + (e.message || e));
+    $('#bootOverlay').classList.remove('show');
+    $('#authWrap').classList.add('show');
+    return;
+  }
+  if(!state.profile){
+    // Profile row missing — trigger didn't fire or RLS blocked it
+    $('#bootOverlay').classList.remove('show');
+    showAuthError('Your account is missing a profile row. Contact the Owner or re-run the migration.');
+    $('#authWrap').classList.add('show');
+    return;
+  }
+  hideAuthScreen();
+  $('#bootOverlay').classList.remove('show');
+  renderUserMenu();
+  applyPermissions();
+  renderDashboard();
+  renderEvents();
+  renderTasks();
+  renderCrm();
+  renderNotes();
+  renderTeam();
+  // Default to dashboard if previous section no longer allowed
+  const target = canAccess(state.section) ? state.section : 'dashboard';
+  switchSection(target);
+}
+
 // ===== BOOT =====
 applyTheme();
-renderUserSwitcher();
-applyPermissions();
-renderDashboard();
-renderEvents();
-renderTasks();
-renderCrm();
-renderNotes();
-renderTeam();
-switchSection('dashboard');
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if(session){
+    await onSignedIn(session);
+  } else {
+    showAuthScreen();
+  }
+})();
+
+sb.auth.onAuthStateChange((event, session) => {
+  if(event === 'SIGNED_OUT'){
+    showAuthScreen();
+  }
+});
 </script>
 </body>
 </html>

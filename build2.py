@@ -2,6 +2,33 @@
 """Part 2: appends HTML body markup (sidebar, topbar, sections) to index.html."""
 
 BODY = r"""
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- Boot overlay (while we resolve session) -->
+<div class="boot-overlay show" id="bootOverlay">
+  <div class="spinner"></div>
+  <div class="boot-label">Connecting...</div>
+</div>
+
+<!-- Auth screen -->
+<div class="auth-wrap" id="authWrap">
+  <div class="auth-card">
+    <div class="auth-logo">E</div>
+    <h2>Cambridge ETA Club</h2>
+    <div class="auth-sub">Sign in to the management platform</div>
+    <div class="auth-tabs">
+      <div class="tab active" data-auth-tab="signin" onclick="setAuthTab('signin')">Sign in</div>
+      <div class="tab" data-auth-tab="signup" onclick="setAuthTab('signup')">Create account</div>
+    </div>
+    <div class="auth-error" id="authError"></div>
+    <div id="authFieldName" class="field" style="display:none"><label>Full name</label><input class="input" id="authName" placeholder="e.g. Taslim Iya"/></div>
+    <div class="field"><label>Email</label><input class="input" id="authEmail" type="email" placeholder="you@cambridge-eta.co.uk"/></div>
+    <div class="field"><label>Password</label><input class="input" id="authPassword" type="password" placeholder="At least 8 characters"/></div>
+    <button class="btn btn-primary auth-submit" id="authSubmit" onclick="handleAuthSubmit()">Sign in</button>
+    <div class="auth-hint" id="authHint">The first person to sign up becomes the Owner. Everyone else starts as a Member and the Owner grants access.</div>
+  </div>
+</div>
+
 <aside class="sidebar">
   <div class="brand">
     <div class="brand-mark">E</div>

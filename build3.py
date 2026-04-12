@@ -4,55 +4,24 @@
 JS1 = r"""
 <script>
 // ===== STATE =====
+// ===== SUPABASE CLIENT =====
+const SUPABASE_URL = 'https://ygreplqxqazgxkudonso.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlncmVwbHF4cWF6Z3hrdWRvbnNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3MDY0MTIsImV4cCI6MjA4NTI4MjQxMn0.zBJK7nL0E0RXADUFaVr6vMxpyQgMO0eauxUuFfPkCAk';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true, storageKey: 'eta-auth' }
+});
+
 const state = {
   section: 'dashboard',
   theme: localStorage.getItem('eta-theme') || 'dark',
-  currentUserId: localStorage.getItem('eta-user') || 'u1',
-  users: [
-    {id:'u1', name:'Taslim Iya',        email:'taslim@cambridge-eta.co.uk',  role:'Owner',       permissions:['*']},
-    {id:'u2', name:'Priya Raghavan',    email:'priya@cambridge-eta.co.uk',   role:'Events Lead', permissions:['dashboard','events','tasks','notes']},
-    {id:'u3', name:'Marcus Weatherby',  email:'marcus@cambridge-eta.co.uk',  role:'Finance Lead',permissions:['dashboard','tasks','notes']},
-    {id:'u4', name:'Sofia Chen',        email:'sofia@cambridge-eta.co.uk',   role:'Member Ops',  permissions:['dashboard','tasks','notes','crm']},
-  ],
-  notes: [
-    {id:'n1', authorId:'u1', targetUserId:'u2', visibility:'direct',  title:'Summit keynote priority',         content:'Priya — please lock Sarah Chen before Friday. We need three keynotes confirmed ahead of the printed programme deadline.', createdAt:'2026-04-10', pinned:true},
-    {id:'n2', authorId:'u1', targetUserId:'u3', visibility:'direct',  title:'Q1 reconciliation',               content:'Marcus, focus first on membership dues, then college dinners. Flag any discrepancies over £100 directly to me.', createdAt:'2026-04-09', pinned:false},
-    {id:'n3', authorId:'u1', targetUserId:'u4', visibility:'direct',  title:'Spring cohort onboarding',        content:'Sofia — induction packs should land this week. Double-check mentor pairings against the updated matrix.', createdAt:'2026-04-08', pinned:false},
-    {id:'n4', authorId:'u1', targetUserId:null, visibility:'public',  title:'All-hands: April priorities',     content:'Team, this month is all about the Annual Summit and the spring cohort. Everything else slots around those two. Thank you all for the hard work.', createdAt:'2026-04-07', pinned:true},
-    {id:'n5', authorId:'u2', targetUserId:null, visibility:'public',  title:'Venue notes: Jesus Upper Hall',   content:'Great acoustics but tight AV corner. Ask Tom for the new radio mic kit — the old one cuts out under pressure.', createdAt:'2026-04-06', pinned:false},
-    {id:'n6', authorId:'u2', targetUserId:null, visibility:'private', title:'Personal follow-ups',             content:'- Ping Alex about the investor panel slot\n- Check catering numbers with Priya\n- Confirm Judge AV booking',  createdAt:'2026-04-11', pinned:false},
-    {id:'n7', authorId:'u3', targetUserId:null, visibility:'public',  title:'Expenses policy reminder',        content:'Please submit expense claims within 14 days of the event. Anything older may be deferred to next term.', createdAt:'2026-04-05', pinned:false},
-  ],
-  members: [
-    {id:1, name:'Alex Thornton', email:'alex.t@cambridge-eta.co.uk', role:'Investor', chapter:'Jesus College', tier:'Platinum', status:'Active', joined:'2023-10-12'},
-    {id:2, name:'Priya Raghavan', email:'priya.r@cambridge-eta.co.uk', role:'Founder', chapter:'Trinity', tier:'Gold', status:'Active', joined:'2024-01-08'},
-    {id:3, name:'Marcus Weatherby', email:'m.weatherby@cambridge-eta.co.uk', role:'Mentor', chapter:'Kings', tier:'Platinum', status:'Active', joined:'2022-09-21'},
-    {id:4, name:'Sofia Chen', email:'sofia.c@cambridge-eta.co.uk', role:'Searcher', chapter:'Clare', tier:'Silver', status:'Pending', joined:'2024-11-03'},
-    {id:5, name:'Daniel Osei', email:'d.osei@cambridge-eta.co.uk', role:'Advisor', chapter:'St Johns', tier:'Gold', status:'Active', joined:'2023-03-14'},
-    {id:6, name:'Emma Lindqvist', email:'e.lindqvist@cambridge-eta.co.uk', role:'Founder', chapter:'Pembroke', tier:'Silver', status:'Active', joined:'2024-06-19'},
-    {id:7, name:'Rohan Mehta', email:'r.mehta@cambridge-eta.co.uk', role:'Investor', chapter:'Jesus College', tier:'Platinum', status:'Active', joined:'2021-11-01'},
-    {id:8, name:'Yuki Tanaka', email:'y.tanaka@cambridge-eta.co.uk', role:'Searcher', chapter:'Queens', tier:'Gold', status:'Active', joined:'2024-02-27'},
-  ],
-  events: [
-    {id:1, title:'Annual Search Fund Summit', date:'2026-05-14', time:'18:30', venue:'Jesus College, Upper Hall', desc:'Flagship evening convening ETA searchers, investors and founders for keynotes and structured networking.', attendees:142, capacity:180, status:'Open'},
-    {id:2, title:'Deal Workshop: CIM Deep Dive', date:'2026-04-22', time:'14:00', venue:'Judge Business School, Room W2.03', desc:'Hands-on workshop analysing real CIMs with senior operators. Limited to 24 participants.', attendees:22, capacity:24, status:'Nearly Full'},
-    {id:3, title:'Founders Fireside: Lessons from Exit', date:'2026-04-30', time:'19:00', venue:'Trinity College, Old Combination Room', desc:'Intimate fireside with three ETA operators who recently exited. Invite-only for active searchers.', attendees:18, capacity:30, status:'Open'},
-    {id:4, title:'Investor Roundtable Q2', date:'2026-05-07', time:'12:30', venue:'Kings Parade, Private Dining', desc:'Quarterly roundtable with LPs, family offices and sponsor funds active in the ETA ecosystem.', attendees:31, capacity:40, status:'Open'},
-    {id:5, title:'Cambridge ETA Black Tie Dinner', date:'2026-06-20', time:'19:30', venue:'The Pitt Building', desc:'Our signature annual black-tie gala celebrating the cohort, with a keynote from a world-class CEO.', attendees:86, capacity:200, status:'Open'},
-    {id:6, title:'New Member Induction', date:'2026-04-18', time:'17:00', venue:'Clare College, Riley Auditorium', desc:'Onboarding session for the spring cohort of new members. Platform walkthrough and mentor matching.', attendees:24, capacity:50, status:'Open'},
-  ],
-  tasks: [
-    {id:1, title:'Finalise speaker lineup for Annual Summit',   due:'2026-04-15', priority:'High',   assigneeId:'u2', done:false, project:'Annual Search Fund Summit'},
-    {id:2, title:'Send welcome packs to spring cohort',         due:'2026-04-14', priority:'High',   assigneeId:'u4', done:false, project:'New Member Induction'},
-    {id:3, title:'Reconcile Q1 membership dues',                due:'2026-04-20', priority:'Medium', assigneeId:'u3', done:false, project:'Finance'},
-    {id:4, title:'Draft investor update newsletter',            due:'2026-04-17', priority:'Medium', assigneeId:'u1', done:false, project:'Comms'},
-    {id:5, title:'Book private dining for roundtable',          due:'2026-04-10', priority:'High',   assigneeId:'u4', done:true,  project:'Investor Roundtable Q2'},
-    {id:6, title:'Update platform brand assets',                due:'2026-04-25', priority:'Low',    assigneeId:'u2', done:false, project:'Platform'},
-    {id:7, title:'Confirm AV for Founders Fireside',            due:'2026-04-28', priority:'Medium', assigneeId:'u2', done:false, project:'Founders Fireside'},
-    {id:8, title:'Renew Judge Business School booking',         due:'2026-04-12', priority:'High',   assigneeId:'u1', done:true,  project:'Deal Workshop'},
-    {id:9, title:'File VAT return for Q1',                      due:'2026-04-22', priority:'High',   assigneeId:'u3', done:false, project:'Finance'},
-    {id:10,title:'Publish April member newsletter',             due:'2026-04-18', priority:'Medium', assigneeId:'u4', done:false, project:'Comms'},
-  ],
+  session: null,
+  profile: null,   // current user's eta_users row
+  users:   [],     // all eta_users
+  events:  [],
+  tasks:   [],
+  members: [],
+  notes:   [],
+  loading: true,
 };
 
 // ===== HELPERS =====
@@ -70,28 +39,44 @@ const initials = (n) => n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCas
 const esc = (s) => String(s).replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 
 // ===== USERS / PERMISSIONS =====
-function currentUser(){ return state.users.find(u=>u.id===state.currentUserId) || state.users[0]; }
-function isOwner(){ return currentUser().role==='Owner'; }
-function userById(id){ return state.users.find(u=>u.id===id); }
+function currentUser(){ return state.profile; }
+function currentUserId(){ return state.profile ? state.profile.id : null; }
+function isOwner(){ return state.profile && state.profile.role === 'Owner'; }
+function userById(id){ return state.users.find(u => u.id === id); }
 function userName(id){ const u = userById(id); return u ? u.name : 'Unassigned'; }
 function canAccess(section){
-  const u = currentUser();
-  if(u.permissions.includes('*')) return true;
-  return u.permissions.includes(section);
+  const u = state.profile;
+  if(!u) return false;
+  if(Array.isArray(u.permissions) && (u.permissions.includes('*') || u.permissions.includes(section))) return true;
+  return false;
 }
 function visibleTasks(){
+  // RLS already restricts what we can fetch; this is just a belt-and-braces filter.
   if(isOwner()) return state.tasks;
-  return state.tasks.filter(t=>t.assigneeId===state.currentUserId);
+  return state.tasks.filter(t => t.assigneeId === currentUserId());
 }
 function notesForMe(){
-  const me = state.currentUserId;
-  return state.notes.filter(n=>n.visibility==='direct' && n.targetUserId===me);
+  const me = currentUserId();
+  return state.notes.filter(n => n.visibility === 'direct' && n.targetUserId === me);
 }
 function notesMyOwn(){
-  return state.notes.filter(n=>n.authorId===state.currentUserId);
+  return state.notes.filter(n => n.authorId === currentUserId());
 }
 function notesTeamPublic(){
-  return state.notes.filter(n=>n.visibility==='public');
+  return state.notes.filter(n => n.visibility === 'public');
+}
+
+// ===== DB -> JS SHAPE =====
+function mapUser(u){ return u; } // shapes already match
+function mapEvent(e){
+  return { ...e, date: e.event_date, time: e.event_time || '', desc: e.description || '' };
+}
+function mapTask(t){
+  return { ...t, due: t.due_date, assigneeId: t.assignee_id };
+}
+function mapMember(m){ return m; } // shapes already match
+function mapNote(n){
+  return { ...n, authorId: n.author_id, targetUserId: n.target_user_id, createdAt: n.created_at };
 }
 
 function toast(title, msg){

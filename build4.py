@@ -16,14 +16,23 @@ function renderDashboard(){
   const eventSorted = [...state.events].sort((a,b)=> new Date(a.date)-new Date(b.date)).slice(0,3);
   const recentMembers = [...state.members].slice(-4).reverse();
 
-  const chartData = [
-    {label:'Jan',v:62},{label:'Feb',v:74},{label:'Mar',v:81},{label:'Apr',v:95},
-    {label:'May',v:88},{label:'Jun',v:112},{label:'Jul',v:128}
-  ];
-  const max = Math.max(...chartData.map(d=>d.v));
+  // Build a real 7-month trailing growth chart from member joined dates
+  const now = new Date();
+  const chartData = [];
+  for(let i=6; i>=0; i--){
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    const label = d.toLocaleDateString('en-GB',{month:'short'});
+    const count = state.members.filter(m => {
+      if(!m.joined) return false;
+      const j = new Date(m.joined);
+      return j <= new Date(d.getFullYear(), d.getMonth()+1, 0);
+    }).length;
+    chartData.push({label, v:count});
+  }
+  const max = Math.max(1, ...chartData.map(d=>d.v));
   const bars = chartData.map(d=>`
-    <div class="bar" style="height:${(d.v/max)*100}%">
-      <div class="bar-value">${d.v}</div>
+    <div class="bar" style="height:${max ? (d.v/max)*100 : 0}%">
+      <div class="bar-value">${d.v||''}</div>
       <div class="bar-label">${d.label}</div>
     </div>`).join('');
 
@@ -33,13 +42,15 @@ function renderDashboard(){
   let acc = 0;
   const segs = Object.entries(tierCounts).map(([k,v])=>{
     const pct = (v/tierTotal)*100;
-    const s = `${k}|${acc}|${acc+pct}|${tierColors[k]}`;
+    const s = `${k}|${acc}|${acc+pct}|${tierColors[k] || 'var(--purple)'}`;
     acc += pct; return s;
   });
-  const grads = segs.map(s=>{
-    const [,from,to,color] = s.split('|');
-    return `${color} ${from}% ${to}%`;
-  }).join(',');
+  const grads = tierTotal === 0
+    ? 'rgba(138,99,255,0.15) 0% 100%'
+    : segs.map(s=>{
+        const [,from,to,color] = s.split('|');
+        return `${color} ${from}% ${to}%`;
+      }).join(',');
 
   const firstName = me.name.split(' ')[0];
   const heroDesc = owner
@@ -132,9 +143,11 @@ function renderDashboard(){
           </div>
         </div>
         <div class="legend">
-          ${Object.entries(tierCounts).map(([k,v])=>`
+          ${tierTotal === 0
+            ? '<div class="legend-item" style="color:var(--text-muted);font-size:11.5px">No members yet — add your first one from the Members CRM.</div>'
+            : Object.entries(tierCounts).map(([k,v])=>`
             <div class="legend-item">
-              <div class="legend-dot" style="background:${tierColors[k]}"></div>
+              <div class="legend-dot" style="background:${tierColors[k] || 'var(--purple)'}"></div>
               <span style="flex:1">${k}</span>
               <span style="color:var(--text-muted)">${v}</span>
             </div>`).join('')}
@@ -148,7 +161,7 @@ function renderDashboard(){
           <div><div class="card-title">Upcoming events</div><div class="card-sub">Next three in your calendar</div></div>
           <button class="btn btn-ghost" onclick="switchSection('events')">View all</button>
         </div>
-        ${eventSorted.map(e=>{
+        ${eventSorted.length === 0 ? '<div class="empty">No events scheduled. Create your first one from the Events tab.</div>' : eventSorted.map(e=>{
           const d = shortDate(e.date);
           return `
           <div style="display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--border)">
@@ -157,9 +170,9 @@ function renderDashboard(){
               <div style="font-size:18px;font-weight:700;font-family:'Space Grotesk'">${d.day}</div>
             </div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:13.5px;font-weight:600;color:#fff">${esc(e.title)}</div>
-              <div style="font-size:11.5px;color:var(--text-muted);margin-top:3px">${esc(e.venue)} · ${e.time}</div>
-              <div style="margin-top:6px"><span class="tag">${e.attendees}/${e.capacity} attending</span></div>
+              <div style="font-size:13.5px;font-weight:600;color:var(--text)">${esc(e.title)}</div>
+              <div style="font-size:11.5px;color:var(--text-muted);margin-top:3px">${esc(e.venue||'')}${e.time?' · '+esc(e.time):''}</div>
+              <div style="margin-top:6px"><span class="tag">${e.attendees||0}/${e.capacity||0} attending</span></div>
             </div>
           </div>`;
         }).join('')}
@@ -169,14 +182,14 @@ function renderDashboard(){
           <div><div class="card-title">Recent members</div><div class="card-sub">Latest additions to the club</div></div>
           <button class="btn btn-ghost" onclick="switchSection('crm')">View all</button>
         </div>
-        ${recentMembers.map(m=>`
+        ${recentMembers.length === 0 ? '<div class="empty">No members yet.</div>' : recentMembers.map(m=>`
           <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
             <div class="avatar">${initials(m.name)}</div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:13px;font-weight:600;color:#fff">${esc(m.name)}</div>
-              <div style="font-size:11.5px;color:var(--text-muted)">${esc(m.role)} · ${esc(m.chapter)}</div>
+              <div style="font-size:13px;font-weight:600;color:var(--text)">${esc(m.name)}</div>
+              <div style="font-size:11.5px;color:var(--text-muted)">${esc(m.role||'')}${m.chapter?' · '+esc(m.chapter):''}</div>
             </div>
-            <span class="tag ${m.tier==='Platinum'?'':m.tier==='Gold'?'gold':'blue'}">${m.tier}</span>
+            <span class="tag ${m.tier==='Platinum'?'':m.tier==='Gold'?'gold':'blue'}">${m.tier||''}</span>
           </div>`).join('')}
       </div>
     </div>

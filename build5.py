@@ -15,15 +15,14 @@ function renderTasks(){
     const prioClass = t.priority==='High'?'red':t.priority==='Medium'?'gold':'blue';
     return `
     <div class="task-row ${t.done?'done':''}">
-      <div class="checkbox ${t.done?'checked':''}" onclick="toggleTask(${t.id})"></div>
+      <div class="checkbox ${t.done?'checked':''}" onclick="toggleTask('${t.id}')"></div>
       <div class="task-info">
         <div class="task-title">${esc(t.title)}</div>
         <div class="task-meta">
-          <span>${fmtDate(t.due)}</span>
+          <span>${t.due?fmtDate(t.due):'No due date'}</span>
           <span>·</span>
           <span>${esc(userName(t.assigneeId))}</span>
-          <span>·</span>
-          <span>${esc(t.project)}</span>
+          ${t.project?`<span>·</span><span>${esc(t.project)}</span>`:''}
         </div>
       </div>
       <span class="tag ${prioClass}">${t.priority}</span>
@@ -87,7 +86,7 @@ function renderNotes(){
       <div class="note-body">${esc(n.content)}</div>
       <div class="note-foot">
         <span class="tag ${n.visibility==='public'?'green':n.visibility==='private'?'gold':''}">${visLabel}</span>
-        ${n.authorId===state.currentUserId ? `<button class="btn btn-ghost" style="margin-left:auto;padding:6px 12px;font-size:11px" onclick="deleteNote('${n.id}')">Delete</button>` : ''}
+        ${n.authorId===currentUserId() ? `<button class="btn btn-ghost" style="margin-left:auto;padding:6px 12px;font-size:11px" onclick="deleteNote('${n.id}')">Delete</button>` : ''}
       </div>
     </div>`;
   };
@@ -135,7 +134,9 @@ function renderNotes(){
   else { badge.style.display='none'; }
 }
 function switchNotesTab(t){ notesTab = t; renderNotes(); }
-function deleteNote(id){
+async function deleteNote(id){
+  const { error } = await sb.from('eta_notes').delete().eq('id', id);
+  if(error){ toast('Could not delete', error.message); return; }
   state.notes = state.notes.filter(n=>n.id!==id);
   renderNotes();
   toast('Note deleted','Removed from your notes');
@@ -170,7 +171,7 @@ function renderTeam(){
           </div>
         </div>
       </td>
-      <td>${esc(u.role)}</td>
+      <td>${isO ? esc(u.role) : `<input class="input" style="padding:6px 10px;font-size:12px;max-width:140px" value="${esc(u.role)}" onblur="updateUserRole('${u.id}', this.value.trim() || 'Member')"/>`}</td>
       <td style="min-width:280px">${perms}</td>
       <td style="min-width:180px">
         <div style="display:flex;align-items:center;gap:10px">
@@ -211,25 +212,33 @@ function renderTeam(){
   `;
 }
 
-function togglePerm(uid, perm){
+async function togglePerm(uid, perm){
   const u = userById(uid);
   if(!u || u.role==='Owner') return;
-  const i = u.permissions.indexOf(perm);
-  if(i>=0) u.permissions.splice(i,1); else u.permissions.push(perm);
+  const nextPerms = u.permissions.includes(perm)
+    ? u.permissions.filter(p => p !== perm)
+    : [...u.permissions, perm];
+  const { error } = await sb.from('eta_users').update({ permissions: nextPerms }).eq('id', uid);
+  if(error){ toast('Could not update', error.message); return; }
+  u.permissions = nextPerms;
   renderTeam();
-  toast('Permission updated', `${u.name}: ${perm} ${i>=0?'removed':'granted'}`);
+  toast('Permission updated', `${u.name}: ${perm} ${u.permissions.includes(perm)?'granted':'removed'}`);
 }
 
 function writeNoteTo(uid){
   openNewNoteModal(uid);
 }
 
-function toggleTask(id){
-  const t = state.tasks.find(x=>x.id===id);
+async function toggleTask(id){
+  const t = state.tasks.find(x => x.id === id);
   if(!t) return;
-  t.done = !t.done;
+  const next = !t.done;
+  const { error } = await sb.from('eta_tasks').update({ done: next }).eq('id', id);
+  if(error){ toast('Could not update task', error.message); return; }
+  t.done = next;
   renderTasks();
-  toast(t.done?'Task completed':'Task reopened', esc(t.title));
+  renderDashboard();
+  toast(next?'Task completed':'Task reopened', t.title);
 }
 
 // ===== CRM =====
@@ -310,55 +319,66 @@ function openNewEventModal(){
     </div>
   `);
 }
-function saveEvent(){
+async function saveEvent(){
   const title = $('#f_title').value.trim();
   if(!title){ toast('Missing title','Please give the event a name'); return; }
-  state.events.push({
-    id: Date.now(),
+  const payload = {
     title,
-    date: $('#f_date').value,
-    time: $('#f_time').value,
-    venue: $('#f_venue').value || 'TBC',
-    desc: $('#f_desc').value || '',
-    attendees: 0,
+    event_date: $('#f_date').value,
+    event_time: $('#f_time').value,
+    venue: $('#f_venue').value || null,
+    description: $('#f_desc').value || null,
     capacity: parseInt($('#f_cap').value,10) || 50,
+    attendees: 0,
     status: $('#f_stat').value,
-  });
+    created_by: currentUserId(),
+  };
+  const { data, error } = await sb.from('eta_events').insert(payload).select().single();
+  if(error){ toast('Could not save', error.message); return; }
+  state.events.push(mapEvent(data));
   closeModal();
   renderEvents(); renderDashboard();
-  toast('Event created', esc(title));
+  toast('Event created', title);
 }
 
 function openNewTaskModal(){
+  const today = new Date().toISOString().slice(0,10);
+  const assigneeOptions = state.users.map(u =>
+    `<option value="${u.id}" ${u.id===currentUserId()?'selected':''}>${esc(u.name)} · ${esc(u.role)}</option>`
+  ).join('');
   openModal(`
     <h3>New task</h3>
     <div class="modal-sub">Track something the club needs to get done.</div>
     <div class="field"><label>Task</label><input class="input" id="t_title"/></div>
     <div class="grid grid-2" style="gap:12px">
-      <div class="field"><label>Due</label><input class="input" id="t_due" type="date" value="2026-04-30"/></div>
+      <div class="field"><label>Due</label><input class="input" id="t_due" type="date" value="${today}"/></div>
       <div class="field"><label>Priority</label><select class="input" id="t_prio"><option>High</option><option selected>Medium</option><option>Low</option></select></div>
     </div>
-    <div class="field"><label>Owner</label><input class="input" id="t_owner" value="Taslim Iya"/></div>
-    <div class="field"><label>Project</label><input class="input" id="t_proj" value="General"/></div>
+    <div class="field"><label>Assign to</label><select class="input" id="t_assignee" ${isOwner()?'':'disabled'}>${assigneeOptions}</select></div>
+    <div class="field"><label>Project</label><input class="input" id="t_proj" placeholder="e.g. Annual Summit"/></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
       <button class="btn btn-primary" onclick="saveTask()">Add task</button>
     </div>
   `);
 }
-function saveTask(){
+async function saveTask(){
   const title = $('#t_title').value.trim();
   if(!title){ toast('Missing title','Please describe the task'); return; }
-  state.tasks.push({
-    id: Date.now(), title,
-    due: $('#t_due').value,
+  const payload = {
+    title,
+    due_date: $('#t_due').value || null,
     priority: $('#t_prio').value,
-    owner: $('#t_owner').value,
-    project: $('#t_proj').value,
-    done:false,
-  });
+    assignee_id: $('#t_assignee').value || currentUserId(),
+    project: $('#t_proj').value || null,
+    done: false,
+    created_by: currentUserId(),
+  };
+  const { data, error } = await sb.from('eta_tasks').insert(payload).select().single();
+  if(error){ toast('Could not save', error.message); return; }
+  state.tasks.push(mapTask(data));
   closeModal(); renderTasks(); renderDashboard();
-  toast('Task added', esc(title));
+  toast('Task added', title);
 }
 
 function openNewMemberModal(){
@@ -381,20 +401,23 @@ function openNewMemberModal(){
     </div>
   `);
 }
-function saveMember(){
+async function saveMember(){
   const name = $('#m_name').value.trim();
   if(!name){ toast('Missing name','Enter the member\'s full name'); return; }
-  state.members.push({
-    id: Date.now(), name,
-    email: $('#m_email').value || (name.toLowerCase().replace(/\s+/g,'.')+'@cambridge-eta.co.uk'),
+  const payload = {
+    name,
+    email: $('#m_email').value || null,
     role: $('#m_role').value,
-    chapter: $('#m_college').value || 'Unassigned',
+    chapter: $('#m_college').value || null,
     tier: $('#m_tier').value,
     status: $('#m_stat').value,
-    joined: new Date().toISOString().slice(0,10),
-  });
+    created_by: currentUserId(),
+  };
+  const { data, error } = await sb.from('eta_members').insert(payload).select().single();
+  if(error){ toast('Could not save', error.message); return; }
+  state.members.push(mapMember(data));
   closeModal(); renderCrm(); renderDashboard();
-  toast('Member added', esc(name));
+  toast('Member added', name);
 }
 
 // ===== NOTES MODAL =====
@@ -403,7 +426,7 @@ function openNewNoteModal(prefillTargetId){
   const visibilityOptions = owner
     ? '<option value="direct">Direct to a team member</option><option value="public">Public (whole team)</option><option value="private">Private (just me)</option>'
     : '<option value="private">Private (just me)</option><option value="public">Public (whole team)</option>';
-  const targetOptions = state.users.filter(u=>u.id!==state.currentUserId).map(u=>`<option value="${u.id}" ${prefillTargetId===u.id?'selected':''}>${esc(u.name)} · ${esc(u.role)}</option>`).join('');
+  const targetOptions = state.users.filter(u=>u.id!==currentUserId()).map(u=>`<option value="${u.id}" ${prefillTargetId===u.id?'selected':''}>${esc(u.name)} · ${esc(u.role)}</option>`).join('');
   openModal(`
     <h3>New note</h3>
     <div class="modal-sub">Capture a thought, guidance or briefing.</div>
@@ -422,66 +445,56 @@ function updateNoteVisibility(){
   const v = $('#n_vis').value;
   $('#n_target_field').style.display = v==='direct' ? 'block' : 'none';
 }
-function saveNote(){
+async function saveNote(){
   const title = $('#n_title').value.trim();
   const content = $('#n_content').value.trim();
   const vis = $('#n_vis').value;
   if(!title || !content){ toast('Missing fields','Please add a title and content'); return; }
   const target = vis==='direct' ? $('#n_target').value : null;
-  state.notes.unshift({
-    id: 'n'+Date.now(),
-    authorId: state.currentUserId,
-    targetUserId: target,
+  const payload = {
+    author_id: currentUserId(),
+    target_user_id: target,
     visibility: vis,
-    title, content,
-    createdAt: new Date().toISOString().slice(0,10),
+    title,
+    content,
     pinned: false,
-  });
+  };
+  const { data, error } = await sb.from('eta_notes').insert(payload).select().single();
+  if(error){ toast('Could not save', error.message); return; }
+  state.notes.unshift(mapNote(data));
   closeModal();
-  if(vis==='direct') notesTab='forme';
-  else if(vis==='private') notesTab='mine';
-  else notesTab='team';
+  if(vis==='direct') notesTab = 'mine';  // author always sees it in "My notes"
+  else if(vis==='private') notesTab = 'mine';
+  else notesTab = 'team';
   renderNotes(); renderDashboard();
   toast('Note saved', vis==='direct' ? `Sent to ${userName(target)}` : vis==='public' ? 'Visible to the whole team' : 'Visible only to you');
 }
 
 // ===== TEAM MEMBER MODAL =====
 function openNewTeamMemberModal(){
+  const origin = window.location.origin + window.location.pathname;
   openModal(`
-    <h3>Add team member</h3>
-    <div class="modal-sub">Grant someone access to the platform and assign their scope.</div>
-    <div class="field"><label>Full name</label><input class="input" id="tm_name"/></div>
-    <div class="field"><label>Email</label><input class="input" id="tm_email" type="email"/></div>
-    <div class="field"><label>Role</label><input class="input" id="tm_role" placeholder="e.g. Comms Lead"/></div>
-    <div class="field"><label>Permissions</label>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px">
-        ${['dashboard','events','tasks','crm','notes'].map(p=>`
-          <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;cursor:pointer">
-            <input type="checkbox" class="tm_perm" value="${p}" ${p==='dashboard'||p==='tasks'||p==='notes'?'checked':''}/>${p}
-          </label>
-        `).join('')}
-      </div>
+    <h3>Invite a team member</h3>
+    <div class="modal-sub">Team members sign themselves up, then you grant them access here.</div>
+    <div class="field">
+      <label>Sign-up link</label>
+      <input class="input" readonly value="${esc(origin)}" onclick="this.select()"/>
+    </div>
+    <div class="auth-hint" style="text-align:left;margin-top:10px">
+      Share this URL with the person you want to add. They create an account with their own email and password, then they appear in this Team view as a <b>Member</b> with basic access. From there you can edit their role and flip permissions on and off.
     </div>
     <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveTeamMember()">Add member</button>
+      <button class="btn btn-primary" onclick="closeModal()">Got it</button>
     </div>
   `);
 }
-function saveTeamMember(){
-  const name = $('#tm_name').value.trim();
-  if(!name){ toast('Missing name','Enter the team member\'s name'); return; }
-  const perms = Array.from($$('.tm_perm')).filter(c=>c.checked).map(c=>c.value);
-  state.users.push({
-    id: 'u'+Date.now(),
-    name,
-    email: $('#tm_email').value || (name.toLowerCase().replace(/\s+/g,'.')+'@cambridge-eta.co.uk'),
-    role: $('#tm_role').value || 'Team Member',
-    permissions: perms,
-  });
-  closeModal();
-  renderTeam(); renderUserSwitcher();
-  toast('Team member added', esc(name));
+async function updateUserRole(uid, nextRole){
+  const { error } = await sb.from('eta_users').update({ role: nextRole }).eq('id', uid);
+  if(error){ toast('Could not update', error.message); return; }
+  const u = userById(uid);
+  if(u) u.role = nextRole;
+  renderTeam();
+  toast('Role updated', `${u?u.name:'User'} is now ${nextRole}`);
 }
 
 // ===== THEME =====
@@ -497,27 +510,30 @@ function toggleTheme(){
   toast('Theme switched', `Now using ${state.theme} mode`);
 }
 
-// ===== USER SWITCHER =====
-function renderUserSwitcher(){
+// ===== USER MENU =====
+function renderUserMenu(){
   const me = currentUser();
+  if(!me) return;
   $('#chipAvatar').textContent = initials(me.name);
   $('#chipName').textContent = me.name;
   $('#chipRole').textContent = me.role;
   const menu = $('#userMenu');
   menu.innerHTML = `
-    <div class="user-menu-label">Viewing as</div>
-    ${state.users.map(u=>`
-      <div class="user-menu-item ${u.id===state.currentUserId?'current':''}" onclick="switchUser('${u.id}')">
-        <div class="avatar">${initials(u.name)}</div>
-        <div class="info">
-          <div class="name">${esc(u.name)}</div>
-          <div class="role">${esc(u.role)}</div>
-        </div>
-        <svg class="check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    <div style="padding:14px 12px 10px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border)">
+      <div class="avatar">${initials(me.name)}</div>
+      <div style="min-width:0;flex:1">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">${esc(me.name)}</div>
+        <div style="font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(me.email)}</div>
       </div>
-    `).join('')}
-    <div style="padding:10px 12px;border-top:1px solid var(--border);margin-top:6px;font-size:10.5px;color:var(--text-muted)">
-      Simulates logging in as that team member. Sections and data filter by their permissions.
+    </div>
+    <div style="padding:10px 12px;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;font-weight:600">Signed in as</div>
+    <div style="padding:0 12px 10px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <span class="tag">${esc(me.role)}</span>
+      <span style="font-size:10.5px;color:var(--text-muted)">${(me.permissions||[]).join(' · ') || 'No access'}</span>
+    </div>
+    <div class="user-menu-item" onclick="signOut()" style="border-top:1px solid var(--border);margin-top:6px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      <div class="info"><div class="name">Sign out</div><div class="role">End this session</div></div>
     </div>
   `;
 }
@@ -525,18 +541,14 @@ function toggleUserMenu(e){
   if(e) e.stopPropagation();
   $('#userMenu').classList.toggle('open');
 }
-function switchUser(uid){
-  state.currentUserId = uid;
-  localStorage.setItem('eta-user', uid);
-  $('#userMenu').classList.remove('open');
-  renderUserSwitcher();
-  applyPermissions();
-  renderDashboard(); renderEvents(); renderTasks(); renderCrm(); renderNotes(); renderTeam();
-  const me = currentUser();
-  // If the current section isn't allowed, fall back to dashboard
-  if(!canAccess(state.section) && state.section!=='dashboard') switchSection('dashboard');
-  else switchSection(state.section);
-  toast('Switched user', `Now viewing as ${me.name}`);
+
+async function signOut(){
+  await sb.auth.signOut();
+  state.session = null;
+  state.profile = null;
+  state.users = state.events = state.tasks = state.members = state.notes = [];
+  showAuthScreen();
+  toast('Signed out','See you soon');
 }
 document.addEventListener('click', (e)=>{
   const sw = document.getElementById('userSwitcher');
@@ -549,7 +561,8 @@ function applyPermissions(){
   document.querySelectorAll('.nav-item').forEach(n=>{
     const nav = n.dataset.nav;
     const ownerOnly = n.hasAttribute('data-owner-only');
-    const allowed = canAccess(nav) && (!ownerOnly || owner);
+    // Team is owner-only; Notes and Dashboard always available if authed
+    const allowed = (nav === 'team' ? owner : (canAccess(nav) || nav === 'dashboard'));
     n.style.display = allowed ? '' : 'none';
   });
 }
@@ -587,17 +600,132 @@ function switchSection(name){
 $$('.nav-item').forEach(n=>n.addEventListener('click',()=>switchSection(n.dataset.nav)));
 $('#themeToggle').addEventListener('click', toggleTheme);
 
+// ===== AUTH FLOW =====
+let authTab = 'signin';
+function setAuthTab(t){
+  authTab = t;
+  document.querySelectorAll('[data-auth-tab]').forEach(el => {
+    el.classList.toggle('active', el.dataset.authTab === t);
+  });
+  $('#authFieldName').style.display = t === 'signup' ? 'block' : 'none';
+  $('#authSubmit').textContent = t === 'signup' ? 'Create account' : 'Sign in';
+  $('#authError').classList.remove('show');
+}
+function showAuthError(msg){
+  const el = $('#authError');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+async function handleAuthSubmit(){
+  const email = $('#authEmail').value.trim();
+  const password = $('#authPassword').value;
+  if(!email || !password){ showAuthError('Email and password are required'); return; }
+  $('#authSubmit').disabled = true;
+  $('#authError').classList.remove('show');
+  try {
+    if(authTab === 'signup'){
+      const name = $('#authName').value.trim();
+      if(!name){ showAuthError('Please enter your full name'); $('#authSubmit').disabled = false; return; }
+      const { data, error } = await sb.auth.signUp({
+        email, password,
+        options: { data: { name } }
+      });
+      if(error){ showAuthError(error.message); $('#authSubmit').disabled = false; return; }
+      if(!data.session){
+        showAuthError('Check your email to confirm your account, then sign in.');
+        setAuthTab('signin');
+        $('#authSubmit').disabled = false;
+        return;
+      }
+      // session available immediately (email confirmation disabled)
+      await onSignedIn(data.session);
+    } else {
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if(error){ showAuthError(error.message); $('#authSubmit').disabled = false; return; }
+      await onSignedIn(data.session);
+    }
+  } catch (e){
+    showAuthError(e.message || 'Something went wrong');
+  }
+  $('#authSubmit').disabled = false;
+}
+function showAuthScreen(){
+  $('#bootOverlay').classList.remove('show');
+  $('#authWrap').classList.add('show');
+  document.querySelector('.app').classList.remove('ready');
+}
+function hideAuthScreen(){
+  $('#authWrap').classList.remove('show');
+  document.querySelector('.app').classList.add('ready');
+}
+
+// ===== DATA LOADING =====
+async function loadAll(){
+  const [users, events, tasks, members, notes] = await Promise.all([
+    sb.from('eta_users').select('*').order('created_at', {ascending:true}),
+    sb.from('eta_events').select('*').order('event_date', {ascending:true}),
+    sb.from('eta_tasks').select('*').order('due_date', {ascending:true, nullsFirst:false}),
+    sb.from('eta_members').select('*').order('created_at', {ascending:false}),
+    sb.from('eta_notes').select('*').order('created_at', {ascending:false}),
+  ]);
+  state.users   = (users.data   || []).map(mapUser);
+  state.events  = (events.data  || []).map(mapEvent);
+  state.tasks   = (tasks.data   || []).map(mapTask);
+  state.members = (members.data || []).map(mapMember);
+  state.notes   = (notes.data   || []).map(mapNote);
+  state.profile = state.users.find(u => u.id === state.session.user.id) || null;
+}
+
+async function onSignedIn(session){
+  state.session = session;
+  $('#bootOverlay').classList.add('show');
+  $('#authWrap').classList.remove('show');
+  try {
+    await loadAll();
+  } catch(e){
+    showAuthError('Could not load data: ' + (e.message || e));
+    $('#bootOverlay').classList.remove('show');
+    $('#authWrap').classList.add('show');
+    return;
+  }
+  if(!state.profile){
+    // Profile row missing — trigger didn't fire or RLS blocked it
+    $('#bootOverlay').classList.remove('show');
+    showAuthError('Your account is missing a profile row. Contact the Owner or re-run the migration.');
+    $('#authWrap').classList.add('show');
+    return;
+  }
+  hideAuthScreen();
+  $('#bootOverlay').classList.remove('show');
+  renderUserMenu();
+  applyPermissions();
+  renderDashboard();
+  renderEvents();
+  renderTasks();
+  renderCrm();
+  renderNotes();
+  renderTeam();
+  // Default to dashboard if previous section no longer allowed
+  const target = canAccess(state.section) ? state.section : 'dashboard';
+  switchSection(target);
+}
+
 // ===== BOOT =====
 applyTheme();
-renderUserSwitcher();
-applyPermissions();
-renderDashboard();
-renderEvents();
-renderTasks();
-renderCrm();
-renderNotes();
-renderTeam();
-switchSection('dashboard');
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if(session){
+    await onSignedIn(session);
+  } else {
+    showAuthScreen();
+  }
+})();
+
+sb.auth.onAuthStateChange((event, session) => {
+  if(event === 'SIGNED_OUT'){
+    showAuthScreen();
+  }
+});
 </script>
 </body>
 </html>
