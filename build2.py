@@ -30,6 +30,15 @@ BODY = r"""
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       <span>Members CRM</span>
     </div>
+    <div class="nav-item" data-nav="notes">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span>Notes</span>
+      <span class="badge" id="notesBadge" style="display:none">0</span>
+    </div>
+    <div class="nav-item" data-nav="team" data-owner-only>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="11" r="4"/><path d="M22 11l-3 3-1.5-1.5"/><path d="M19 3a3 3 0 0 1 0 6"/></svg>
+      <span>Team</span>
+    </div>
   </div>
 
   <div class="sidebar-footer">
@@ -54,6 +63,21 @@ BODY = r"""
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input type="text" placeholder="Search members, events, tasks..." />
       </div>
+      <div class="user-switcher" id="userSwitcher">
+        <button class="user-chip" onclick="toggleUserMenu(event)">
+          <div class="avatar" id="chipAvatar">TI</div>
+          <div style="text-align:left;min-width:0">
+            <div class="chip-name" id="chipName">Taslim Iya</div>
+            <div class="chip-role" id="chipRole">Owner</div>
+          </div>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:0.6"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="user-menu" id="userMenu"></div>
+      </div>
+      <button class="icon-btn" title="Toggle theme" id="themeToggle">
+        <svg id="themeIconDark" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg id="themeIconLight" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
       <button class="icon-btn" title="Notifications">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         <span class="dot"></span>
@@ -70,6 +94,8 @@ BODY = r"""
     <section class="section" id="section-events"></section>
     <section class="section" id="section-tasks"></section>
     <section class="section" id="section-crm"></section>
+    <section class="section" id="section-notes"></section>
+    <section class="section" id="section-team"></section>
   </div>
 </main>
 

@@ -6,6 +6,23 @@ JS1 = r"""
 // ===== STATE =====
 const state = {
   section: 'dashboard',
+  theme: localStorage.getItem('eta-theme') || 'dark',
+  currentUserId: localStorage.getItem('eta-user') || 'u1',
+  users: [
+    {id:'u1', name:'Taslim Iya',        email:'taslim@cambridge-eta.co.uk',  role:'Owner',       permissions:['*']},
+    {id:'u2', name:'Priya Raghavan',    email:'priya@cambridge-eta.co.uk',   role:'Events Lead', permissions:['dashboard','events','tasks','notes']},
+    {id:'u3', name:'Marcus Weatherby',  email:'marcus@cambridge-eta.co.uk',  role:'Finance Lead',permissions:['dashboard','tasks','notes']},
+    {id:'u4', name:'Sofia Chen',        email:'sofia@cambridge-eta.co.uk',   role:'Member Ops',  permissions:['dashboard','tasks','notes','crm']},
+  ],
+  notes: [
+    {id:'n1', authorId:'u1', targetUserId:'u2', visibility:'direct',  title:'Summit keynote priority',         content:'Priya — please lock Sarah Chen before Friday. We need three keynotes confirmed ahead of the printed programme deadline.', createdAt:'2026-04-10', pinned:true},
+    {id:'n2', authorId:'u1', targetUserId:'u3', visibility:'direct',  title:'Q1 reconciliation',               content:'Marcus, focus first on membership dues, then college dinners. Flag any discrepancies over £100 directly to me.', createdAt:'2026-04-09', pinned:false},
+    {id:'n3', authorId:'u1', targetUserId:'u4', visibility:'direct',  title:'Spring cohort onboarding',        content:'Sofia — induction packs should land this week. Double-check mentor pairings against the updated matrix.', createdAt:'2026-04-08', pinned:false},
+    {id:'n4', authorId:'u1', targetUserId:null, visibility:'public',  title:'All-hands: April priorities',     content:'Team, this month is all about the Annual Summit and the spring cohort. Everything else slots around those two. Thank you all for the hard work.', createdAt:'2026-04-07', pinned:true},
+    {id:'n5', authorId:'u2', targetUserId:null, visibility:'public',  title:'Venue notes: Jesus Upper Hall',   content:'Great acoustics but tight AV corner. Ask Tom for the new radio mic kit — the old one cuts out under pressure.', createdAt:'2026-04-06', pinned:false},
+    {id:'n6', authorId:'u2', targetUserId:null, visibility:'private', title:'Personal follow-ups',             content:'- Ping Alex about the investor panel slot\n- Check catering numbers with Priya\n- Confirm Judge AV booking',  createdAt:'2026-04-11', pinned:false},
+    {id:'n7', authorId:'u3', targetUserId:null, visibility:'public',  title:'Expenses policy reminder',        content:'Please submit expense claims within 14 days of the event. Anything older may be deferred to next term.', createdAt:'2026-04-05', pinned:false},
+  ],
   members: [
     {id:1, name:'Alex Thornton', email:'alex.t@cambridge-eta.co.uk', role:'Investor', chapter:'Jesus College', tier:'Platinum', status:'Active', joined:'2023-10-12'},
     {id:2, name:'Priya Raghavan', email:'priya.r@cambridge-eta.co.uk', role:'Founder', chapter:'Trinity', tier:'Gold', status:'Active', joined:'2024-01-08'},
@@ -25,14 +42,16 @@ const state = {
     {id:6, title:'New Member Induction', date:'2026-04-18', time:'17:00', venue:'Clare College, Riley Auditorium', desc:'Onboarding session for the spring cohort of new members. Platform walkthrough and mentor matching.', attendees:24, capacity:50, status:'Open'},
   ],
   tasks: [
-    {id:1, title:'Finalise speaker lineup for Annual Summit', due:'2026-04-15', priority:'High', owner:'Taslim Iya', done:false, project:'Annual Search Fund Summit'},
-    {id:2, title:'Send welcome packs to spring cohort', due:'2026-04-14', priority:'High', owner:'Priya Raghavan', done:false, project:'New Member Induction'},
-    {id:3, title:'Reconcile Q1 membership dues', due:'2026-04-20', priority:'Medium', owner:'Marcus Weatherby', done:false, project:'Finance'},
-    {id:4, title:'Draft investor update newsletter', due:'2026-04-17', priority:'Medium', owner:'Taslim Iya', done:false, project:'Comms'},
-    {id:5, title:'Book private dining for roundtable', due:'2026-04-10', priority:'High', owner:'Sofia Chen', done:true, project:'Investor Roundtable Q2'},
-    {id:6, title:'Update platform brand assets', due:'2026-04-25', priority:'Low', owner:'Daniel Osei', done:false, project:'Platform'},
-    {id:7, title:'Confirm AV for Fireside chat', due:'2026-04-28', priority:'Medium', owner:'Rohan Mehta', done:false, project:'Founders Fireside'},
-    {id:8, title:'Renew Judge Business School booking', due:'2026-04-12', priority:'High', owner:'Taslim Iya', done:true, project:'Deal Workshop'},
+    {id:1, title:'Finalise speaker lineup for Annual Summit',   due:'2026-04-15', priority:'High',   assigneeId:'u2', done:false, project:'Annual Search Fund Summit'},
+    {id:2, title:'Send welcome packs to spring cohort',         due:'2026-04-14', priority:'High',   assigneeId:'u4', done:false, project:'New Member Induction'},
+    {id:3, title:'Reconcile Q1 membership dues',                due:'2026-04-20', priority:'Medium', assigneeId:'u3', done:false, project:'Finance'},
+    {id:4, title:'Draft investor update newsletter',            due:'2026-04-17', priority:'Medium', assigneeId:'u1', done:false, project:'Comms'},
+    {id:5, title:'Book private dining for roundtable',          due:'2026-04-10', priority:'High',   assigneeId:'u4', done:true,  project:'Investor Roundtable Q2'},
+    {id:6, title:'Update platform brand assets',                due:'2026-04-25', priority:'Low',    assigneeId:'u2', done:false, project:'Platform'},
+    {id:7, title:'Confirm AV for Founders Fireside',            due:'2026-04-28', priority:'Medium', assigneeId:'u2', done:false, project:'Founders Fireside'},
+    {id:8, title:'Renew Judge Business School booking',         due:'2026-04-12', priority:'High',   assigneeId:'u1', done:true,  project:'Deal Workshop'},
+    {id:9, title:'File VAT return for Q1',                      due:'2026-04-22', priority:'High',   assigneeId:'u3', done:false, project:'Finance'},
+    {id:10,title:'Publish April member newsletter',             due:'2026-04-18', priority:'Medium', assigneeId:'u4', done:false, project:'Comms'},
   ],
 };
 
@@ -49,6 +68,31 @@ const shortDate = (s) => {
 };
 const initials = (n) => n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
 const esc = (s) => String(s).replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+
+// ===== USERS / PERMISSIONS =====
+function currentUser(){ return state.users.find(u=>u.id===state.currentUserId) || state.users[0]; }
+function isOwner(){ return currentUser().role==='Owner'; }
+function userById(id){ return state.users.find(u=>u.id===id); }
+function userName(id){ const u = userById(id); return u ? u.name : 'Unassigned'; }
+function canAccess(section){
+  const u = currentUser();
+  if(u.permissions.includes('*')) return true;
+  return u.permissions.includes(section);
+}
+function visibleTasks(){
+  if(isOwner()) return state.tasks;
+  return state.tasks.filter(t=>t.assigneeId===state.currentUserId);
+}
+function notesForMe(){
+  const me = state.currentUserId;
+  return state.notes.filter(n=>n.visibility==='direct' && n.targetUserId===me);
+}
+function notesMyOwn(){
+  return state.notes.filter(n=>n.authorId===state.currentUserId);
+}
+function notesTeamPublic(){
+  return state.notes.filter(n=>n.visibility==='public');
+}
 
 function toast(title, msg){
   $('#toastTitle').textContent = title;

@@ -42,6 +42,87 @@ body{
   overflow:hidden;
   font-size:14px;
   line-height:1.5;
+  transition:background 0.3s ease, color 0.3s ease;
+}
+
+/* ===== LIGHT THEME ===== */
+[data-theme="light"]{
+  --bg-0:#ffffff;
+  --bg-1:#ffffff;
+  --bg-2:#faf9ff;
+  --bg-3:#f3efff;
+  --panel:#ffffff;
+  --panel-2:#fafaff;
+  --border:rgba(106,61,255,0.14);
+  --border-strong:rgba(106,61,255,0.32);
+  --text:#0f0a2c;
+  --text-dim:#4e456d;
+  --text-muted:#8a84a8;
+  --purple:#6a3dff;
+  --purple-2:#8a63ff;
+  --purple-glow:rgba(106,61,255,0.35);
+  --shadow:0 20px 48px -24px rgba(106,61,255,0.25);
+}
+[data-theme="light"] body::before{
+  background:
+    radial-gradient(900px 600px at 12% -10%, rgba(138,99,255,0.08), transparent 60%),
+    radial-gradient(800px 500px at 100% 0%, rgba(106,61,255,0.06), transparent 60%),
+    radial-gradient(600px 400px at 50% 110%, rgba(168,139,255,0.05), transparent 60%);
+}
+[data-theme="light"] .sidebar{
+  background:linear-gradient(180deg,#ffffff,#fafaff);
+  border-right:1px solid rgba(106,61,255,0.1);
+}
+[data-theme="light"] .topbar{background:rgba(255,255,255,0.85)}
+[data-theme="light"] .card,
+[data-theme="light"] .kpi,
+[data-theme="light"] .event-card{
+  background:#ffffff;
+  box-shadow:0 1px 2px rgba(106,61,255,0.04),0 8px 24px -16px rgba(106,61,255,0.15);
+}
+[data-theme="light"] .kpi::after{
+  background:radial-gradient(circle,rgba(138,99,255,0.12),transparent 70%);
+}
+[data-theme="light"] .kpi-value{
+  -webkit-text-fill-color:initial;background:none;background-clip:unset;
+  color:#1a0e4a;
+}
+[data-theme="light"] .nav-item{color:#4e456d}
+[data-theme="light"] .nav-item:hover{background:rgba(106,61,255,0.06);color:#0f0a2c}
+[data-theme="light"] .nav-item.active{
+  background:linear-gradient(90deg,rgba(106,61,255,0.12),rgba(106,61,255,0.02));
+  color:#0f0a2c;
+  box-shadow:inset 0 0 0 1px rgba(106,61,255,0.18);
+}
+[data-theme="light"] .search,
+[data-theme="light"] .icon-btn,
+[data-theme="light"] .btn-ghost,
+[data-theme="light"] .tabs{
+  background:#f4f1ff;border-color:rgba(106,61,255,0.14);
+}
+[data-theme="light"] .search input{color:#0f0a2c}
+[data-theme="light"] .task-row{background:#faf9ff}
+[data-theme="light"] .task-row:hover{background:#f3efff}
+[data-theme="light"] .user-card{background:#f4f1ff}
+[data-theme="light"] .input{background:#ffffff;color:#0f0a2c}
+[data-theme="light"] .modal{background:#ffffff}
+[data-theme="light"] .toast{background:#ffffff;color:#0f0a2c}
+[data-theme="light"] .hero{
+  background:linear-gradient(135deg,rgba(138,99,255,0.10),rgba(106,61,255,0.03));
+}
+[data-theme="light"] .table tbody tr:hover{background:rgba(106,61,255,0.05)}
+[data-theme="light"] .donut > div{background:#ffffff !important}
+[data-theme="light"] .contact-cell .name,
+[data-theme="light"] .task-title,
+[data-theme="light"] .event-title,
+[data-theme="light"] .card-title,
+[data-theme="light"] .brand-text .title,
+[data-theme="light"] .user-card .name,
+[data-theme="light"] .page-title{color:#0f0a2c}
+[data-theme="light"] .content::-webkit-scrollbar-thumb{background:rgba(106,61,255,0.18)}
+
+.sidebar,.topbar,.card,.kpi,.event-card,.task-row,.input,.modal,.btn-ghost,.search,.icon-btn,.tabs{
+  transition:background 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 }
 body::before{
   content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
@@ -374,6 +455,78 @@ a{color:inherit;text-decoration:none}
 .tab{padding:8px 14px;border-radius:7px;font-size:12px;font-weight:600;color:var(--text-dim);cursor:pointer;transition:all 0.2s}
 .tab.active{background:linear-gradient(135deg,#8a63ff,#6a3dff);color:#fff;box-shadow:0 4px 12px -4px rgba(138,99,255,0.6)}
 
+/* ===== USER SWITCHER ===== */
+.user-switcher{position:relative}
+.user-chip{
+  display:flex;align-items:center;gap:10px;
+  padding:6px 12px 6px 6px;border-radius:10px;
+  background:rgba(138,99,255,0.08);border:1px solid var(--border);
+  transition:all 0.2s;max-width:200px;
+}
+.user-chip:hover{background:rgba(138,99,255,0.16);border-color:var(--border-strong)}
+.user-chip .avatar{width:30px;height:30px;font-size:11px;border-radius:8px;flex-shrink:0}
+.chip-name{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px}
+.chip-role{font-size:10px;color:var(--text-muted);white-space:nowrap}
+.user-menu{
+  position:absolute;top:calc(100% + 8px);right:0;min-width:280px;z-index:50;
+  background:linear-gradient(180deg,#13112b,#0d0c1f);
+  border:1px solid var(--border-strong);border-radius:12px;
+  box-shadow:var(--shadow);
+  padding:8px;display:none;
+}
+[data-theme="light"] .user-menu{background:#ffffff}
+.user-menu.open{display:block;animation:fadeUp 0.2s ease}
+.user-menu-label{font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);padding:10px 12px 6px;font-weight:600}
+.user-menu-item{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 12px;border-radius:8px;cursor:pointer;transition:background 0.15s;
+}
+.user-menu-item:hover{background:rgba(138,99,255,0.1)}
+.user-menu-item .avatar{width:32px;height:32px;font-size:11px;border-radius:8px}
+.user-menu-item .info{flex:1;min-width:0}
+.user-menu-item .name{font-size:12.5px;font-weight:600;color:var(--text)}
+.user-menu-item .role{font-size:10.5px;color:var(--text-muted)}
+.user-menu-item.current{background:linear-gradient(90deg,rgba(138,99,255,0.18),rgba(138,99,255,0.04))}
+.user-menu-item .check{color:var(--purple-2);opacity:0;transition:opacity 0.2s}
+.user-menu-item.current .check{opacity:1}
+
+/* ===== NOTES ===== */
+.note-card{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:var(--radius);padding:18px 20px;
+  position:relative;transition:all 0.2s;
+}
+.note-card:hover{border-color:var(--border-strong);transform:translateY(-1px);box-shadow:var(--shadow)}
+.note-card.direct{border-left:3px solid #a98bff}
+.note-card.private{border-left:3px solid var(--gold)}
+.note-card.public{border-left:3px solid var(--green)}
+.note-card.pinned::after{
+  content:"";position:absolute;top:14px;right:16px;width:8px;height:8px;border-radius:50%;
+  background:linear-gradient(135deg,#a98bff,#6a3dff);box-shadow:0 0 10px var(--purple-glow);
+}
+.note-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.note-head .avatar{width:28px;height:28px;font-size:10px;border-radius:7px}
+.note-author{font-size:12px;font-weight:600;color:var(--text)}
+.note-meta{font-size:11px;color:var(--text-muted);margin-left:auto}
+.note-title{font-size:14.5px;font-weight:700;margin-bottom:8px;font-family:'Space Grotesk';color:var(--text)}
+.note-body{font-size:12.5px;color:var(--text-dim);line-height:1.6;white-space:pre-wrap}
+.note-foot{display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
+
+/* ===== TEAM PROGRESS ===== */
+.progress-bar{
+  height:6px;background:rgba(138,99,255,0.12);border-radius:6px;overflow:hidden;flex:1;
+}
+.progress-fill{
+  height:100%;background:linear-gradient(90deg,#a98bff,#6a3dff);
+  border-radius:6px;transition:width 0.6s ease;
+  box-shadow:0 0 12px rgba(138,99,255,0.4);
+}
+.team-row{
+  display:flex;align-items:center;gap:16px;padding:14px 0;
+  border-bottom:1px solid var(--border);
+}
+.team-row:last-child{border-bottom:none}
+
 @media (max-width:1100px){
   .grid-4{grid-template-columns:repeat(2,1fr)}
   .grid-3{grid-template-columns:repeat(2,1fr)}
@@ -416,6 +569,15 @@ a{color:inherit;text-decoration:none}
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       <span>Members CRM</span>
     </div>
+    <div class="nav-item" data-nav="notes">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span>Notes</span>
+      <span class="badge" id="notesBadge" style="display:none">0</span>
+    </div>
+    <div class="nav-item" data-nav="team" data-owner-only>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="11" r="4"/><path d="M22 11l-3 3-1.5-1.5"/><path d="M19 3a3 3 0 0 1 0 6"/></svg>
+      <span>Team</span>
+    </div>
   </div>
 
   <div class="sidebar-footer">
@@ -440,6 +602,21 @@ a{color:inherit;text-decoration:none}
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input type="text" placeholder="Search members, events, tasks..." />
       </div>
+      <div class="user-switcher" id="userSwitcher">
+        <button class="user-chip" onclick="toggleUserMenu(event)">
+          <div class="avatar" id="chipAvatar">TI</div>
+          <div style="text-align:left;min-width:0">
+            <div class="chip-name" id="chipName">Taslim Iya</div>
+            <div class="chip-role" id="chipRole">Owner</div>
+          </div>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:0.6"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="user-menu" id="userMenu"></div>
+      </div>
+      <button class="icon-btn" title="Toggle theme" id="themeToggle">
+        <svg id="themeIconDark" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg id="themeIconLight" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
       <button class="icon-btn" title="Notifications">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         <span class="dot"></span>
@@ -456,6 +633,8 @@ a{color:inherit;text-decoration:none}
     <section class="section" id="section-events"></section>
     <section class="section" id="section-tasks"></section>
     <section class="section" id="section-crm"></section>
+    <section class="section" id="section-notes"></section>
+    <section class="section" id="section-team"></section>
   </div>
 </main>
 
@@ -484,6 +663,23 @@ a{color:inherit;text-decoration:none}
 // ===== STATE =====
 const state = {
   section: 'dashboard',
+  theme: localStorage.getItem('eta-theme') || 'dark',
+  currentUserId: localStorage.getItem('eta-user') || 'u1',
+  users: [
+    {id:'u1', name:'Taslim Iya',        email:'taslim@cambridge-eta.co.uk',  role:'Owner',       permissions:['*']},
+    {id:'u2', name:'Priya Raghavan',    email:'priya@cambridge-eta.co.uk',   role:'Events Lead', permissions:['dashboard','events','tasks','notes']},
+    {id:'u3', name:'Marcus Weatherby',  email:'marcus@cambridge-eta.co.uk',  role:'Finance Lead',permissions:['dashboard','tasks','notes']},
+    {id:'u4', name:'Sofia Chen',        email:'sofia@cambridge-eta.co.uk',   role:'Member Ops',  permissions:['dashboard','tasks','notes','crm']},
+  ],
+  notes: [
+    {id:'n1', authorId:'u1', targetUserId:'u2', visibility:'direct',  title:'Summit keynote priority',         content:'Priya — please lock Sarah Chen before Friday. We need three keynotes confirmed ahead of the printed programme deadline.', createdAt:'2026-04-10', pinned:true},
+    {id:'n2', authorId:'u1', targetUserId:'u3', visibility:'direct',  title:'Q1 reconciliation',               content:'Marcus, focus first on membership dues, then college dinners. Flag any discrepancies over £100 directly to me.', createdAt:'2026-04-09', pinned:false},
+    {id:'n3', authorId:'u1', targetUserId:'u4', visibility:'direct',  title:'Spring cohort onboarding',        content:'Sofia — induction packs should land this week. Double-check mentor pairings against the updated matrix.', createdAt:'2026-04-08', pinned:false},
+    {id:'n4', authorId:'u1', targetUserId:null, visibility:'public',  title:'All-hands: April priorities',     content:'Team, this month is all about the Annual Summit and the spring cohort. Everything else slots around those two. Thank you all for the hard work.', createdAt:'2026-04-07', pinned:true},
+    {id:'n5', authorId:'u2', targetUserId:null, visibility:'public',  title:'Venue notes: Jesus Upper Hall',   content:'Great acoustics but tight AV corner. Ask Tom for the new radio mic kit — the old one cuts out under pressure.', createdAt:'2026-04-06', pinned:false},
+    {id:'n6', authorId:'u2', targetUserId:null, visibility:'private', title:'Personal follow-ups',             content:'- Ping Alex about the investor panel slot\n- Check catering numbers with Priya\n- Confirm Judge AV booking',  createdAt:'2026-04-11', pinned:false},
+    {id:'n7', authorId:'u3', targetUserId:null, visibility:'public',  title:'Expenses policy reminder',        content:'Please submit expense claims within 14 days of the event. Anything older may be deferred to next term.', createdAt:'2026-04-05', pinned:false},
+  ],
   members: [
     {id:1, name:'Alex Thornton', email:'alex.t@cambridge-eta.co.uk', role:'Investor', chapter:'Jesus College', tier:'Platinum', status:'Active', joined:'2023-10-12'},
     {id:2, name:'Priya Raghavan', email:'priya.r@cambridge-eta.co.uk', role:'Founder', chapter:'Trinity', tier:'Gold', status:'Active', joined:'2024-01-08'},
@@ -503,14 +699,16 @@ const state = {
     {id:6, title:'New Member Induction', date:'2026-04-18', time:'17:00', venue:'Clare College, Riley Auditorium', desc:'Onboarding session for the spring cohort of new members. Platform walkthrough and mentor matching.', attendees:24, capacity:50, status:'Open'},
   ],
   tasks: [
-    {id:1, title:'Finalise speaker lineup for Annual Summit', due:'2026-04-15', priority:'High', owner:'Taslim Iya', done:false, project:'Annual Search Fund Summit'},
-    {id:2, title:'Send welcome packs to spring cohort', due:'2026-04-14', priority:'High', owner:'Priya Raghavan', done:false, project:'New Member Induction'},
-    {id:3, title:'Reconcile Q1 membership dues', due:'2026-04-20', priority:'Medium', owner:'Marcus Weatherby', done:false, project:'Finance'},
-    {id:4, title:'Draft investor update newsletter', due:'2026-04-17', priority:'Medium', owner:'Taslim Iya', done:false, project:'Comms'},
-    {id:5, title:'Book private dining for roundtable', due:'2026-04-10', priority:'High', owner:'Sofia Chen', done:true, project:'Investor Roundtable Q2'},
-    {id:6, title:'Update platform brand assets', due:'2026-04-25', priority:'Low', owner:'Daniel Osei', done:false, project:'Platform'},
-    {id:7, title:'Confirm AV for Fireside chat', due:'2026-04-28', priority:'Medium', owner:'Rohan Mehta', done:false, project:'Founders Fireside'},
-    {id:8, title:'Renew Judge Business School booking', due:'2026-04-12', priority:'High', owner:'Taslim Iya', done:true, project:'Deal Workshop'},
+    {id:1, title:'Finalise speaker lineup for Annual Summit',   due:'2026-04-15', priority:'High',   assigneeId:'u2', done:false, project:'Annual Search Fund Summit'},
+    {id:2, title:'Send welcome packs to spring cohort',         due:'2026-04-14', priority:'High',   assigneeId:'u4', done:false, project:'New Member Induction'},
+    {id:3, title:'Reconcile Q1 membership dues',                due:'2026-04-20', priority:'Medium', assigneeId:'u3', done:false, project:'Finance'},
+    {id:4, title:'Draft investor update newsletter',            due:'2026-04-17', priority:'Medium', assigneeId:'u1', done:false, project:'Comms'},
+    {id:5, title:'Book private dining for roundtable',          due:'2026-04-10', priority:'High',   assigneeId:'u4', done:true,  project:'Investor Roundtable Q2'},
+    {id:6, title:'Update platform brand assets',                due:'2026-04-25', priority:'Low',    assigneeId:'u2', done:false, project:'Platform'},
+    {id:7, title:'Confirm AV for Founders Fireside',            due:'2026-04-28', priority:'Medium', assigneeId:'u2', done:false, project:'Founders Fireside'},
+    {id:8, title:'Renew Judge Business School booking',         due:'2026-04-12', priority:'High',   assigneeId:'u1', done:true,  project:'Deal Workshop'},
+    {id:9, title:'File VAT return for Q1',                      due:'2026-04-22', priority:'High',   assigneeId:'u3', done:false, project:'Finance'},
+    {id:10,title:'Publish April member newsletter',             due:'2026-04-18', priority:'Medium', assigneeId:'u4', done:false, project:'Comms'},
   ],
 };
 
@@ -527,6 +725,31 @@ const shortDate = (s) => {
 };
 const initials = (n) => n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
 const esc = (s) => String(s).replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+
+// ===== USERS / PERMISSIONS =====
+function currentUser(){ return state.users.find(u=>u.id===state.currentUserId) || state.users[0]; }
+function isOwner(){ return currentUser().role==='Owner'; }
+function userById(id){ return state.users.find(u=>u.id===id); }
+function userName(id){ const u = userById(id); return u ? u.name : 'Unassigned'; }
+function canAccess(section){
+  const u = currentUser();
+  if(u.permissions.includes('*')) return true;
+  return u.permissions.includes(section);
+}
+function visibleTasks(){
+  if(isOwner()) return state.tasks;
+  return state.tasks.filter(t=>t.assigneeId===state.currentUserId);
+}
+function notesForMe(){
+  const me = state.currentUserId;
+  return state.notes.filter(n=>n.visibility==='direct' && n.targetUserId===me);
+}
+function notesMyOwn(){
+  return state.notes.filter(n=>n.authorId===state.currentUserId);
+}
+function notesTeamPublic(){
+  return state.notes.filter(n=>n.visibility==='public');
+}
 
 function toast(title, msg){
   $('#toastTitle').textContent = title;
@@ -551,10 +774,13 @@ const ICONS = {
 <script>
 // ===== DASHBOARD =====
 function renderDashboard(){
+  const me = currentUser();
+  const owner = isOwner();
   const totalMembers = state.members.length;
   const activeMembers = state.members.filter(m=>m.status==='Active').length;
   const upcoming = state.events.length;
-  const openTasks = state.tasks.filter(t=>!t.done).length;
+  const myTasks = visibleTasks();
+  const openTasks = (owner ? state.tasks : myTasks).filter(t=>!t.done).length;
 
   const eventSorted = [...state.events].sort((a,b)=> new Date(a.date)-new Date(b.date)).slice(0,3);
   const recentMembers = [...state.members].slice(-4).reverse();
@@ -584,13 +810,43 @@ function renderDashboard(){
     return `${color} ${from}% ${to}%`;
   }).join(',');
 
+  const firstName = me.name.split(' ')[0];
+  const heroDesc = owner
+    ? `Here is your command centre for the Cambridge ETA Club. ${openTasks} open tasks across the team, ${upcoming} upcoming events, and a steadily growing cohort.`
+    : `Welcome back. You have ${openTasks} open tasks assigned to you and ${notesForMe().length} note${notesForMe().length===1?'':'s'} from leadership waiting for you.`;
+
+  // Team progress (owner only)
+  const teamProgress = owner ? `
+    <div class="card" style="margin-bottom:24px">
+      <div class="section-head">
+        <div><div class="card-title">Team progress</div><div class="card-sub">Live view of each team member's workload</div></div>
+        <button class="btn btn-ghost" onclick="switchSection('team')">Manage team</button>
+      </div>
+      ${state.users.filter(u=>u.role!=='Owner').map(u=>{
+        const theirs = state.tasks.filter(t=>t.assigneeId===u.id);
+        const doneCount = theirs.filter(t=>t.done).length;
+        const pct = theirs.length ? Math.round(doneCount/theirs.length*100) : 0;
+        return `
+        <div class="team-row">
+          <div class="avatar">${initials(u.name)}</div>
+          <div style="min-width:160px">
+            <div style="font-size:13px;font-weight:600;color:var(--text)">${esc(u.name)}</div>
+            <div style="font-size:11px;color:var(--text-muted)">${esc(u.role)}</div>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+          <div style="font-size:12px;color:var(--text-dim);min-width:90px;text-align:right">${doneCount}/${theirs.length} tasks</div>
+          <span class="tag ${pct>=75?'green':pct>=40?'gold':'red'}">${pct}%</span>
+        </div>`;
+      }).join('')}
+    </div>
+  ` : '';
+
   $('#section-dashboard').innerHTML = `
     <div class="hero">
-      <h1>Welcome back, Taslim</h1>
-      <p>Here is your command centre for the Cambridge ETA Club. ${openTasks} open tasks, ${upcoming} upcoming events, and a steadily growing cohort.</p>
+      <h1>Welcome back, ${esc(firstName)}</h1>
+      <p>${heroDesc}</p>
       <div class="hero-actions">
-        <button class="btn btn-primary" onclick="switchSection('events')">Plan an event</button>
-        <button class="btn btn-ghost" onclick="switchSection('crm')">Review members</button>
+        ${owner ? '<button class="btn btn-primary" onclick="switchSection(\'events\')">Plan an event</button><button class="btn btn-ghost" onclick="switchSection(\'team\')">Manage team</button>' : '<button class="btn btn-primary" onclick="switchSection(\'tasks\')">View my tasks</button><button class="btn btn-ghost" onclick="switchSection(\'notes\')">Read notes</button>'}
       </div>
     </div>
 
@@ -620,6 +876,8 @@ function renderDashboard(){
         <div class="kpi-meta"><span class="kpi-trend trend-up">+6%</span> event attendance</div>
       </div>
     </div>
+
+    ${teamProgress}
 
     <div class="grid grid-2-1" style="margin-bottom:24px">
       <div class="card">
@@ -744,8 +1002,10 @@ function renderEvents(){
 <script>
 // ===== TASKS =====
 function renderTasks(){
-  const pending = state.tasks.filter(t=>!t.done);
-  const done = state.tasks.filter(t=>t.done);
+  const owner = isOwner();
+  const scope = visibleTasks();
+  const pending = scope.filter(t=>!t.done);
+  const done = scope.filter(t=>t.done);
   const highP = pending.filter(t=>t.priority==='High').length;
 
   const taskRow = (t) => {
@@ -758,7 +1018,7 @@ function renderTasks(){
         <div class="task-meta">
           <span>${fmtDate(t.due)}</span>
           <span>·</span>
-          <span>${esc(t.owner)}</span>
+          <span>${esc(userName(t.assigneeId))}</span>
           <span>·</span>
           <span>${esc(t.project)}</span>
         </div>
@@ -767,18 +1027,21 @@ function renderTasks(){
     </div>`;
   };
 
+  const ownersCount = new Set(scope.map(t=>t.assigneeId)).size;
+  const cardSub = owner ? 'Everything your team is working on' : 'Tasks assigned to you';
+
   $('#section-tasks').innerHTML = `
     <div class="grid grid-4" style="margin-bottom:24px">
-      <div class="kpi"><div class="kpi-label">Open</div><div class="kpi-value">${pending.length}</div><div class="kpi-meta">${highP} high priority</div></div>
+      <div class="kpi"><div class="kpi-label">${owner?'Open':'My open'}</div><div class="kpi-value">${pending.length}</div><div class="kpi-meta">${highP} high priority</div></div>
       <div class="kpi"><div class="kpi-label">Completed</div><div class="kpi-value">${done.length}</div><div class="kpi-meta">this cycle</div></div>
       <div class="kpi"><div class="kpi-label">Due this week</div><div class="kpi-value">${pending.filter(t=>{const d=new Date(t.due);const n=new Date();return (d-n)/(1000*60*60*24)<=7;}).length}</div><div class="kpi-meta">next 7 days</div></div>
-      <div class="kpi"><div class="kpi-label">Owners</div><div class="kpi-value">${new Set(state.tasks.map(t=>t.owner)).size}</div><div class="kpi-meta">active contributors</div></div>
+      <div class="kpi"><div class="kpi-label">${owner?'Assignees':'Project'}</div><div class="kpi-value">${owner?ownersCount:new Set(scope.map(t=>t.project)).size}</div><div class="kpi-meta">${owner?'active contributors':'workstreams'}</div></div>
     </div>
 
     <div class="card">
       <div class="section-head">
-        <div><div class="card-title">Open tasks</div><div class="card-sub">Everything your team is working on</div></div>
-        <div class="tabs"><div class="tab active">All</div><div class="tab">Mine</div><div class="tab">High</div></div>
+        <div><div class="card-title">${owner?'Open tasks':'My open tasks'}</div><div class="card-sub">${cardSub}</div></div>
+        <div class="tabs"><div class="tab active">All</div><div class="tab">High</div></div>
       </div>
       ${pending.map(taskRow).join('') || '<div class="empty">Nothing pending. Nice work.</div>'}
     </div>
@@ -789,6 +1052,173 @@ function renderTasks(){
       ${done.map(taskRow).join('') || '<div class="empty">Nothing completed yet.</div>'}
     </div>
   `;
+}
+
+// ===== NOTES =====
+let notesTab = 'forme';
+function renderNotes(){
+  const owner = isOwner();
+  const forMe = notesForMe();
+  const mine = notesMyOwn();
+  const team = notesTeamPublic();
+  const pinnedForMe = forMe.filter(n=>n.pinned).length;
+
+  const noteCard = (n) => {
+    const a = userById(n.authorId);
+    const target = n.targetUserId ? userById(n.targetUserId) : null;
+    const visLabel = n.visibility==='direct' ? (target ? `to ${target.name}` : 'direct')
+                    : n.visibility==='public' ? 'team public'
+                    : 'private';
+    const visClass = n.visibility;
+    return `
+    <div class="note-card ${visClass}${n.pinned?' pinned':''}">
+      <div class="note-head">
+        <div class="avatar">${initials(a.name)}</div>
+        <div>
+          <div class="note-author">${esc(a.name)}</div>
+          <div style="font-size:10.5px;color:var(--text-muted)">${esc(a.role)}</div>
+        </div>
+        <div class="note-meta">${fmtDate(n.createdAt)}</div>
+      </div>
+      <div class="note-title">${esc(n.title)}</div>
+      <div class="note-body">${esc(n.content)}</div>
+      <div class="note-foot">
+        <span class="tag ${n.visibility==='public'?'green':n.visibility==='private'?'gold':''}">${visLabel}</span>
+        ${n.authorId===state.currentUserId ? `<button class="btn btn-ghost" style="margin-left:auto;padding:6px 12px;font-size:11px" onclick="deleteNote('${n.id}')">Delete</button>` : ''}
+      </div>
+    </div>`;
+  };
+
+  const lists = {
+    forme: forMe,
+    mine: mine,
+    team: team,
+  };
+  const active = lists[notesTab];
+  const emptyMsg = {
+    forme: 'No direct notes yet. When leadership shares guidance with you, it appears here.',
+    mine: 'You have not written any notes yet. Create one with the button above.',
+    team: 'No public team notes yet.',
+  }[notesTab];
+
+  $('#section-notes').innerHTML = `
+    <div class="grid grid-4" style="margin-bottom:24px">
+      <div class="kpi"><div class="kpi-label">For me</div><div class="kpi-value">${forMe.length}</div><div class="kpi-meta">${pinnedForMe} pinned</div></div>
+      <div class="kpi"><div class="kpi-label">My notes</div><div class="kpi-value">${mine.length}</div><div class="kpi-meta">${mine.filter(n=>n.visibility==='private').length} private</div></div>
+      <div class="kpi"><div class="kpi-label">Team public</div><div class="kpi-value">${team.length}</div><div class="kpi-meta">visible to everyone</div></div>
+      <div class="kpi"><div class="kpi-label">Authors</div><div class="kpi-value">${new Set(state.notes.map(n=>n.authorId)).size}</div><div class="kpi-meta">people sharing</div></div>
+    </div>
+
+    <div class="section-head">
+      <div>
+        <h2>Notes</h2>
+        <div style="font-size:12.5px;color:var(--text-muted);margin-top:3px">Private, public and direct notes across the team</div>
+      </div>
+      <div class="tabs">
+        <div class="tab ${notesTab==='forme'?'active':''}" onclick="switchNotesTab('forme')">For me <span style="opacity:0.6">(${forMe.length})</span></div>
+        <div class="tab ${notesTab==='mine'?'active':''}" onclick="switchNotesTab('mine')">My notes <span style="opacity:0.6">(${mine.length})</span></div>
+        <div class="tab ${notesTab==='team'?'active':''}" onclick="switchNotesTab('team')">Team <span style="opacity:0.6">(${team.length})</span></div>
+      </div>
+    </div>
+
+    <div class="grid grid-2">
+      ${active.length ? active.map(noteCard).join('') : `<div class="card" style="grid-column:1/-1"><div class="empty">${emptyMsg}</div></div>`}
+    </div>
+  `;
+
+  // badge
+  const badge = $('#notesBadge');
+  if(forMe.length){ badge.style.display='inline-block'; badge.textContent=forMe.length; }
+  else { badge.style.display='none'; }
+}
+function switchNotesTab(t){ notesTab = t; renderNotes(); }
+function deleteNote(id){
+  state.notes = state.notes.filter(n=>n.id!==id);
+  renderNotes();
+  toast('Note deleted','Removed from your notes');
+}
+
+// ===== TEAM =====
+function renderTeam(){
+  if(!isOwner()){
+    $('#section-team').innerHTML = `<div class="card"><div class="empty">Only the Owner can manage the team. Switch user from the topbar to see this view.</div></div>`;
+    return;
+  }
+  const PERM_OPTIONS = ['dashboard','events','tasks','crm','notes'];
+  const rows = state.users.map(u=>{
+    const theirs = state.tasks.filter(t=>t.assigneeId===u.id);
+    const doneCount = theirs.filter(t=>t.done).length;
+    const overdue = theirs.filter(t=>!t.done && new Date(t.due) < new Date()).length;
+    const pct = theirs.length ? Math.round(doneCount/theirs.length*100) : 0;
+    const isO = u.role==='Owner';
+    const perms = isO ? '<span class="tag">Full access</span>' :
+      PERM_OPTIONS.map(p=>{
+        const has = u.permissions.includes(p);
+        return `<span class="tag ${has?'green':'red'}" style="cursor:pointer" onclick="togglePerm('${u.id}','${p}')">${has?'':'—'} ${p}</span>`;
+      }).join(' ');
+    return `
+    <tr>
+      <td>
+        <div class="contact-cell">
+          <div class="avatar">${initials(u.name)}</div>
+          <div class="info">
+            <div class="name">${esc(u.name)}</div>
+            <div class="email">${esc(u.email)}</div>
+          </div>
+        </div>
+      </td>
+      <td>${esc(u.role)}</td>
+      <td style="min-width:280px">${perms}</td>
+      <td style="min-width:180px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="progress-bar" style="min-width:90px"><div class="progress-fill" style="width:${pct}%"></div></div>
+          <span style="font-size:11.5px;color:var(--text-muted)">${doneCount}/${theirs.length}</span>
+        </div>
+      </td>
+      <td>${overdue>0?`<span class="tag red">${overdue} overdue</span>`:`<span class="tag green">on track</span>`}</td>
+      <td>
+        <button class="btn btn-ghost" style="padding:6px 12px;font-size:11px" onclick="writeNoteTo('${u.id}')">${isO?'Note':'Write note'}</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  $('#section-team').innerHTML = `
+    <div class="grid grid-4" style="margin-bottom:24px">
+      <div class="kpi"><div class="kpi-label">Team size</div><div class="kpi-value">${state.users.length}</div><div class="kpi-meta">active members</div></div>
+      <div class="kpi"><div class="kpi-label">Tasks assigned</div><div class="kpi-value">${state.tasks.length}</div><div class="kpi-meta">${state.tasks.filter(t=>!t.done).length} open</div></div>
+      <div class="kpi"><div class="kpi-label">Completion</div><div class="kpi-value">${state.tasks.length?Math.round(state.tasks.filter(t=>t.done).length/state.tasks.length*100):0}%</div><div class="kpi-meta">across the team</div></div>
+      <div class="kpi"><div class="kpi-label">Direct notes</div><div class="kpi-value">${state.notes.filter(n=>n.visibility==='direct').length}</div><div class="kpi-meta">leadership to team</div></div>
+    </div>
+
+    <div class="card">
+      <div class="section-head">
+        <div><div class="card-title">Team members</div><div class="card-sub">Monitor progress, grant section access, and leave direct notes</div></div>
+        <button class="btn btn-primary" onclick="openNewTeamMemberModal()">Add team member</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="table">
+          <thead>
+            <tr><th>Member</th><th>Role</th><th>Permissions</th><th>Progress</th><th>Status</th><th></th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <div style="margin-top:14px;font-size:11.5px;color:var(--text-muted)">Tip: click any permission tag to toggle access. Use the topbar user switcher to preview the app as that team member.</div>
+    </div>
+  `;
+}
+
+function togglePerm(uid, perm){
+  const u = userById(uid);
+  if(!u || u.role==='Owner') return;
+  const i = u.permissions.indexOf(perm);
+  if(i>=0) u.permissions.splice(i,1); else u.permissions.push(perm);
+  renderTeam();
+  toast('Permission updated', `${u.name}: ${perm} ${i>=0?'removed':'granted'}`);
+}
+
+function writeNoteTo(uid){
+  openNewNoteModal(uid);
 }
 
 function toggleTask(id){
@@ -964,15 +1394,176 @@ function saveMember(){
   toast('Member added', esc(name));
 }
 
+// ===== NOTES MODAL =====
+function openNewNoteModal(prefillTargetId){
+  const owner = isOwner();
+  const visibilityOptions = owner
+    ? '<option value="direct">Direct to a team member</option><option value="public">Public (whole team)</option><option value="private">Private (just me)</option>'
+    : '<option value="private">Private (just me)</option><option value="public">Public (whole team)</option>';
+  const targetOptions = state.users.filter(u=>u.id!==state.currentUserId).map(u=>`<option value="${u.id}" ${prefillTargetId===u.id?'selected':''}>${esc(u.name)} · ${esc(u.role)}</option>`).join('');
+  openModal(`
+    <h3>New note</h3>
+    <div class="modal-sub">Capture a thought, guidance or briefing.</div>
+    <div class="field"><label>Visibility</label><select class="input" id="n_vis" onchange="updateNoteVisibility()">${visibilityOptions}</select></div>
+    <div class="field" id="n_target_field" style="${owner?'':'display:none'}"><label>Direct to</label><select class="input" id="n_target">${targetOptions}</select></div>
+    <div class="field"><label>Title</label><input class="input" id="n_title" placeholder="e.g. Budget review priorities"/></div>
+    <div class="field"><label>Content</label><textarea class="input" id="n_content" rows="5" placeholder="Write your note..."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNote()">Save note</button>
+    </div>
+  `);
+  updateNoteVisibility();
+}
+function updateNoteVisibility(){
+  const v = $('#n_vis').value;
+  $('#n_target_field').style.display = v==='direct' ? 'block' : 'none';
+}
+function saveNote(){
+  const title = $('#n_title').value.trim();
+  const content = $('#n_content').value.trim();
+  const vis = $('#n_vis').value;
+  if(!title || !content){ toast('Missing fields','Please add a title and content'); return; }
+  const target = vis==='direct' ? $('#n_target').value : null;
+  state.notes.unshift({
+    id: 'n'+Date.now(),
+    authorId: state.currentUserId,
+    targetUserId: target,
+    visibility: vis,
+    title, content,
+    createdAt: new Date().toISOString().slice(0,10),
+    pinned: false,
+  });
+  closeModal();
+  if(vis==='direct') notesTab='forme';
+  else if(vis==='private') notesTab='mine';
+  else notesTab='team';
+  renderNotes(); renderDashboard();
+  toast('Note saved', vis==='direct' ? `Sent to ${userName(target)}` : vis==='public' ? 'Visible to the whole team' : 'Visible only to you');
+}
+
+// ===== TEAM MEMBER MODAL =====
+function openNewTeamMemberModal(){
+  openModal(`
+    <h3>Add team member</h3>
+    <div class="modal-sub">Grant someone access to the platform and assign their scope.</div>
+    <div class="field"><label>Full name</label><input class="input" id="tm_name"/></div>
+    <div class="field"><label>Email</label><input class="input" id="tm_email" type="email"/></div>
+    <div class="field"><label>Role</label><input class="input" id="tm_role" placeholder="e.g. Comms Lead"/></div>
+    <div class="field"><label>Permissions</label>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px">
+        ${['dashboard','events','tasks','crm','notes'].map(p=>`
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;cursor:pointer">
+            <input type="checkbox" class="tm_perm" value="${p}" ${p==='dashboard'||p==='tasks'||p==='notes'?'checked':''}/>${p}
+          </label>
+        `).join('')}
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTeamMember()">Add member</button>
+    </div>
+  `);
+}
+function saveTeamMember(){
+  const name = $('#tm_name').value.trim();
+  if(!name){ toast('Missing name','Enter the team member\'s name'); return; }
+  const perms = Array.from($$('.tm_perm')).filter(c=>c.checked).map(c=>c.value);
+  state.users.push({
+    id: 'u'+Date.now(),
+    name,
+    email: $('#tm_email').value || (name.toLowerCase().replace(/\s+/g,'.')+'@cambridge-eta.co.uk'),
+    role: $('#tm_role').value || 'Team Member',
+    permissions: perms,
+  });
+  closeModal();
+  renderTeam(); renderUserSwitcher();
+  toast('Team member added', esc(name));
+}
+
+// ===== THEME =====
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme', state.theme);
+  $('#themeIconDark').style.display = state.theme==='dark' ? 'block' : 'none';
+  $('#themeIconLight').style.display = state.theme==='light' ? 'block' : 'none';
+}
+function toggleTheme(){
+  state.theme = state.theme==='dark' ? 'light' : 'dark';
+  localStorage.setItem('eta-theme', state.theme);
+  applyTheme();
+  toast('Theme switched', `Now using ${state.theme} mode`);
+}
+
+// ===== USER SWITCHER =====
+function renderUserSwitcher(){
+  const me = currentUser();
+  $('#chipAvatar').textContent = initials(me.name);
+  $('#chipName').textContent = me.name;
+  $('#chipRole').textContent = me.role;
+  const menu = $('#userMenu');
+  menu.innerHTML = `
+    <div class="user-menu-label">Viewing as</div>
+    ${state.users.map(u=>`
+      <div class="user-menu-item ${u.id===state.currentUserId?'current':''}" onclick="switchUser('${u.id}')">
+        <div class="avatar">${initials(u.name)}</div>
+        <div class="info">
+          <div class="name">${esc(u.name)}</div>
+          <div class="role">${esc(u.role)}</div>
+        </div>
+        <svg class="check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+    `).join('')}
+    <div style="padding:10px 12px;border-top:1px solid var(--border);margin-top:6px;font-size:10.5px;color:var(--text-muted)">
+      Simulates logging in as that team member. Sections and data filter by their permissions.
+    </div>
+  `;
+}
+function toggleUserMenu(e){
+  if(e) e.stopPropagation();
+  $('#userMenu').classList.toggle('open');
+}
+function switchUser(uid){
+  state.currentUserId = uid;
+  localStorage.setItem('eta-user', uid);
+  $('#userMenu').classList.remove('open');
+  renderUserSwitcher();
+  applyPermissions();
+  renderDashboard(); renderEvents(); renderTasks(); renderCrm(); renderNotes(); renderTeam();
+  const me = currentUser();
+  // If the current section isn't allowed, fall back to dashboard
+  if(!canAccess(state.section) && state.section!=='dashboard') switchSection('dashboard');
+  else switchSection(state.section);
+  toast('Switched user', `Now viewing as ${me.name}`);
+}
+document.addEventListener('click', (e)=>{
+  const sw = document.getElementById('userSwitcher');
+  if(sw && !sw.contains(e.target)) $('#userMenu').classList.remove('open');
+});
+
+// ===== PERMISSIONS: sidebar visibility =====
+function applyPermissions(){
+  const owner = isOwner();
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    const nav = n.dataset.nav;
+    const ownerOnly = n.hasAttribute('data-owner-only');
+    const allowed = canAccess(nav) && (!ownerOnly || owner);
+    n.style.display = allowed ? '' : 'none';
+  });
+}
+
 // ===== ROUTER =====
 const SECTION_CONFIG = {
-  dashboard: {title:'Dashboard', subtitle:'Your club at a glance', btn:'New Event', action: openNewEventModal},
-  events:    {title:'Events',    subtitle:'Calendar, planning & capacity', btn:'New Event', action: openNewEventModal},
-  tasks:     {title:'Tasks',     subtitle:'What the team is working on', btn:'New Task', action: openNewTaskModal},
-  crm:       {title:'Members CRM', subtitle:'Directory of the Cambridge ETA community', btn:'Add Member', action: openNewMemberModal},
+  dashboard: {title:'Dashboard',    subtitle:'Your club at a glance',                  btn:'New Event',  action: openNewEventModal},
+  events:    {title:'Events',       subtitle:'Calendar, planning & capacity',          btn:'New Event',  action: openNewEventModal},
+  tasks:     {title:'Tasks',        subtitle:'What you are working on',                btn:'New Task',   action: openNewTaskModal},
+  crm:       {title:'Members CRM',  subtitle:'Directory of the Cambridge ETA community', btn:'Add Member', action: openNewMemberModal},
+  notes:     {title:'Notes',        subtitle:'Private, public & direct notes',         btn:'New Note',   action: ()=>openNewNoteModal()},
+  team:      {title:'Team',         subtitle:'Manage permissions and monitor progress',btn:'Add Member', action: openNewTeamMemberModal},
 };
 
 function switchSection(name){
+  if(!canAccess(name)){ toast('No access', `You do not have permission to view ${name}`); return; }
+  if(name==='team' && !isOwner()){ toast('Owner only','Only the Owner can manage the team'); return; }
   state.section = name;
   $$('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.nav===name));
   $$('.section').forEach(s=>s.classList.toggle('active', s.id===`section-${name}`));
@@ -986,15 +1577,23 @@ function switchSection(name){
   if(name==='events') renderEvents();
   if(name==='tasks') renderTasks();
   if(name==='crm') renderCrm();
+  if(name==='notes') renderNotes();
+  if(name==='team') renderTeam();
 }
 
 $$('.nav-item').forEach(n=>n.addEventListener('click',()=>switchSection(n.dataset.nav)));
+$('#themeToggle').addEventListener('click', toggleTheme);
 
 // ===== BOOT =====
+applyTheme();
+renderUserSwitcher();
+applyPermissions();
 renderDashboard();
 renderEvents();
 renderTasks();
 renderCrm();
+renderNotes();
+renderTeam();
 switchSection('dashboard');
 </script>
 </body>

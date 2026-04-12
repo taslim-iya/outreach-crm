@@ -5,10 +5,13 @@ JS2 = r"""
 <script>
 // ===== DASHBOARD =====
 function renderDashboard(){
+  const me = currentUser();
+  const owner = isOwner();
   const totalMembers = state.members.length;
   const activeMembers = state.members.filter(m=>m.status==='Active').length;
   const upcoming = state.events.length;
-  const openTasks = state.tasks.filter(t=>!t.done).length;
+  const myTasks = visibleTasks();
+  const openTasks = (owner ? state.tasks : myTasks).filter(t=>!t.done).length;
 
   const eventSorted = [...state.events].sort((a,b)=> new Date(a.date)-new Date(b.date)).slice(0,3);
   const recentMembers = [...state.members].slice(-4).reverse();
@@ -38,13 +41,43 @@ function renderDashboard(){
     return `${color} ${from}% ${to}%`;
   }).join(',');
 
+  const firstName = me.name.split(' ')[0];
+  const heroDesc = owner
+    ? `Here is your command centre for the Cambridge ETA Club. ${openTasks} open tasks across the team, ${upcoming} upcoming events, and a steadily growing cohort.`
+    : `Welcome back. You have ${openTasks} open tasks assigned to you and ${notesForMe().length} note${notesForMe().length===1?'':'s'} from leadership waiting for you.`;
+
+  // Team progress (owner only)
+  const teamProgress = owner ? `
+    <div class="card" style="margin-bottom:24px">
+      <div class="section-head">
+        <div><div class="card-title">Team progress</div><div class="card-sub">Live view of each team member's workload</div></div>
+        <button class="btn btn-ghost" onclick="switchSection('team')">Manage team</button>
+      </div>
+      ${state.users.filter(u=>u.role!=='Owner').map(u=>{
+        const theirs = state.tasks.filter(t=>t.assigneeId===u.id);
+        const doneCount = theirs.filter(t=>t.done).length;
+        const pct = theirs.length ? Math.round(doneCount/theirs.length*100) : 0;
+        return `
+        <div class="team-row">
+          <div class="avatar">${initials(u.name)}</div>
+          <div style="min-width:160px">
+            <div style="font-size:13px;font-weight:600;color:var(--text)">${esc(u.name)}</div>
+            <div style="font-size:11px;color:var(--text-muted)">${esc(u.role)}</div>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+          <div style="font-size:12px;color:var(--text-dim);min-width:90px;text-align:right">${doneCount}/${theirs.length} tasks</div>
+          <span class="tag ${pct>=75?'green':pct>=40?'gold':'red'}">${pct}%</span>
+        </div>`;
+      }).join('')}
+    </div>
+  ` : '';
+
   $('#section-dashboard').innerHTML = `
     <div class="hero">
-      <h1>Welcome back, Taslim</h1>
-      <p>Here is your command centre for the Cambridge ETA Club. ${openTasks} open tasks, ${upcoming} upcoming events, and a steadily growing cohort.</p>
+      <h1>Welcome back, ${esc(firstName)}</h1>
+      <p>${heroDesc}</p>
       <div class="hero-actions">
-        <button class="btn btn-primary" onclick="switchSection('events')">Plan an event</button>
-        <button class="btn btn-ghost" onclick="switchSection('crm')">Review members</button>
+        ${owner ? '<button class="btn btn-primary" onclick="switchSection(\'events\')">Plan an event</button><button class="btn btn-ghost" onclick="switchSection(\'team\')">Manage team</button>' : '<button class="btn btn-primary" onclick="switchSection(\'tasks\')">View my tasks</button><button class="btn btn-ghost" onclick="switchSection(\'notes\')">Read notes</button>'}
       </div>
     </div>
 
@@ -74,6 +107,8 @@ function renderDashboard(){
         <div class="kpi-meta"><span class="kpi-trend trend-up">+6%</span> event attendance</div>
       </div>
     </div>
+
+    ${teamProgress}
 
     <div class="grid grid-2-1" style="margin-bottom:24px">
       <div class="card">
