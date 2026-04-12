@@ -142,12 +142,16 @@ ALTER TABLE public.eta_notes   ENABLE ROW LEVEL SECURITY;
 -- (needed to show assignee names, the team panel, and note authors).
 -- Only the Owner can modify role / permissions / other profiles.
 -- Each user can update their own name.
+-- Each user can create their OWN profile row (client-side self-heal
+-- fallback in case the signup trigger silently fails).
 DROP POLICY IF EXISTS eta_users_select        ON public.eta_users;
+DROP POLICY IF EXISTS eta_users_insert_self   ON public.eta_users;
 DROP POLICY IF EXISTS eta_users_update_self   ON public.eta_users;
 DROP POLICY IF EXISTS eta_users_update_owner  ON public.eta_users;
 DROP POLICY IF EXISTS eta_users_delete_owner  ON public.eta_users;
 
 CREATE POLICY eta_users_select       ON public.eta_users FOR SELECT TO authenticated USING (true);
+CREATE POLICY eta_users_insert_self  ON public.eta_users FOR INSERT TO authenticated WITH CHECK (id = auth.uid());
 CREATE POLICY eta_users_update_self  ON public.eta_users FOR UPDATE TO authenticated USING (id = auth.uid()) WITH CHECK (id = auth.uid());
 CREATE POLICY eta_users_update_owner ON public.eta_users FOR UPDATE TO authenticated USING (public.eta_is_owner()) WITH CHECK (public.eta_is_owner());
 CREATE POLICY eta_users_delete_owner ON public.eta_users FOR DELETE TO authenticated USING (public.eta_is_owner());

@@ -703,6 +703,28 @@ async function loadAll(){
   state.profile = state.users.find(u => u.id === state.session.user.id) || null;
 }
 
+async function selfHealProfile(session){
+  // Happens when the account exists in auth.users but the signup
+  // trigger never created an eta_users row (migration wasn't run yet,
+  // signed up on an older schema, trigger error, etc.).
+  // We try to insert the missing profile ourselves. The eta_users_insert_self
+  // RLS policy allows this only when id = auth.uid().
+  const existingUsers = await sb.from('eta_users').select('id').limit(1);
+  const isFirstUser = !existingUsers.error && (existingUsers.data || []).length === 0;
+  const u = session.user;
+  const name = (u.user_metadata && u.user_metadata.name) || (u.email ? u.email.split('@')[0] : 'User');
+  const payload = {
+    id: u.id,
+    email: u.email,
+    name,
+    role: isFirstUser ? 'Owner' : 'Member',
+    permissions: isFirstUser ? ['*'] : ['dashboard','tasks','notes'],
+  };
+  const { data, error } = await sb.from('eta_users').insert(payload).select().single();
+  if(error) return { error };
+  return { data };
+}
+
 async function onSignedIn(session){
   state.session = session;
   $('#bootOverlay').classList.add('show');
@@ -716,11 +738,27 @@ async function onSignedIn(session){
     return;
   }
   if(!state.profile){
-    // Profile row missing — trigger didn't fire or RLS blocked it
-    $('#bootOverlay').classList.remove('show');
-    showAuthError('Your account is missing a profile row. Contact the Owner or re-run the migration.');
-    $('#authWrap').classList.add('show');
-    return;
+    // Profile row missing — try to self-heal by inserting it directly.
+    const heal = await selfHealProfile(session);
+    if(heal.error){
+      $('#bootOverlay').classList.remove('show');
+      showAuthError(
+        'Your account is missing a profile row and self-heal failed: ' +
+        (heal.error.message || 'unknown error') +
+        '. Run the backfill migration (supabase/migrations/20260412130000_eta_profile_backfill.sql) in your Supabase SQL editor, then reload.'
+      );
+      $('#authWrap').classList.add('show');
+      return;
+    }
+    // Re-fetch so we have the definitive row
+    await loadAll();
+    if(!state.profile){
+      $('#bootOverlay').classList.remove('show');
+      showAuthError('Profile self-heal inserted a row but could not read it back. Please reload.');
+      $('#authWrap').classList.add('show');
+      return;
+    }
+    toast('Welcome', `Profile created for ${state.profile.name}`);
   }
   hideAuthScreen();
   $('#bootOverlay').classList.remove('show');
