@@ -2,39 +2,6 @@
 """Part 2: appends HTML body markup (sidebar, topbar, sections) to index.html."""
 
 BODY = r"""
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</div><!-- close the .app wrapper opened in HEAD so boot/auth are siblings of .app, not descendants (display:none would hide them otherwise) -->
-
-<!-- Boot overlay (while we resolve session) -->
-<div class="boot-overlay show" id="bootOverlay">
-  <div class="spinner"></div>
-  <div class="boot-label">Connecting...</div>
-</div>
-
-<!-- Auth screen -->
-<div class="auth-wrap" id="authWrap">
-  <button class="auth-theme-toggle" id="authThemeToggle" title="Toggle theme">
-    <svg id="authThemeIconDark" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-    <svg id="authThemeIconLight" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-  </button>
-  <div class="auth-card">
-    <div class="auth-logo">E</div>
-    <h2>Cambridge ETA Club</h2>
-    <div class="auth-sub">Sign in to the management platform</div>
-    <div class="auth-tabs">
-      <div class="tab active" data-auth-tab="signin" onclick="setAuthTab('signin')">Sign in</div>
-      <div class="tab" data-auth-tab="signup" onclick="setAuthTab('signup')">Create account</div>
-    </div>
-    <div class="auth-error" id="authError"></div>
-    <div id="authFieldName" class="field" style="display:none"><label>Full name</label><input class="input" id="authName" placeholder="e.g. Taslim Iya"/></div>
-    <div class="field"><label>Email</label><input class="input" id="authEmail" type="email" placeholder="you@cambridge-eta.co.uk"/></div>
-    <div class="field"><label>Password</label><input class="input" id="authPassword" type="password" placeholder="At least 8 characters"/></div>
-    <button class="btn btn-primary auth-submit" id="authSubmit" onclick="handleAuthSubmit()">Sign in</button>
-    <div class="auth-hint" id="authHint">The first person to sign up becomes the Owner. Everyone else starts as a Member and the Owner grants access.</div>
-  </div>
-</div>
-
-<div class="app"><!-- reopen .app wrapper; sidebar + main live inside -->
 <aside class="sidebar">
   <div class="brand">
     <div class="brand-mark">E</div>

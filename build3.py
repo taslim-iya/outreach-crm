@@ -4,24 +4,144 @@
 JS1 = r"""
 <script>
 // ===== STATE =====
-// ===== SUPABASE CLIENT =====
-const SUPABASE_URL = 'https://ygreplqxqazgxkudonso.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlncmVwbHF4cWF6Z3hrdWRvbnNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3MDY0MTIsImV4cCI6MjA4NTI4MjQxMn0.zBJK7nL0E0RXADUFaVr6vMxpyQgMO0eauxUuFfPkCAk';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: { persistSession: true, autoRefreshToken: true, storageKey: 'eta-auth' }
-});
+// ===== LOCAL STORAGE "SUPABASE" SHIM =====
+// This app runs entirely in the browser. There is no backend, no auth.
+// We expose a small query builder that matches the subset of the
+// Supabase JS API used by the rest of the code so every existing
+// save/update/delete site keeps working without changes.
+
+const LOCAL_DATA_KEY = 'eta-local-data-v1';
+const LOCAL_OWNER_ID = 'local-owner';
+
+function _loadLocal(){
+  try {
+    const raw = localStorage.getItem(LOCAL_DATA_KEY);
+    if(raw) return JSON.parse(raw);
+  } catch(e){}
+  // First run: seed with a single Owner so profile-dependent features work.
+  const seed = {
+    eta_users: [{
+      id: LOCAL_OWNER_ID,
+      email: 'owner@local',
+      name: 'Owner',
+      role: 'Owner',
+      permissions: ['*'],
+      created_at: new Date().toISOString(),
+    }],
+    eta_events:  [],
+    eta_tasks:   [],
+    eta_members: [],
+    eta_notes:   [],
+  };
+  localStorage.setItem(LOCAL_DATA_KEY, JSON.stringify(seed));
+  return seed;
+}
+function _saveLocal(data){
+  localStorage.setItem(LOCAL_DATA_KEY, JSON.stringify(data));
+}
+function _genId(){
+  return 'loc_' + Math.random().toString(36).slice(2, 11) + Date.now().toString(36);
+}
+
+class LocalQuery {
+  constructor(table){
+    this.table = table;
+    this.op = null;
+    this.payload = null;
+    this.patch = null;
+    this.filters = [];
+    this.orderBy = null;
+    this.limitN = null;
+    this.single_ = false;
+  }
+  select(){ if(!this.op) this.op = 'select'; return this; }
+  insert(payload){ this.op = 'insert'; this.payload = payload; return this; }
+  update(patch){ this.op = 'update'; this.patch = patch; return this; }
+  delete(){ this.op = 'delete'; return this; }
+  eq(col, val){ this.filters.push({col, val}); return this; }
+  order(col, opts){ this.orderBy = {col, opts: opts || {}}; return this; }
+  limit(n){ this.limitN = n; return this; }
+  single(){ this.single_ = true; return this; }
+  then(onResolve, onReject){
+    return Promise.resolve().then(() => this._run()).then(onResolve, onReject);
+  }
+  _matches(row){
+    return this.filters.every(f => row[f.col] === f.val);
+  }
+  _run(){
+    const data = _loadLocal();
+    const rows = data[this.table] || [];
+    try {
+      if(this.op === 'select' || this.op === null){
+        let result = rows.filter(r => this._matches(r));
+        if(this.orderBy){
+          const {col, opts} = this.orderBy;
+          const asc = opts.ascending !== false;
+          result = result.slice().sort((a,b) => {
+            const av = a[col], bv = b[col];
+            if(av == null && bv == null) return 0;
+            if(av == null) return 1;
+            if(bv == null) return -1;
+            if(av === bv) return 0;
+            return asc ? (av > bv ? 1 : -1) : (av > bv ? -1 : 1);
+          });
+        }
+        if(this.limitN != null) result = result.slice(0, this.limitN);
+        if(this.single_) return { data: result[0] || null, error: null };
+        return { data: result, error: null };
+      }
+      if(this.op === 'insert'){
+        const list = Array.isArray(this.payload) ? this.payload : [this.payload];
+        const inserted = list.map(p => ({
+          id: p.id || _genId(),
+          created_at: new Date().toISOString(),
+          ...p,
+        }));
+        data[this.table] = [...rows, ...inserted];
+        _saveLocal(data);
+        if(this.single_) return { data: inserted[0], error: null };
+        return { data: inserted, error: null };
+      }
+      if(this.op === 'update'){
+        const updated = [];
+        const newRows = rows.map(r => {
+          if(this._matches(r)){
+            const u = { ...r, ...this.patch };
+            updated.push(u);
+            return u;
+          }
+          return r;
+        });
+        data[this.table] = newRows;
+        _saveLocal(data);
+        if(this.single_) return { data: updated[0] || null, error: null };
+        return { data: updated, error: null };
+      }
+      if(this.op === 'delete'){
+        data[this.table] = rows.filter(r => !this._matches(r));
+        _saveLocal(data);
+        return { data: null, error: null };
+      }
+      return { data: null, error: null };
+    } catch(e){
+      return { data: null, error: { message: e.message || String(e) } };
+    }
+  }
+}
+
+const sb = {
+  from(table){ return new LocalQuery(table); }
+};
 
 const state = {
   section: 'dashboard',
   theme: localStorage.getItem('eta-theme') || 'dark',
-  session: null,
-  profile: null,   // current user's eta_users row
-  users:   [],     // all eta_users
+  profile: null,   // the hardcoded local Owner
+  users:   [],
   events:  [],
   tasks:   [],
   members: [],
   notes:   [],
-  loading: true,
 };
 
 // ===== HELPERS =====

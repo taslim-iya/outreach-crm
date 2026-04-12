@@ -501,10 +501,8 @@ async function updateUserRole(uid, nextRole){
 function applyTheme(){
   document.documentElement.setAttribute('data-theme', state.theme);
   const show = (id, on) => { const el = document.getElementById(id); if(el) el.style.display = on ? 'block' : 'none'; };
-  show('themeIconDark',      state.theme==='dark');
-  show('themeIconLight',     state.theme==='light');
-  show('authThemeIconDark',  state.theme==='dark');
-  show('authThemeIconLight', state.theme==='light');
+  show('themeIconDark',  state.theme==='dark');
+  show('themeIconLight', state.theme==='light');
 }
 function toggleTheme(){
   state.theme = state.theme==='dark' ? 'light' : 'dark';
@@ -526,17 +524,17 @@ function renderUserMenu(){
       <div class="avatar">${initials(me.name)}</div>
       <div style="min-width:0;flex:1">
         <div style="font-size:13px;font-weight:600;color:var(--text)">${esc(me.name)}</div>
-        <div style="font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(me.email)}</div>
+        <div style="font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(me.email||'')}</div>
       </div>
     </div>
-    <div style="padding:10px 12px;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;font-weight:600">Signed in as</div>
+    <div style="padding:10px 12px;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;font-weight:600">Role</div>
     <div style="padding:0 12px 10px;display:flex;align-items:center;justify-content:space-between;gap:10px">
       <span class="tag">${esc(me.role)}</span>
       <span style="font-size:10.5px;color:var(--text-muted)">${(me.permissions||[]).join(' · ') || 'No access'}</span>
     </div>
-    <div class="user-menu-item" onclick="signOut()" style="border-top:1px solid var(--border);margin-top:6px">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-      <div class="info"><div class="name">Sign out</div><div class="role">End this session</div></div>
+    <div class="user-menu-item" onclick="resetLocalData()" style="border-top:1px solid var(--border);margin-top:6px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+      <div class="info"><div class="name">Reset all data</div><div class="role">Wipe local storage</div></div>
     </div>
   `;
 }
@@ -545,13 +543,10 @@ function toggleUserMenu(e){
   $('#userMenu').classList.toggle('open');
 }
 
-async function signOut(){
-  await sb.auth.signOut();
-  state.session = null;
-  state.profile = null;
-  state.users = state.events = state.tasks = state.members = state.notes = [];
-  showAuthScreen();
-  toast('Signed out','See you soon');
+function resetLocalData(){
+  if(!confirm('This will permanently delete all events, tasks, members and notes stored in this browser. Continue?')) return;
+  localStorage.removeItem(LOCAL_DATA_KEY);
+  window.location.reload();
 }
 document.addEventListener('click', (e)=>{
   const sw = document.getElementById('userSwitcher');
@@ -604,8 +599,6 @@ $$('.nav-item').forEach(n=>n.addEventListener('click',()=>switchSection(n.datase
 {
   const tt = document.getElementById('themeToggle');
   if(tt) tt.addEventListener('click', toggleTheme);
-  const att = document.getElementById('authThemeToggle');
-  if(att) att.addEventListener('click', toggleTheme);
   const aib = document.getElementById('aiBtn');
   if(aib) aib.addEventListener('click', openAiDrawer);
   const aii = document.getElementById('aiInput');
@@ -627,87 +620,7 @@ $$('.nav-item').forEach(n=>n.addEventListener('click',()=>switchSection(n.datase
   });
 }
 
-// ===== AUTH FLOW =====
-let authTab = 'signin';
-function setAuthTab(t){
-  authTab = t;
-  document.querySelectorAll('[data-auth-tab]').forEach(el => {
-    el.classList.toggle('active', el.dataset.authTab === t);
-  });
-  $('#authFieldName').style.display = t === 'signup' ? 'block' : 'none';
-  $('#authSubmit').textContent = t === 'signup' ? 'Create account' : 'Sign in';
-  $('#authError').classList.remove('show');
-}
-function showAuthError(msg, opts){
-  const el = $('#authError');
-  if(opts && opts.html){
-    el.innerHTML = msg;
-  } else {
-    el.textContent = msg;
-  }
-  el.classList.add('show');
-}
-function showSetupRequired(rawError){
-  const sqlUrl = 'https://raw.githubusercontent.com/taslim-iya/outreach-crm/claude/eta-club-management-app-NyIb1/FIX-ME-NOW.sql';
-  const sqlEditorUrl = 'https://supabase.com/dashboard/project/ygreplqxqazgxkudonso/sql/new';
-  const html = `
-    <div style="text-align:left">
-      <div style="font-weight:700;margin-bottom:8px">One-time setup required</div>
-      <div style="line-height:1.5;margin-bottom:10px">${esc(rawError)}</div>
-      <ol style="margin:0 0 10px 18px;padding:0;font-size:12px;line-height:1.6">
-        <li>Open the <a href="${sqlEditorUrl}" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">Supabase SQL Editor</a></li>
-        <li>Open <a href="${sqlUrl}" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">FIX-ME-NOW.sql</a>, copy its contents</li>
-        <li>Paste &amp; run it in the editor</li>
-        <li>Come back here and reload this page</li>
-      </ol>
-    </div>
-  `;
-  showAuthError(html, { html: true });
-}
-async function handleAuthSubmit(){
-  const email = $('#authEmail').value.trim();
-  const password = $('#authPassword').value;
-  if(!email || !password){ showAuthError('Email and password are required'); return; }
-  $('#authSubmit').disabled = true;
-  $('#authError').classList.remove('show');
-  try {
-    if(authTab === 'signup'){
-      const name = $('#authName').value.trim();
-      if(!name){ showAuthError('Please enter your full name'); $('#authSubmit').disabled = false; return; }
-      const { data, error } = await sb.auth.signUp({
-        email, password,
-        options: { data: { name } }
-      });
-      if(error){ showAuthError(error.message); $('#authSubmit').disabled = false; return; }
-      if(!data.session){
-        showAuthError('Check your email to confirm your account, then sign in.');
-        setAuthTab('signin');
-        $('#authSubmit').disabled = false;
-        return;
-      }
-      // session available immediately (email confirmation disabled)
-      await onSignedIn(data.session);
-    } else {
-      const { data, error } = await sb.auth.signInWithPassword({ email, password });
-      if(error){ showAuthError(error.message); $('#authSubmit').disabled = false; return; }
-      await onSignedIn(data.session);
-    }
-  } catch (e){
-    showAuthError(e.message || 'Something went wrong');
-  }
-  $('#authSubmit').disabled = false;
-}
-function showAuthScreen(){
-  $('#bootOverlay').classList.remove('show');
-  $('#authWrap').classList.add('show');
-  document.querySelector('.app').classList.remove('ready');
-}
-function hideAuthScreen(){
-  $('#authWrap').classList.remove('show');
-  document.querySelector('.app').classList.add('ready');
-}
-
-// ===== DATA LOADING =====
+// ===== DATA LOADING (local storage) =====
 async function loadAll(){
   const [users, events, tasks, members, notes] = await Promise.all([
     sb.from('eta_users').select('*').order('created_at', {ascending:true}),
@@ -716,92 +629,17 @@ async function loadAll(){
     sb.from('eta_members').select('*').order('created_at', {ascending:false}),
     sb.from('eta_notes').select('*').order('created_at', {ascending:false}),
   ]);
-  // Surface a schema-missing error early with a crystal-clear message.
-  for(const [name, result] of [['eta_users',users],['eta_events',events],['eta_tasks',tasks],['eta_members',members],['eta_notes',notes]]){
-    if(result.error){
-      const msg = result.error.message || '';
-      if(/relation .* does not exist|schema cache|does not exist/i.test(msg)){
-        throw new Error(`Database table "${name}" doesn't exist yet. Run the FIX-ME-NOW.sql script in your Supabase SQL editor (see setup instructions).`);
-      }
-      throw new Error(`${name}: ${msg}`);
-    }
-  }
   state.users   = (users.data   || []).map(mapUser);
   state.events  = (events.data  || []).map(mapEvent);
   state.tasks   = (tasks.data   || []).map(mapTask);
   state.members = (members.data || []).map(mapMember);
   state.notes   = (notes.data   || []).map(mapNote);
-  state.profile = state.users.find(u => u.id === state.session.user.id) || null;
+  // Hardcoded local Owner. Seeded by _loadLocal() on first run.
+  state.profile = state.users.find(u => u.id === LOCAL_OWNER_ID) || state.users[0] || null;
 }
 
-async function selfHealProfile(session){
-  // Happens when the account exists in auth.users but the signup
-  // trigger never created an eta_users row (migration wasn't run yet,
-  // signed up on an older schema, trigger error, etc.).
-  // We try to insert the missing profile ourselves. The eta_users_insert_self
-  // RLS policy allows this only when id = auth.uid().
-  const existingUsers = await sb.from('eta_users').select('id').limit(1);
-  const isFirstUser = !existingUsers.error && (existingUsers.data || []).length === 0;
-  const u = session.user;
-  const name = (u.user_metadata && u.user_metadata.name) || (u.email ? u.email.split('@')[0] : 'User');
-  const payload = {
-    id: u.id,
-    email: u.email,
-    name,
-    role: isFirstUser ? 'Owner' : 'Member',
-    permissions: isFirstUser ? ['*'] : ['dashboard','tasks','notes'],
-  };
-  const { data, error } = await sb.from('eta_users').insert(payload).select().single();
-  if(error) return { error };
-  return { data };
-}
-
-async function onSignedIn(session){
-  state.session = session;
-  $('#bootOverlay').classList.add('show');
-  $('#authWrap').classList.remove('show');
-  try {
-    await loadAll();
-  } catch(e){
-    const msg = (e && e.message) || String(e);
-    console.error('loadAll failed:', e);
-    $('#bootOverlay').classList.remove('show');
-    if(/doesn't exist|does not exist|schema|relation/i.test(msg)){
-      showSetupRequired(msg);
-    } else {
-      showAuthError('Could not load data: ' + msg);
-    }
-    $('#authWrap').classList.add('show');
-    return;
-  }
-  if(!state.profile){
-    // Profile row missing — try to self-heal by inserting it directly.
-    const heal = await selfHealProfile(session);
-    if(heal.error){
-      const msg = heal.error.message || 'unknown error';
-      console.error('self-heal failed:', heal.error);
-      $('#bootOverlay').classList.remove('show');
-      showSetupRequired('Profile row is missing and could not be created (' + msg + ').');
-      $('#authWrap').classList.add('show');
-      return;
-    }
-    // Re-fetch so we have the definitive row
-    try { await loadAll(); } catch(e) {
-      $('#bootOverlay').classList.remove('show');
-      showAuthError('Reload after self-heal failed: ' + (e.message || e));
-      $('#authWrap').classList.add('show');
-      return;
-    }
-    if(!state.profile){
-      $('#bootOverlay').classList.remove('show');
-      showSetupRequired('Profile inserted but could not be read back. Likely missing eta_users_select RLS policy.');
-      $('#authWrap').classList.add('show');
-      return;
-    }
-    toast('Welcome', `Profile created for ${state.profile.name}`);
-  }
-  hideAuthScreen();
-  $('#bootOverlay').classList.remove('show');
+async function bootApp(){
+  try { await loadAll(); } catch(e){ console.error('loadAll failed:', e); }
   renderUserMenu();
   applyPermissions();
   renderDashboard();
@@ -810,10 +648,10 @@ async function onSignedIn(session){
   renderCrm();
   renderNotes();
   renderTeam();
-  // Default to dashboard if previous section no longer allowed
   const target = canAccess(state.section) ? state.section : 'dashboard';
   switchSection(target);
 }
+
 
 // ============================================================
 // ===== AI ASSISTANT (Claude tool-use via browser API) =======
@@ -1237,27 +1075,7 @@ async function sendAiMessage(){
 
 // ===== BOOT =====
 applyTheme();
-(async () => {
-  try {
-    const { data: { session } } = await sb.auth.getSession();
-    if(session){
-      await onSignedIn(session);
-    } else {
-      showAuthScreen();
-    }
-  } catch(e){
-    console.error('Boot error:', e);
-    $('#bootOverlay').classList.remove('show');
-    showAuthError('Failed to contact Supabase: ' + ((e && e.message) || e));
-    $('#authWrap').classList.add('show');
-  }
-})();
-
-sb.auth.onAuthStateChange((event, session) => {
-  if(event === 'SIGNED_OUT'){
-    showAuthScreen();
-  }
-});
+bootApp();
 </script>
 </body>
 </html>
