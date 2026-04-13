@@ -1,0 +1,48 @@
+# This project ships a single pre-built index.html at the repo root.
+# Everything below is legacy Vite/React source left over from the Lovable
+# scaffold and must NOT be uploaded to Vercel — it would confuse framework
+# auto-detection and inflate the deployment.
+
+# Legacy Vite/React source tree
+src/
+
+# Node tooling — no install, no build
+node_modules/
+package.json
+package-lock.json
+bun.lock
+bun.lockb
+
+# Vite / TypeScript / tooling configs
+vite.config.ts
+vitest.config.ts
+tsconfig.json
+tsconfig.app.json
+tsconfig.node.json
+eslint.config.js
+postcss.config.js
+tailwind.config.ts
+components.json
+
+# Supabase + misc leftovers
+supabase/
+FIX-ME-NOW.sql
+
+# Build tooling (we invoke build*.py locally to regenerate index.html,
+# Vercel never needs these)
+build.py
+build2.py
+build3.py
+build4.py
+build5.py
+
+# Lovable scaffolding
+.lovable/
+
+# GitHub Actions workflow is for Pages, not Vercel
+.github/
+
+# Dev dotfiles
+.env
+.gitignore
+README.md

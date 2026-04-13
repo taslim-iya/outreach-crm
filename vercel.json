@@ -7,6 +7,24 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
+    { "source": "/favicon.ico", "destination": "/public/favicon.ico" },
+    { "source": "/favicon.png", "destination": "/public/favicon.png" },
+    { "source": "/robots.txt", "destination": "/public/robots.txt" },
+    { "source": "/placeholder.svg", "destination": "/public/placeholder.svg" },
     { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/index.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/(favicon\\.(ico|png)|robots\\.txt|placeholder\\.svg)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400" }
+      ]
+    }
   ]
 }
