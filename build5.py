@@ -472,21 +472,46 @@ async function saveNote(){
 
 // ===== TEAM MEMBER MODAL =====
 function openNewTeamMemberModal(){
-  const origin = window.location.origin + window.location.pathname;
   openModal(`
-    <h3>Invite a team member</h3>
-    <div class="modal-sub">Team members sign themselves up, then you grant them access here.</div>
-    <div class="field">
-      <label>Sign-up link</label>
-      <input class="input" readonly value="${esc(origin)}" onclick="this.select()"/>
-    </div>
-    <div class="auth-hint" style="text-align:left;margin-top:10px">
-      Share this URL with the person you want to add. They create an account with their own email and password, then they appear in this Team view as a <b>Member</b> with basic access. From there you can edit their role and flip permissions on and off.
+    <h3>Add team member</h3>
+    <div class="modal-sub">Add someone to the internal operations team. You can flip their permissions afterwards from the Team table.</div>
+    <div class="field"><label>Full name</label><input class="input" id="tm_name" placeholder="e.g. Priya Raghavan"/></div>
+    <div class="field"><label>Email</label><input class="input" id="tm_email" type="email" placeholder="priya@cambridge-eta.co.uk"/></div>
+    <div class="field"><label>Role</label><input class="input" id="tm_role" placeholder="e.g. Events Lead"/></div>
+    <div class="field"><label>Permissions</label>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px">
+        ${['dashboard','events','tasks','crm','notes'].map(p=>`
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;cursor:pointer">
+            <input type="checkbox" class="tm_perm" value="${p}" ${p==='dashboard'||p==='tasks'||p==='notes'?'checked':''}/>${p}
+          </label>
+        `).join('')}
+      </div>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-primary" onclick="closeModal()">Got it</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTeamMember()">Add member</button>
     </div>
   `);
+}
+async function saveTeamMember(){
+  const name = ($('#tm_name').value || '').trim();
+  if(!name){ toast('Missing name','Enter the team member\'s name'); return; }
+  const perms = Array.from(document.querySelectorAll('.tm_perm')).filter(c=>c.checked).map(c=>c.value);
+  const email = $('#tm_email').value || (name.toLowerCase().replace(/\s+/g,'.')+'@cambridge-eta.co.uk');
+  const payload = {
+    email,
+    name,
+    role: $('#tm_role').value || 'Team Member',
+    permissions: perms,
+  };
+  const { data, error } = await sb.from('eta_users').insert(payload).select().single();
+  if(error){ toast('Could not save', error.message); return; }
+  state.users.push(mapUser(data));
+  closeModal();
+  renderTeam();
+  renderUserMenu();
+  renderDashboard();
+  toast('Team member added', name);
 }
 async function updateUserRole(uid, nextRole){
   const { error } = await sb.from('eta_users').update({ role: nextRole }).eq('id', uid);

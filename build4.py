@@ -58,13 +58,14 @@ function renderDashboard(){
     : `Welcome back. You have ${openTasks} open tasks assigned to you and ${notesForMe().length} note${notesForMe().length===1?'':'s'} from leadership waiting for you.`;
 
   // Team progress (owner only)
+  const otherMembers = state.users.filter(u=>u.role!=='Owner');
   const teamProgress = owner ? `
     <div class="card" style="margin-bottom:24px">
       <div class="section-head">
         <div><div class="card-title">Team progress</div><div class="card-sub">Live view of each team member's workload</div></div>
         <button class="btn btn-ghost" onclick="switchSection('team')">Manage team</button>
       </div>
-      ${state.users.filter(u=>u.role!=='Owner').map(u=>{
+      ${otherMembers.length === 0 ? '<div class="empty">No team members yet. Add one from the Team section to start assigning work.</div>' : otherMembers.map(u=>{
         const theirs = state.tasks.filter(t=>t.assigneeId===u.id);
         const doneCount = theirs.filter(t=>t.done).length;
         const pct = theirs.length ? Math.round(doneCount/theirs.length*100) : 0;
