@@ -1,0 +1,13 @@
+# Vercel CLI workspace
+.vercel
+
+# OS / editor crud
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Runtime scratch
+*.log
+/tmp/

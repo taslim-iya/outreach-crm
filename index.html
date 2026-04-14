@@ -1,0 +1,2390 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cambridge ETA Club Management Platform</title>
+<meta name="description" content="Premium club management platform for Cambridge ETA." />
+<link rel="icon" type="image/svg+xml" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="%238a63ff"/><stop offset="1" stop-color="%23a98bff"/></linearGradient></defs><rect width="100" height="100" rx="22" fill="url(%23g)"/><text x="50" y="70" font-family="Inter, Arial, sans-serif" font-size="58" font-weight="800" text-anchor="middle" fill="white">E</text></svg>' />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-0:#07060d;
+  --bg-1:#0b0a17;
+  --bg-2:#111029;
+  --bg-3:#181635;
+  --panel:rgba(20,18,44,0.72);
+  --panel-2:rgba(28,25,58,0.78);
+  --border:rgba(138,99,255,0.18);
+  --border-strong:rgba(138,99,255,0.35);
+  --text:#e9e6ff;
+  --text-dim:#a39ec7;
+  --text-muted:#6e6a90;
+  --purple:#8a63ff;
+  --purple-2:#a98bff;
+  --purple-glow:rgba(138,99,255,0.45);
+  --violet:#6a3dff;
+  --gold:#e8c66b;
+  --green:#4ade80;
+  --red:#ff6b8a;
+  --blue:#5ec8ff;
+  --radius:14px;
+  --shadow:0 20px 60px -20px rgba(80,40,200,0.45);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  background:var(--bg-0);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+  font-size:14px;
+  line-height:1.5;
+  transition:background 0.3s ease, color 0.3s ease;
+}
+
+/* ===== LIGHT THEME ===== */
+[data-theme="light"]{
+  --bg-0:#ffffff;
+  --bg-1:#ffffff;
+  --bg-2:#faf9ff;
+  --bg-3:#f3efff;
+  --panel:#ffffff;
+  --panel-2:#fafaff;
+  --border:rgba(106,61,255,0.14);
+  --border-strong:rgba(106,61,255,0.32);
+  --text:#0f0a2c;
+  --text-dim:#4e456d;
+  --text-muted:#8a84a8;
+  --purple:#6a3dff;
+  --purple-2:#8a63ff;
+  --purple-glow:rgba(106,61,255,0.35);
+  --shadow:0 20px 48px -24px rgba(106,61,255,0.25);
+}
+[data-theme="light"] body::before{
+  background:
+    radial-gradient(900px 600px at 12% -10%, rgba(138,99,255,0.08), transparent 60%),
+    radial-gradient(800px 500px at 100% 0%, rgba(106,61,255,0.06), transparent 60%),
+    radial-gradient(600px 400px at 50% 110%, rgba(168,139,255,0.05), transparent 60%);
+}
+[data-theme="light"] .sidebar{
+  background:linear-gradient(180deg,#ffffff,#fafaff);
+  border-right:1px solid rgba(106,61,255,0.1);
+}
+[data-theme="light"] .topbar{background:rgba(255,255,255,0.85)}
+[data-theme="light"] .card,
+[data-theme="light"] .kpi,
+[data-theme="light"] .event-card{
+  background:#ffffff;
+  box-shadow:0 1px 2px rgba(106,61,255,0.04),0 8px 24px -16px rgba(106,61,255,0.15);
+}
+[data-theme="light"] .kpi::after{
+  background:radial-gradient(circle,rgba(138,99,255,0.12),transparent 70%);
+}
+[data-theme="light"] .kpi-value{
+  -webkit-text-fill-color:initial;background:none;background-clip:unset;
+  color:#1a0e4a;
+}
+[data-theme="light"] .nav-item{color:#4e456d}
+[data-theme="light"] .nav-item:hover{background:rgba(106,61,255,0.06);color:#0f0a2c}
+[data-theme="light"] .nav-item.active{
+  background:linear-gradient(90deg,rgba(106,61,255,0.12),rgba(106,61,255,0.02));
+  color:#0f0a2c;
+  box-shadow:inset 0 0 0 1px rgba(106,61,255,0.18);
+}
+[data-theme="light"] .search,
+[data-theme="light"] .icon-btn,
+[data-theme="light"] .btn-ghost,
+[data-theme="light"] .tabs{
+  background:#f4f1ff;border-color:rgba(106,61,255,0.14);
+}
+[data-theme="light"] .search input{color:#0f0a2c}
+[data-theme="light"] .task-row{background:#faf9ff}
+[data-theme="light"] .task-row:hover{background:#f3efff}
+[data-theme="light"] .user-card{background:#f4f1ff}
+[data-theme="light"] .input{background:#ffffff;color:#0f0a2c}
+[data-theme="light"] .modal{background:#ffffff}
+[data-theme="light"] .toast{background:#ffffff;color:#0f0a2c}
+[data-theme="light"] .hero{
+  background:linear-gradient(135deg,rgba(138,99,255,0.10),rgba(106,61,255,0.03));
+}
+[data-theme="light"] .table tbody tr:hover{background:rgba(106,61,255,0.05)}
+[data-theme="light"] .donut > div{background:#ffffff !important}
+[data-theme="light"] .contact-cell .name,
+[data-theme="light"] .task-title,
+[data-theme="light"] .event-title,
+[data-theme="light"] .card-title,
+[data-theme="light"] .brand-text .title,
+[data-theme="light"] .user-card .name,
+[data-theme="light"] .page-title{color:#0f0a2c}
+[data-theme="light"] .content::-webkit-scrollbar-thumb{background:rgba(106,61,255,0.18)}
+
+.sidebar,.topbar,.card,.kpi,.event-card,.task-row,.input,.modal,.btn-ghost,.search,.icon-btn,.tabs{
+  transition:background 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(900px 600px at 12% -10%, rgba(138,99,255,0.18), transparent 60%),
+    radial-gradient(800px 500px at 100% 0%, rgba(106,61,255,0.14), transparent 60%),
+    radial-gradient(600px 400px at 50% 110%, rgba(168,139,255,0.10), transparent 60%);
+}
+h1,h2,h3,h4{font-family:'Space Grotesk','Inter',sans-serif;letter-spacing:-0.01em;font-weight:600}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select,textarea{font-family:inherit}
+a{color:inherit;text-decoration:none}
+
+/* ===== LAYOUT ===== */
+.app{display:flex;height:100vh;position:relative;z-index:1}
+.sidebar{
+  width:260px;flex-shrink:0;
+  background:linear-gradient(180deg,rgba(15,13,35,0.92),rgba(10,9,22,0.92));
+  backdrop-filter:blur(20px);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  padding:22px 16px;
+}
+.brand{display:flex;align-items:center;gap:12px;padding:6px 10px 22px}
+.brand-mark{
+  width:40px;height:40px;border-radius:12px;
+  background:linear-gradient(135deg,#8a63ff 0%,#6a3dff 50%,#3a1f9e 100%);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Space Grotesk';font-weight:700;font-size:18px;color:white;
+  box-shadow:0 8px 24px -4px rgba(138,99,255,0.5),inset 0 1px 0 rgba(255,255,255,0.3);
+  position:relative;
+}
+.brand-mark::after{content:"";position:absolute;inset:2px;border-radius:10px;border:1px solid rgba(255,255,255,0.15)}
+.brand-text{display:flex;flex-direction:column;line-height:1.15}
+.brand-text .title{font-family:'Space Grotesk';font-weight:700;font-size:15px;color:#fff}
+.brand-text .sub{font-size:10.5px;color:var(--text-muted);letter-spacing:0.1em;text-transform:uppercase}
+
+.nav{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.nav-label{font-size:10.5px;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-muted);padding:14px 12px 6px;font-weight:600}
+.nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 12px;border-radius:10px;
+  color:var(--text-dim);font-size:13.5px;font-weight:500;
+  cursor:pointer;transition:all 0.2s ease;
+  position:relative;
+}
+.nav-item:hover{background:rgba(138,99,255,0.08);color:var(--text)}
+.nav-item.active{
+  background:linear-gradient(90deg,rgba(138,99,255,0.22),rgba(138,99,255,0.06));
+  color:#fff;
+  box-shadow:inset 0 0 0 1px rgba(138,99,255,0.3);
+}
+.nav-item.active::before{
+  content:"";position:absolute;left:-16px;top:50%;transform:translateY(-50%);
+  width:3px;height:22px;border-radius:0 3px 3px 0;
+  background:linear-gradient(180deg,#a98bff,#6a3dff);
+  box-shadow:0 0 12px var(--purple-glow);
+}
+.nav-item .icon{width:18px;height:18px;opacity:0.9;flex-shrink:0}
+.nav-item .badge{margin-left:auto;background:var(--purple);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px}
+
+.sidebar-footer{margin-top:auto;padding-top:18px;border-top:1px solid var(--border)}
+.user-card{
+  display:flex;align-items:center;gap:12px;padding:10px;border-radius:12px;
+  background:rgba(138,99,255,0.06);border:1px solid var(--border);
+}
+.avatar{
+  width:36px;height:36px;border-radius:10px;
+  background:linear-gradient(135deg,#a98bff,#6a3dff);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;color:#fff;font-size:13px;
+}
+.user-card .name{font-size:12.5px;font-weight:600;color:#fff}
+.user-card .role{font-size:10.5px;color:var(--text-muted)}
+
+/* ===== MAIN ===== */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.topbar{
+  height:68px;padding:0 32px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);
+  background:rgba(11,10,23,0.6);backdrop-filter:blur(16px);
+  flex-shrink:0;
+}
+.page-title{font-size:20px;font-weight:700;font-family:'Space Grotesk'}
+.page-subtitle{font-size:12.5px;color:var(--text-muted);margin-top:2px}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.search{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(138,99,255,0.08);
+  border:1px solid var(--border);
+  padding:9px 14px;border-radius:10px;min-width:280px;
+}
+.search input{background:none;border:none;outline:none;color:var(--text);flex:1;font-size:13px}
+.search input::placeholder{color:var(--text-muted)}
+.icon-btn{
+  width:38px;height:38px;border-radius:10px;
+  background:rgba(138,99,255,0.08);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;transition:all 0.2s;
+  position:relative;
+}
+.icon-btn:hover{background:rgba(138,99,255,0.18);border-color:var(--border-strong)}
+.icon-btn .dot{position:absolute;top:8px;right:8px;width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red)}
+
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;
+  transition:all 0.2s;white-space:nowrap;
+}
+.btn-primary{
+  background:linear-gradient(135deg,#8a63ff,#6a3dff);
+  color:#fff;
+  box-shadow:0 8px 24px -8px rgba(138,99,255,0.6),inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 12px 28px -8px rgba(138,99,255,0.8)}
+.btn-ghost{background:rgba(138,99,255,0.08);border:1px solid var(--border);color:var(--text)}
+.btn-ghost:hover{background:rgba(138,99,255,0.16)}
+
+.content{flex:1;overflow-y:auto;padding:28px 32px 40px}
+.content::-webkit-scrollbar{width:10px}
+.content::-webkit-scrollbar-track{background:transparent}
+.content::-webkit-scrollbar-thumb{background:rgba(138,99,255,0.2);border-radius:10px}
+.content::-webkit-scrollbar-thumb:hover{background:rgba(138,99,255,0.35)}
+
+.section{display:none;animation:fadeUp 0.35s ease}
+.section.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ===== CARDS ===== */
+.card{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:22px;
+  backdrop-filter:blur(20px);
+  position:relative;
+  overflow:hidden;
+}
+.card::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(168,139,255,0.4),transparent);
+}
+.card-title{font-size:15px;font-weight:600;margin-bottom:4px}
+.card-sub{font-size:12px;color:var(--text-muted);margin-bottom:18px}
+
+.grid{display:grid;gap:18px}
+.grid-4{grid-template-columns:repeat(4,1fr)}
+.grid-3{grid-template-columns:repeat(3,1fr)}
+.grid-2{grid-template-columns:repeat(2,1fr)}
+.grid-2-1{grid-template-columns:2fr 1fr}
+
+/* ===== KPI ===== */
+.kpi{
+  background:linear-gradient(135deg,rgba(20,18,44,0.85),rgba(28,25,58,0.65));
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:20px;position:relative;overflow:hidden;
+}
+.kpi::after{
+  content:"";position:absolute;top:-40px;right:-40px;width:140px;height:140px;
+  background:radial-gradient(circle,rgba(138,99,255,0.22),transparent 70%);
+  border-radius:50%;
+}
+.kpi-label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;font-weight:600}
+.kpi-value{font-size:32px;font-weight:700;font-family:'Space Grotesk';margin-top:8px;background:linear-gradient(135deg,#fff,#c4b8ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.kpi-meta{display:flex;align-items:center;gap:6px;margin-top:10px;font-size:12px;color:var(--text-dim)}
+.kpi-trend{display:inline-flex;align-items:center;gap:3px;font-weight:600;padding:2px 8px;border-radius:8px;font-size:11px}
+.trend-up{background:rgba(74,222,128,0.12);color:var(--green)}
+.trend-down{background:rgba(255,107,138,0.12);color:var(--red)}
+.kpi-icon{
+  position:absolute;top:18px;right:18px;z-index:1;
+  width:38px;height:38px;border-radius:10px;
+  background:linear-gradient(135deg,rgba(138,99,255,0.3),rgba(106,61,255,0.15));
+  border:1px solid var(--border-strong);
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* ===== TABLES ===== */
+.table{width:100%;border-collapse:collapse}
+.table th{
+  text-align:left;padding:12px 14px;font-size:11px;font-weight:600;
+  color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;
+  border-bottom:1px solid var(--border);
+}
+.table td{padding:14px;font-size:13px;border-bottom:1px solid rgba(138,99,255,0.08)}
+.table tr{transition:background 0.15s}
+.table tbody tr:hover{background:rgba(138,99,255,0.06)}
+.table tr:last-child td{border-bottom:none}
+
+.tag{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;
+  background:rgba(138,99,255,0.14);color:var(--purple-2);
+  border:1px solid rgba(138,99,255,0.25);
+}
+.tag.green{background:rgba(74,222,128,0.12);color:var(--green);border-color:rgba(74,222,128,0.3)}
+.tag.gold{background:rgba(232,198,107,0.12);color:var(--gold);border-color:rgba(232,198,107,0.3)}
+.tag.red{background:rgba(255,107,138,0.12);color:var(--red);border-color:rgba(255,107,138,0.3)}
+.tag.blue{background:rgba(94,200,255,0.12);color:var(--blue);border-color:rgba(94,200,255,0.3)}
+
+.contact-cell{display:flex;align-items:center;gap:11px}
+.contact-cell .avatar{width:34px;height:34px;font-size:12px;border-radius:9px}
+.contact-cell .info{display:flex;flex-direction:column}
+.contact-cell .name{font-weight:600;color:#fff;font-size:13px}
+.contact-cell .email{font-size:11.5px;color:var(--text-muted)}
+
+/* ===== EVENTS ===== */
+.event-card{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:var(--radius);padding:20px;
+  position:relative;overflow:hidden;transition:all 0.25s;
+}
+.event-card:hover{transform:translateY(-2px);border-color:var(--border-strong);box-shadow:var(--shadow)}
+.event-card::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,#8a63ff,#a98bff,#6a3dff);
+}
+.event-date{
+  display:flex;align-items:center;gap:10px;margin-bottom:14px;
+  font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;font-weight:600;
+}
+.event-title{font-size:17px;font-weight:700;font-family:'Space Grotesk';margin-bottom:8px}
+.event-desc{font-size:12.5px;color:var(--text-dim);line-height:1.55;margin-bottom:16px}
+.event-foot{display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid var(--border)}
+.attendees{display:flex;align-items:center}
+.attendees .avatar{width:26px;height:26px;font-size:10px;border-radius:7px;border:2px solid var(--bg-1);margin-left:-8px}
+.attendees .avatar:first-child{margin-left:0}
+.attendees .more{margin-left:-8px;width:26px;height:26px;border-radius:7px;border:2px solid var(--bg-1);background:rgba(138,99,255,0.2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--purple-2)}
+
+/* ===== TASKS ===== */
+.task-row{
+  display:flex;align-items:center;gap:14px;
+  padding:14px 16px;border-radius:10px;
+  background:rgba(138,99,255,0.04);border:1px solid var(--border);
+  margin-bottom:10px;transition:all 0.2s;
+}
+.task-row:hover{background:rgba(138,99,255,0.09);border-color:var(--border-strong)}
+.task-row.done{opacity:0.55}
+.task-row.done .task-title{text-decoration:line-through}
+.checkbox{
+  width:20px;height:20px;border-radius:6px;flex-shrink:0;
+  border:1.5px solid rgba(138,99,255,0.4);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;
+}
+.checkbox:hover{border-color:var(--purple-2)}
+.checkbox.checked{background:linear-gradient(135deg,#8a63ff,#6a3dff);border-color:#8a63ff}
+.checkbox.checked::after{content:"";width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.task-info{flex:1;min-width:0}
+.task-title{font-size:13.5px;font-weight:600;color:#fff}
+.task-meta{font-size:11.5px;color:var(--text-muted);margin-top:3px;display:flex;gap:12px;align-items:center}
+
+/* ===== FORMS & MODAL ===== */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;font-weight:600}
+.input,select.input,textarea.input{
+  width:100%;padding:11px 14px;border-radius:10px;
+  background:rgba(10,9,22,0.6);border:1px solid var(--border);
+  color:var(--text);font-size:13px;outline:none;transition:all 0.2s;
+}
+.input:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(138,99,255,0.18)}
+
+.modal-back{
+  position:fixed;inset:0;background:rgba(5,4,15,0.75);backdrop-filter:blur(8px);
+  z-index:100;display:none;align-items:center;justify-content:center;padding:20px;
+}
+.modal-back.open{display:flex;animation:fadeIn 0.2s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{
+  background:linear-gradient(180deg,#13112b,#0d0c1f);
+  border:1px solid var(--border-strong);
+  border-radius:18px;padding:28px;width:100%;max-width:500px;
+  box-shadow:var(--shadow);position:relative;
+  max-height:90vh;overflow-y:auto;
+}
+.modal h3{font-size:18px;margin-bottom:6px}
+.modal-sub{font-size:12.5px;color:var(--text-muted);margin-bottom:22px}
+.modal-close{position:absolute;top:18px;right:18px;width:32px;height:32px;border-radius:8px;background:rgba(138,99,255,0.1)}
+.modal-close:hover{background:rgba(138,99,255,0.2)}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:22px;padding-top:18px;border-top:1px solid var(--border)}
+
+/* ===== CHARTS ===== */
+.bar-chart{display:flex;align-items:flex-end;gap:10px;height:180px;padding:10px 0}
+.bar{
+  flex:1;border-radius:6px 6px 0 0;
+  background:linear-gradient(180deg,#a98bff,#6a3dff);
+  position:relative;min-height:6px;
+  transition:all 0.3s;
+}
+.bar:hover{filter:brightness(1.2)}
+.bar-label{position:absolute;bottom:-22px;left:0;right:0;text-align:center;font-size:10.5px;color:var(--text-muted)}
+.bar-value{position:absolute;top:-20px;left:0;right:0;text-align:center;font-size:10.5px;color:var(--purple-2);font-weight:600}
+
+.donut{position:relative;width:180px;height:180px;margin:0 auto}
+.legend{display:flex;flex-direction:column;gap:8px;margin-top:18px}
+.legend-item{display:flex;align-items:center;gap:10px;font-size:12px}
+.legend-dot{width:10px;height:10px;border-radius:3px}
+
+/* ===== MISC ===== */
+.toast{
+  position:fixed;bottom:24px;right:24px;z-index:200;
+  background:linear-gradient(135deg,#1a1638,#0f0c26);
+  border:1px solid var(--border-strong);border-radius:12px;
+  padding:14px 18px;box-shadow:var(--shadow);
+  display:flex;align-items:center;gap:12px;
+  transform:translateX(400px);transition:transform 0.3s ease;
+  max-width:340px;
+}
+.toast.show{transform:translateX(0)}
+.toast-icon{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#8a63ff,#6a3dff);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+.empty{padding:40px 20px;text-align:center;color:var(--text-muted);font-size:13px}
+
+.hero{
+  background:linear-gradient(135deg,rgba(138,99,255,0.14),rgba(106,61,255,0.06));
+  border:1px solid var(--border-strong);
+  border-radius:18px;padding:28px 32px;margin-bottom:24px;
+  position:relative;overflow:hidden;
+}
+.hero::before{
+  content:"";position:absolute;top:-60px;right:-60px;width:260px;height:260px;
+  background:radial-gradient(circle,rgba(168,139,255,0.28),transparent 65%);border-radius:50%;
+}
+.hero h1{font-size:26px;font-family:'Space Grotesk';margin-bottom:6px;position:relative}
+.hero p{font-size:13px;color:var(--text-dim);max-width:560px;position:relative}
+.hero-actions{display:flex;gap:10px;margin-top:18px;position:relative}
+
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.section-head h2{font-size:17px}
+.tabs{display:flex;gap:4px;background:rgba(138,99,255,0.06);padding:4px;border-radius:10px;border:1px solid var(--border)}
+.tab{padding:8px 14px;border-radius:7px;font-size:12px;font-weight:600;color:var(--text-dim);cursor:pointer;transition:all 0.2s}
+.tab.active{background:linear-gradient(135deg,#8a63ff,#6a3dff);color:#fff;box-shadow:0 4px 12px -4px rgba(138,99,255,0.6)}
+
+/* ===== USER SWITCHER ===== */
+.user-switcher{position:relative}
+.user-chip{
+  display:flex;align-items:center;gap:10px;
+  padding:6px 12px 6px 6px;border-radius:10px;
+  background:rgba(138,99,255,0.08);border:1px solid var(--border);
+  transition:all 0.2s;max-width:200px;
+}
+.user-chip:hover{background:rgba(138,99,255,0.16);border-color:var(--border-strong)}
+.user-chip .avatar{width:30px;height:30px;font-size:11px;border-radius:8px;flex-shrink:0}
+.chip-name{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px}
+.chip-role{font-size:10px;color:var(--text-muted);white-space:nowrap}
+.user-menu{
+  position:absolute;top:calc(100% + 8px);right:0;min-width:280px;z-index:50;
+  background:linear-gradient(180deg,#13112b,#0d0c1f);
+  border:1px solid var(--border-strong);border-radius:12px;
+  box-shadow:var(--shadow);
+  padding:8px;display:none;
+}
+[data-theme="light"] .user-menu{background:#ffffff}
+.user-menu.open{display:block;animation:fadeUp 0.2s ease}
+.user-menu-label{font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);padding:10px 12px 6px;font-weight:600}
+.user-menu-item{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 12px;border-radius:8px;cursor:pointer;transition:background 0.15s;
+}
+.user-menu-item:hover{background:rgba(138,99,255,0.1)}
+.user-menu-item .avatar{width:32px;height:32px;font-size:11px;border-radius:8px}
+.user-menu-item .info{flex:1;min-width:0}
+.user-menu-item .name{font-size:12.5px;font-weight:600;color:var(--text)}
+.user-menu-item .role{font-size:10.5px;color:var(--text-muted)}
+.user-menu-item.current{background:linear-gradient(90deg,rgba(138,99,255,0.18),rgba(138,99,255,0.04))}
+.user-menu-item .check{color:var(--purple-2);opacity:0;transition:opacity 0.2s}
+.user-menu-item.current .check{opacity:1}
+
+/* ===== NOTES ===== */
+.note-card{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:var(--radius);padding:18px 20px;
+  position:relative;transition:all 0.2s;
+}
+.note-card:hover{border-color:var(--border-strong);transform:translateY(-1px);box-shadow:var(--shadow)}
+.note-card.direct{border-left:3px solid #a98bff}
+.note-card.private{border-left:3px solid var(--gold)}
+.note-card.public{border-left:3px solid var(--green)}
+.note-card.pinned::after{
+  content:"";position:absolute;top:14px;right:16px;width:8px;height:8px;border-radius:50%;
+  background:linear-gradient(135deg,#a98bff,#6a3dff);box-shadow:0 0 10px var(--purple-glow);
+}
+.note-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.note-head .avatar{width:28px;height:28px;font-size:10px;border-radius:7px}
+.note-author{font-size:12px;font-weight:600;color:var(--text)}
+.note-meta{font-size:11px;color:var(--text-muted);margin-left:auto}
+.note-title{font-size:14.5px;font-weight:700;margin-bottom:8px;font-family:'Space Grotesk';color:var(--text)}
+.note-body{font-size:12.5px;color:var(--text-dim);line-height:1.6;white-space:pre-wrap}
+.note-foot{display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
+
+/* ===== TEAM PROGRESS ===== */
+.progress-bar{
+  height:6px;background:rgba(138,99,255,0.12);border-radius:6px;overflow:hidden;flex:1;
+}
+.progress-fill{
+  height:100%;background:linear-gradient(90deg,#a98bff,#6a3dff);
+  border-radius:6px;transition:width 0.6s ease;
+  box-shadow:0 0 12px rgba(138,99,255,0.4);
+}
+.team-row{
+  display:flex;align-items:center;gap:16px;padding:14px 0;
+  border-bottom:1px solid var(--border);
+}
+.team-row:last-child{border-bottom:none}
+
+/* ===== AI CHAT DRAWER ===== */
+.ai-btn{
+  position:relative;
+  background:linear-gradient(135deg,rgba(138,99,255,0.25),rgba(106,61,255,0.12));
+  border:1px solid rgba(138,99,255,0.4);
+  color:var(--text);
+}
+.ai-btn::after{
+  content:"";position:absolute;inset:-2px;border-radius:12px;
+  background:linear-gradient(135deg,rgba(168,139,255,0.4),transparent 70%);
+  opacity:0;transition:opacity 0.25s;pointer-events:none;
+}
+.ai-btn:hover::after{opacity:1}
+.ai-drawer-back{
+  position:fixed;inset:0;z-index:150;display:none;
+  background:rgba(5,4,15,0.45);backdrop-filter:blur(4px);
+}
+.ai-drawer-back.open{display:block;animation:fadeIn 0.25s ease}
+[data-theme="light"] .ai-drawer-back{background:rgba(30,18,70,0.22)}
+.ai-drawer{
+  position:fixed;top:0;right:0;bottom:0;width:420px;max-width:100%;z-index:160;
+  display:flex;flex-direction:column;
+  background:linear-gradient(180deg,#13112b,#0c0b20);
+  border-left:1px solid var(--border-strong);
+  transform:translateX(110%);transition:transform 0.35s cubic-bezier(0.22,0.61,0.36,1);
+  box-shadow:-40px 0 80px -20px rgba(80,40,200,0.45);
+}
+[data-theme="light"] .ai-drawer{
+  background:#ffffff;
+  border-left:1px solid rgba(106,61,255,0.18);
+  box-shadow:-40px 0 60px -20px rgba(106,61,255,0.25);
+}
+.ai-drawer.open{transform:translateX(0)}
+.ai-drawer-head{
+  display:flex;align-items:center;gap:12px;
+  padding:20px 22px;border-bottom:1px solid var(--border);
+}
+.ai-drawer-head .avatar{
+  width:38px;height:38px;border-radius:10px;
+  background:linear-gradient(135deg,#a98bff,#6a3dff);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 20px -6px rgba(138,99,255,0.6);
+  flex-shrink:0;
+}
+.ai-drawer-head .title{font-size:14.5px;font-weight:700;font-family:'Space Grotesk';color:var(--text)}
+.ai-drawer-head .sub{font-size:11px;color:var(--text-muted);margin-top:2px}
+.ai-drawer-head .close{margin-left:auto}
+.ai-messages{
+  flex:1;overflow-y:auto;padding:22px;display:flex;flex-direction:column;gap:14px;
+  scroll-behavior:smooth;
+}
+.ai-messages::-webkit-scrollbar{width:8px}
+.ai-messages::-webkit-scrollbar-thumb{background:rgba(138,99,255,0.2);border-radius:8px}
+.ai-msg{display:flex;gap:10px;max-width:90%}
+.ai-msg.user{align-self:flex-end;flex-direction:row-reverse}
+.ai-msg .bubble{
+  padding:11px 14px;border-radius:14px;font-size:13px;line-height:1.55;
+  white-space:pre-wrap;word-wrap:break-word;
+}
+.ai-msg.assistant .bubble{
+  background:rgba(138,99,255,0.10);
+  border:1px solid rgba(138,99,255,0.22);
+  color:var(--text);
+  border-top-left-radius:4px;
+}
+[data-theme="light"] .ai-msg.assistant .bubble{
+  background:#f4f1ff;border-color:rgba(106,61,255,0.16);color:#0f0a2c;
+}
+.ai-msg.user .bubble{
+  background:linear-gradient(135deg,#8a63ff,#6a3dff);
+  color:#ffffff;
+  border-top-right-radius:4px;
+  box-shadow:0 8px 20px -8px rgba(138,99,255,0.5);
+}
+.ai-msg .avatar{
+  width:28px;height:28px;border-radius:8px;flex-shrink:0;
+  font-size:10px;font-weight:700;color:#ffffff;
+  display:flex;align-items:center;justify-content:center;
+}
+.ai-msg.assistant .avatar{background:linear-gradient(135deg,#a98bff,#6a3dff)}
+.ai-msg.user .avatar{background:rgba(138,99,255,0.25);color:var(--text);border:1px solid var(--border-strong)}
+.ai-tool-chip{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:20px;
+  background:rgba(74,222,128,0.12);color:var(--green);
+  border:1px solid rgba(74,222,128,0.3);
+  margin:6px 0 0;
+}
+.ai-tool-chip.err{background:rgba(255,107,138,0.12);color:var(--red);border-color:rgba(255,107,138,0.3)}
+.ai-typing{display:flex;gap:5px;padding:6px 0}
+.ai-typing span{
+  width:7px;height:7px;border-radius:50%;background:var(--purple-2);
+  animation:pulse 1.4s infinite ease-in-out both;
+}
+.ai-typing span:nth-child(2){animation-delay:0.16s}
+.ai-typing span:nth-child(3){animation-delay:0.32s}
+@keyframes pulse{0%,80%,100%{opacity:0.25;transform:scale(0.8)}40%{opacity:1;transform:scale(1)}}
+.ai-composer{
+  padding:16px 18px 18px;border-top:1px solid var(--border);
+  display:flex;flex-direction:column;gap:10px;
+}
+.ai-composer textarea{
+  width:100%;resize:none;min-height:44px;max-height:140px;
+  padding:12px 14px;border-radius:12px;font-family:inherit;font-size:13px;
+  background:rgba(10,9,22,0.55);
+  border:1px solid var(--border);
+  color:var(--text);outline:none;transition:all 0.2s;
+}
+.ai-composer textarea:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(138,99,255,0.18)}
+[data-theme="light"] .ai-composer textarea{background:#faf9ff;color:#0f0a2c}
+.ai-composer-row{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.ai-suggestions{display:flex;gap:6px;flex-wrap:wrap}
+.ai-suggestion{
+  font-size:10.5px;padding:6px 10px;border-radius:20px;
+  background:rgba(138,99,255,0.08);border:1px solid var(--border);
+  color:var(--text-dim);cursor:pointer;transition:all 0.15s;
+}
+.ai-suggestion:hover{background:rgba(138,99,255,0.16);border-color:var(--border-strong);color:var(--text)}
+.ai-send{
+  width:40px;height:40px;border-radius:10px;flex-shrink:0;
+  background:linear-gradient(135deg,#8a63ff,#6a3dff);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 20px -8px rgba(138,99,255,0.6);cursor:pointer;
+  transition:all 0.15s;
+}
+.ai-send:hover{transform:translateY(-1px)}
+.ai-send:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.ai-setup{
+  padding:22px;border:1px solid var(--border-strong);border-radius:14px;
+  background:rgba(138,99,255,0.08);margin:22px;
+}
+[data-theme="light"] .ai-setup{background:#f4f1ff}
+.ai-setup h4{font-size:14px;margin-bottom:6px;color:var(--text)}
+.ai-setup p{font-size:12px;color:var(--text-dim);line-height:1.55;margin-bottom:14px}
+.ai-setup .input{margin-bottom:10px}
+.ai-setup a{color:var(--purple-2);text-decoration:underline}
+
+@media (max-width:1100px){
+  .grid-4{grid-template-columns:repeat(2,1fr)}
+  .grid-3{grid-template-columns:repeat(2,1fr)}
+  .grid-2-1{grid-template-columns:1fr}
+  .sidebar{width:72px}
+  .brand-text,.nav-label,.nav-item span:not(.badge),.user-card .info{display:none}
+  .nav-item{justify-content:center}
+  .search{min-width:160px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-mark">E</div>
+    <div class="brand-text">
+      <div class="title">Cambridge ETA</div>
+      <div class="sub">Club Platform</div>
+    </div>
+  </div>
+
+  <div class="nav-label">Workspace</div>
+  <div class="nav">
+    <div class="nav-item active" data-nav="dashboard">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+      <span>Dashboard</span>
+    </div>
+    <div class="nav-item" data-nav="events">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span>Events</span>
+      <span class="badge">4</span>
+    </div>
+    <div class="nav-item" data-nav="tasks">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <span>Tasks</span>
+    </div>
+    <div class="nav-item" data-nav="crm">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span>Members CRM</span>
+    </div>
+    <div class="nav-item" data-nav="notes">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span>Notes</span>
+      <span class="badge" id="notesBadge" style="display:none">0</span>
+    </div>
+    <div class="nav-item" data-nav="team" data-owner-only>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="11" r="4"/><path d="M22 11l-3 3-1.5-1.5"/><path d="M19 3a3 3 0 0 1 0 6"/></svg>
+      <span>Team</span>
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="avatar">TI</div>
+      <div class="info">
+        <div class="name">Taslim Iya</div>
+        <div class="role">Club President</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <header class="topbar">
+    <div>
+      <div class="page-title" id="pageTitle">Dashboard</div>
+      <div class="page-subtitle" id="pageSubtitle">Your club at a glance</div>
+    </div>
+    <div class="topbar-right">
+      <div class="search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Search members, events, tasks..." />
+      </div>
+      <div class="user-switcher" id="userSwitcher">
+        <button class="user-chip" onclick="toggleUserMenu(event)">
+          <div class="avatar" id="chipAvatar">TI</div>
+          <div style="text-align:left;min-width:0">
+            <div class="chip-name" id="chipName">Taslim Iya</div>
+            <div class="chip-role" id="chipRole">Owner</div>
+          </div>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:0.6"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="user-menu" id="userMenu"></div>
+      </div>
+      <button class="icon-btn ai-btn" title="Ask the AI assistant" id="aiBtn">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.09 5.26L20 8l-4.5 3.5L17 18l-5-3-5 3 1.5-6.5L4 8l5.91-.74L12 2z"/></svg>
+      </button>
+      <button class="icon-btn" title="Toggle theme" id="themeToggle">
+        <svg id="themeIconDark" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg id="themeIconLight" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+      <button class="icon-btn" title="Notifications">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="dot"></span>
+      </button>
+      <button class="btn btn-primary" id="primaryBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span id="primaryBtnLabel">New Event</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="content">
+    <section class="section active" id="section-dashboard"></section>
+    <section class="section" id="section-events"></section>
+    <section class="section" id="section-tasks"></section>
+    <section class="section" id="section-crm"></section>
+    <section class="section" id="section-notes"></section>
+    <section class="section" id="section-team"></section>
+  </div>
+</main>
+
+</div>
+
+<div class="modal-back" id="modalBack">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<!-- AI chat drawer -->
+<div class="ai-drawer-back" id="aiDrawerBack" onclick="closeAiDrawer()"></div>
+<aside class="ai-drawer" id="aiDrawer" aria-hidden="true">
+  <div class="ai-drawer-head">
+    <div class="avatar">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.09 5.26L20 8l-4.5 3.5L17 18l-5-3-5 3 1.5-6.5L4 8l5.91-.74L12 2z"/></svg>
+    </div>
+    <div>
+      <div class="title">AI assistant</div>
+      <div class="sub">Powered by Claude Sonnet 4.6</div>
+    </div>
+    <button class="icon-btn close" onclick="closeAiDrawer()" title="Close">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="ai-messages" id="aiMessages"></div>
+  <div class="ai-composer">
+    <div class="ai-suggestions" id="aiSuggestions"></div>
+    <div class="ai-composer-row">
+      <textarea id="aiInput" placeholder="Ask me to add a task, schedule an event, update permissions..." rows="1"></textarea>
+      <button class="ai-send" id="aiSend" onclick="sendAiMessage()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<div class="toast" id="toast">
+  <div class="toast-icon">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+  </div>
+  <div>
+    <div style="font-size:13px;font-weight:600" id="toastTitle">Saved</div>
+    <div style="font-size:11.5px;color:var(--text-muted)" id="toastMsg">Changes applied.</div>
+  </div>
+</div>
+
+<script>
+// ===== STATE =====
+// ===== LOCAL STORAGE "SUPABASE" SHIM =====
+// This app runs entirely in the browser. There is no backend, no auth.
+// We expose a small query builder that matches the subset of the
+// Supabase JS API used by the rest of the code so every existing
+// save/update/delete site keeps working without changes.
+
+const LOCAL_DATA_KEY = 'eta-local-data-v1';
+const LOCAL_OWNER_ID = 'local-owner';
+
+function _loadLocal(){
+  try {
+    const raw = localStorage.getItem(LOCAL_DATA_KEY);
+    if(raw) return JSON.parse(raw);
+  } catch(e){}
+  // First run: seed with a single Owner so profile-dependent features work.
+  const seed = {
+    eta_users: [{
+      id: LOCAL_OWNER_ID,
+      email: 'owner@local',
+      name: 'Owner',
+      role: 'Owner',
+      permissions: ['*'],
+      created_at: new Date().toISOString(),
+    }],
+    eta_events:  [],
+    eta_tasks:   [],
+    eta_members: [],
+    eta_notes:   [],
+  };
+  localStorage.setItem(LOCAL_DATA_KEY, JSON.stringify(seed));
+  return seed;
+}
+function _saveLocal(data){
+  localStorage.setItem(LOCAL_DATA_KEY, JSON.stringify(data));
+}
+function _genId(){
+  return 'loc_' + Math.random().toString(36).slice(2, 11) + Date.now().toString(36);
+}
+
+class LocalQuery {
+  constructor(table){
+    this.table = table;
+    this.op = null;
+    this.payload = null;
+    this.patch = null;
+    this.filters = [];
+    this.orderBy = null;
+    this.limitN = null;
+    this.single_ = false;
+  }
+  select(){ if(!this.op) this.op = 'select'; return this; }
+  insert(payload){ this.op = 'insert'; this.payload = payload; return this; }
+  update(patch){ this.op = 'update'; this.patch = patch; return this; }
+  delete(){ this.op = 'delete'; return this; }
+  eq(col, val){ this.filters.push({col, val}); return this; }
+  order(col, opts){ this.orderBy = {col, opts: opts || {}}; return this; }
+  limit(n){ this.limitN = n; return this; }
+  single(){ this.single_ = true; return this; }
+  then(onResolve, onReject){
+    return Promise.resolve().then(() => this._run()).then(onResolve, onReject);
+  }
+  _matches(row){
+    return this.filters.every(f => row[f.col] === f.val);
+  }
+  _run(){
+    const data = _loadLocal();
+    const rows = data[this.table] || [];
+    try {
+      if(this.op === 'select' || this.op === null){
+        let result = rows.filter(r => this._matches(r));
+        if(this.orderBy){
+          const {col, opts} = this.orderBy;
+          const asc = opts.ascending !== false;
+          result = result.slice().sort((a,b) => {
+            const av = a[col], bv = b[col];
+            if(av == null && bv == null) return 0;
+            if(av == null) return 1;
+            if(bv == null) return -1;
+            if(av === bv) return 0;
+            return asc ? (av > bv ? 1 : -1) : (av > bv ? -1 : 1);
+          });
+        }
+        if(this.limitN != null) result = result.slice(0, this.limitN);
+        if(this.single_) return { data: result[0] || null, error: null };
+        return { data: result, error: null };
+      }
+      if(this.op === 'insert'){
+        const list = Array.isArray(this.payload) ? this.payload : [this.payload];
+        const inserted = list.map(p => ({
+          id: p.id || _genId(),
+          created_at: new Date().toISOString(),
+          ...p,
+        }));
+        data[this.table] = [...rows, ...inserted];
+        _saveLocal(data);
+        if(this.single_) return { data: inserted[0], error: null };
+        return { data: inserted, error: null };
+      }
+      if(this.op === 'update'){
+        const updated = [];
+        const newRows = rows.map(r => {
+          if(this._matches(r)){
+            const u = { ...r, ...this.patch };
+            updated.push(u);
+            return u;
+          }
+          return r;
+        });
+        data[this.table] = newRows;
+        _saveLocal(data);
+        if(this.single_) return { data: updated[0] || null, error: null };
+        return { data: updated, error: null };
+      }
+      if(this.op === 'delete'){
+        data[this.table] = rows.filter(r => !this._matches(r));
+        _saveLocal(data);
+        return { data: null, error: null };
+      }
+      return { data: null, error: null };
+    } catch(e){
+      return { data: null, error: { message: e.message || String(e) } };
+    }
+  }
+}
+
+const sb = {
+  from(table){ return new LocalQuery(table); }
+};
+
+const state = {
+  section: 'dashboard',
+  theme: localStorage.getItem('eta-theme') || 'dark',
+  profile: null,   // the hardcoded local Owner
+  users:   [],
+  events:  [],
+  tasks:   [],
+  members: [],
+  notes:   [],
+};
+
+// ===== HELPERS =====
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const fmtDate = (s) => {
+  const d = new Date(s);
+  return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+};
+const shortDate = (s) => {
+  const d = new Date(s);
+  return {day:d.getDate(), month:d.toLocaleDateString('en-GB',{month:'short'}).toUpperCase(), weekday:d.toLocaleDateString('en-GB',{weekday:'short'}).toUpperCase()};
+};
+const initials = (n) => n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+const esc = (s) => String(s).replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+
+// ===== USERS / PERMISSIONS =====
+function currentUser(){ return state.profile; }
+function currentUserId(){ return state.profile ? state.profile.id : null; }
+function isOwner(){ return state.profile && state.profile.role === 'Owner'; }
+function userById(id){ return state.users.find(u => u.id === id); }
+function userName(id){ const u = userById(id); return u ? u.name : 'Unassigned'; }
+function canAccess(section){
+  const u = state.profile;
+  if(!u) return false;
+  if(Array.isArray(u.permissions) && (u.permissions.includes('*') || u.permissions.includes(section))) return true;
+  return false;
+}
+function visibleTasks(){
+  // RLS already restricts what we can fetch; this is just a belt-and-braces filter.
+  if(isOwner()) return state.tasks;
+  return state.tasks.filter(t => t.assigneeId === currentUserId());
+}
+function notesForMe(){
+  const me = currentUserId();
+  return state.notes.filter(n => n.visibility === 'direct' && n.targetUserId === me);
+}
+function notesMyOwn(){
+  return state.notes.filter(n => n.authorId === currentUserId());
+}
+function notesTeamPublic(){
+  return state.notes.filter(n => n.visibility === 'public');
+}
+
+// ===== DB -> JS SHAPE =====
+function mapUser(u){ return u; } // shapes already match
+function mapEvent(e){
+  return { ...e, date: e.event_date, time: e.event_time || '', desc: e.description || '' };
+}
+function mapTask(t){
+  return { ...t, due: t.due_date, assigneeId: t.assignee_id };
+}
+function mapMember(m){ return m; } // shapes already match
+function mapNote(n){
+  return { ...n, authorId: n.author_id, targetUserId: n.target_user_id, createdAt: n.created_at };
+}
+
+function toast(title, msg){
+  $('#toastTitle').textContent = title;
+  $('#toastMsg').textContent = msg;
+  const t = $('#toast'); t.classList.add('show');
+  clearTimeout(window._tt); window._tt = setTimeout(()=>t.classList.remove('show'), 2600);
+}
+
+function openModal(html){ $('#modalBody').innerHTML = html; $('#modalBack').classList.add('open'); }
+function closeModal(){ $('#modalBack').classList.remove('open'); }
+$('#modalBack').addEventListener('click', e=>{ if(e.target.id==='modalBack') closeModal(); });
+
+// ===== ICONS =====
+const ICONS = {
+  users: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a98bff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  cal: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a98bff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+  check: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a98bff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
+  trend: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a98bff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>',
+};
+</script>
+
+<script>
+// ===== DASHBOARD =====
+function renderDashboard(){
+  const me = currentUser();
+  const owner = isOwner();
+  const totalMembers = state.members.length;
+  const activeMembers = state.members.filter(m=>m.status==='Active').length;
+  const upcoming = state.events.length;
+  const myTasks = visibleTasks();
+  const openTasks = (owner ? state.tasks : myTasks).filter(t=>!t.done).length;
+
+  const eventSorted = [...state.events].sort((a,b)=> new Date(a.date)-new Date(b.date)).slice(0,3);
+  const recentMembers = [...state.members].slice(-4).reverse();
+
+  // Build a real 7-month trailing growth chart from member joined dates
+  const now = new Date();
+  const chartData = [];
+  for(let i=6; i>=0; i--){
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    const label = d.toLocaleDateString('en-GB',{month:'short'});
+    const count = state.members.filter(m => {
+      if(!m.joined) return false;
+      const j = new Date(m.joined);
+      return j <= new Date(d.getFullYear(), d.getMonth()+1, 0);
+    }).length;
+    chartData.push({label, v:count});
+  }
+  const max = Math.max(1, ...chartData.map(d=>d.v));
+  const bars = chartData.map(d=>`
+    <div class="bar" style="height:${max ? (d.v/max)*100 : 0}%">
+      <div class="bar-value">${d.v||''}</div>
+      <div class="bar-label">${d.label}</div>
+    </div>`).join('');
+
+  const tierCounts = state.members.reduce((a,m)=>{a[m.tier]=(a[m.tier]||0)+1;return a;},{});
+  const tierColors = {Platinum:'#a98bff', Gold:'#e8c66b', Silver:'#8a94b8'};
+  const tierTotal = Object.values(tierCounts).reduce((a,b)=>a+b,0);
+  let acc = 0;
+  const segs = Object.entries(tierCounts).map(([k,v])=>{
+    const pct = (v/tierTotal)*100;
+    const s = `${k}|${acc}|${acc+pct}|${tierColors[k] || 'var(--purple)'}`;
+    acc += pct; return s;
+  });
+  const grads = tierTotal === 0
+    ? 'rgba(138,99,255,0.15) 0% 100%'
+    : segs.map(s=>{
+        const [,from,to,color] = s.split('|');
+        return `${color} ${from}% ${to}%`;
+      }).join(',');
+
+  const firstName = me.name.split(' ')[0];
+  const heroDesc = owner
+    ? `Here is your command centre for the Cambridge ETA Club. ${openTasks} open tasks across the team, ${upcoming} upcoming events, and a steadily growing cohort.`
+    : `Welcome back. You have ${openTasks} open tasks assigned to you and ${notesForMe().length} note${notesForMe().length===1?'':'s'} from leadership waiting for you.`;
+
+  // Team progress (owner only)
+  const otherMembers = state.users.filter(u=>u.role!=='Owner');
+  const teamProgress = owner ? `
+    <div class="card" style="margin-bottom:24px">
+      <div class="section-head">
+        <div><div class="card-title">Team progress</div><div class="card-sub">Live view of each team member's workload</div></div>
+        <button class="btn btn-ghost" onclick="switchSection('team')">Manage team</button>
+      </div>
+      ${otherMembers.length === 0 ? '<div class="empty">No team members yet. Add one from the Team section to start assigning work.</div>' : otherMembers.map(u=>{
+        const theirs = state.tasks.filter(t=>t.assigneeId===u.id);
+        const doneCount = theirs.filter(t=>t.done).length;
+        const pct = theirs.length ? Math.round(doneCount/theirs.length*100) : 0;
+        return `
+        <div class="team-row">
+          <div class="avatar">${initials(u.name)}</div>
+          <div style="min-width:160px">
+            <div style="font-size:13px;font-weight:600;color:var(--text)">${esc(u.name)}</div>
+            <div style="font-size:11px;color:var(--text-muted)">${esc(u.role)}</div>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+          <div style="font-size:12px;color:var(--text-dim);min-width:90px;text-align:right">${doneCount}/${theirs.length} tasks</div>
+          <span class="tag ${pct>=75?'green':pct>=40?'gold':'red'}">${pct}%</span>
+        </div>`;
+      }).join('')}
+    </div>
+  ` : '';
+
+  $('#section-dashboard').innerHTML = `
+    <div class="hero">
+      <h1>Welcome back, ${esc(firstName)}</h1>
+      <p>${heroDesc}</p>
+      <div class="hero-actions">
+        ${owner ? '<button class="btn btn-primary" onclick="switchSection(\'events\')">Plan an event</button><button class="btn btn-ghost" onclick="switchSection(\'team\')">Manage team</button>' : '<button class="btn btn-primary" onclick="switchSection(\'tasks\')">View my tasks</button><button class="btn btn-ghost" onclick="switchSection(\'notes\')">Read notes</button>'}
+      </div>
+    </div>
+
+    <div class="grid grid-4" style="margin-bottom:24px">
+      <div class="kpi">
+        <div class="kpi-icon">${ICONS.users}</div>
+        <div class="kpi-label">Total Members</div>
+        <div class="kpi-value">${totalMembers}</div>
+        <div class="kpi-meta"><span class="kpi-trend trend-up">+12%</span> vs last term</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-icon">${ICONS.check}</div>
+        <div class="kpi-label">Active</div>
+        <div class="kpi-value">${activeMembers}</div>
+        <div class="kpi-meta"><span class="kpi-trend trend-up">+4</span> this month</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-icon">${ICONS.cal}</div>
+        <div class="kpi-label">Events Scheduled</div>
+        <div class="kpi-value">${upcoming}</div>
+        <div class="kpi-meta"><span class="kpi-trend trend-up">+2</span> since April</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-icon">${ICONS.trend}</div>
+        <div class="kpi-label">Engagement</div>
+        <div class="kpi-value">94%</div>
+        <div class="kpi-meta"><span class="kpi-trend trend-up">+6%</span> event attendance</div>
+      </div>
+    </div>
+
+    ${teamProgress}
+
+    <div class="grid grid-2-1" style="margin-bottom:24px">
+      <div class="card">
+        <div class="section-head">
+          <div>
+            <div class="card-title">Membership growth</div>
+            <div class="card-sub">New and renewing members · 7 months trailing</div>
+          </div>
+          <div class="tabs"><div class="tab active">Monthly</div><div class="tab">Quarterly</div></div>
+        </div>
+        <div class="bar-chart">${bars}</div>
+        <div style="height:20px"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Membership tiers</div>
+        <div class="card-sub">Distribution across the cohort</div>
+        <div class="donut" style="background:conic-gradient(${grads});border-radius:50%">
+          <div style="position:absolute;inset:22px;background:var(--bg-1);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <div style="font-size:26px;font-weight:700;font-family:'Space Grotesk'">${tierTotal}</div>
+            <div style="font-size:10.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em">Members</div>
+          </div>
+        </div>
+        <div class="legend">
+          ${tierTotal === 0
+            ? '<div class="legend-item" style="color:var(--text-muted);font-size:11.5px">No members yet — add your first one from the Members CRM.</div>'
+            : Object.entries(tierCounts).map(([k,v])=>`
+            <div class="legend-item">
+              <div class="legend-dot" style="background:${tierColors[k] || 'var(--purple)'}"></div>
+              <span style="flex:1">${k}</span>
+              <span style="color:var(--text-muted)">${v}</span>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-2" style="margin-bottom:24px">
+      <div class="card">
+        <div class="section-head">
+          <div><div class="card-title">Upcoming events</div><div class="card-sub">Next three in your calendar</div></div>
+          <button class="btn btn-ghost" onclick="switchSection('events')">View all</button>
+        </div>
+        ${eventSorted.length === 0 ? '<div class="empty">No events scheduled. Create your first one from the Events tab.</div>' : eventSorted.map(e=>{
+          const d = shortDate(e.date);
+          return `
+          <div style="display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--border)">
+            <div style="width:54px;height:54px;border-radius:10px;background:linear-gradient(135deg,rgba(138,99,255,0.25),rgba(106,61,255,0.1));border:1px solid var(--border-strong);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0">
+              <div style="font-size:9.5px;color:var(--purple-2);font-weight:700;letter-spacing:0.06em">${d.month}</div>
+              <div style="font-size:18px;font-weight:700;font-family:'Space Grotesk'">${d.day}</div>
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13.5px;font-weight:600;color:var(--text)">${esc(e.title)}</div>
+              <div style="font-size:11.5px;color:var(--text-muted);margin-top:3px">${esc(e.venue||'')}${e.time?' · '+esc(e.time):''}</div>
+              <div style="margin-top:6px"><span class="tag">${e.attendees||0}/${e.capacity||0} attending</span></div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="card">
+        <div class="section-head">
+          <div><div class="card-title">Recent members</div><div class="card-sub">Latest additions to the club</div></div>
+          <button class="btn btn-ghost" onclick="switchSection('crm')">View all</button>
+        </div>
+        ${recentMembers.length === 0 ? '<div class="empty">No members yet.</div>' : recentMembers.map(m=>`
+          <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
+            <div class="avatar">${initials(m.name)}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:600;color:var(--text)">${esc(m.name)}</div>
+              <div style="font-size:11.5px;color:var(--text-muted)">${esc(m.role||'')}${m.chapter?' · '+esc(m.chapter):''}</div>
+            </div>
+            <span class="tag ${m.tier==='Platinum'?'':m.tier==='Gold'?'gold':'blue'}">${m.tier||''}</span>
+          </div>`).join('')}
+      </div>
+    </div>
+  `;
+}
+
+// ===== EVENTS =====
+function renderEvents(){
+  const cards = state.events.map(e=>{
+    const d = shortDate(e.date);
+    const statusClass = e.status==='Nearly Full'?'gold':'green';
+    return `
+    <div class="event-card">
+      <div class="event-date">
+        <div style="display:flex;flex-direction:column;padding:6px 10px;border-radius:8px;background:rgba(138,99,255,0.12);border:1px solid var(--border);min-width:50px;text-align:center">
+          <div style="font-size:9px;color:var(--purple-2);font-weight:700">${d.month}</div>
+          <div style="font-size:15px;font-weight:700;color:#fff;font-family:'Space Grotesk'">${d.day}</div>
+        </div>
+        <span>${d.weekday} · ${e.time}</span>
+      </div>
+      <div class="event-title">${esc(e.title)}</div>
+      <div class="event-desc">${esc(e.desc)}</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;font-size:11.5px;color:var(--text-muted)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span>${esc(e.venue)}</span>
+      </div>
+      <div class="event-foot">
+        <div class="attendees">
+          ${state.members.slice(0,4).map(m=>`<div class="avatar">${initials(m.name)}</div>`).join('')}
+          <div class="more">+${Math.max(0,e.attendees-4)}</div>
+        </div>
+        <span class="tag ${statusClass}">${e.status}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  $('#section-events').innerHTML = `
+    <div class="section-head">
+      <div>
+        <h2>Upcoming events</h2>
+        <div style="font-size:12.5px;color:var(--text-muted);margin-top:3px">${state.events.length} events in your pipeline</div>
+      </div>
+      <div class="tabs">
+        <div class="tab active">All</div>
+        <div class="tab">This week</div>
+        <div class="tab">This month</div>
+      </div>
+    </div>
+    <div class="grid grid-3">${cards}</div>
+  `;
+}
+</script>
+
+<script>
+// ===== TASKS =====
+function renderTasks(){
+  const owner = isOwner();
+  const scope = visibleTasks();
+  const pending = scope.filter(t=>!t.done);
+  const done = scope.filter(t=>t.done);
+  const highP = pending.filter(t=>t.priority==='High').length;
+
+  const taskRow = (t) => {
+    const prioClass = t.priority==='High'?'red':t.priority==='Medium'?'gold':'blue';
+    return `
+    <div class="task-row ${t.done?'done':''}">
+      <div class="checkbox ${t.done?'checked':''}" onclick="toggleTask('${t.id}')"></div>
+      <div class="task-info">
+        <div class="task-title">${esc(t.title)}</div>
+        <div class="task-meta">
+          <span>${t.due?fmtDate(t.due):'No due date'}</span>
+          <span>·</span>
+          <span>${esc(userName(t.assigneeId))}</span>
+          ${t.project?`<span>·</span><span>${esc(t.project)}</span>`:''}
+        </div>
+      </div>
+      <span class="tag ${prioClass}">${t.priority}</span>
+    </div>`;
+  };
+
+  const ownersCount = new Set(scope.map(t=>t.assigneeId)).size;
+  const cardSub = owner ? 'Everything your team is working on' : 'Tasks assigned to you';
+
+  $('#section-tasks').innerHTML = `
+    <div class="grid grid-4" style="margin-bottom:24px">
+      <div class="kpi"><div class="kpi-label">${owner?'Open':'My open'}</div><div class="kpi-value">${pending.length}</div><div class="kpi-meta">${highP} high priority</div></div>
+      <div class="kpi"><div class="kpi-label">Completed</div><div class="kpi-value">${done.length}</div><div class="kpi-meta">this cycle</div></div>
+      <div class="kpi"><div class="kpi-label">Due this week</div><div class="kpi-value">${pending.filter(t=>{const d=new Date(t.due);const n=new Date();return (d-n)/(1000*60*60*24)<=7;}).length}</div><div class="kpi-meta">next 7 days</div></div>
+      <div class="kpi"><div class="kpi-label">${owner?'Assignees':'Project'}</div><div class="kpi-value">${owner?ownersCount:new Set(scope.map(t=>t.project)).size}</div><div class="kpi-meta">${owner?'active contributors':'workstreams'}</div></div>
+    </div>
+
+    <div class="card">
+      <div class="section-head">
+        <div><div class="card-title">${owner?'Open tasks':'My open tasks'}</div><div class="card-sub">${cardSub}</div></div>
+        <div class="tabs"><div class="tab active">All</div><div class="tab">High</div></div>
+      </div>
+      ${pending.map(taskRow).join('') || '<div class="empty">Nothing pending. Nice work.</div>'}
+    </div>
+
+    <div class="card" style="margin-top:24px">
+      <div class="card-title">Completed</div>
+      <div class="card-sub">Closed out recently</div>
+      ${done.map(taskRow).join('') || '<div class="empty">Nothing completed yet.</div>'}
+    </div>
+  `;
+}
+
+// ===== NOTES =====
+let notesTab = 'forme';
+function renderNotes(){
+  const owner = isOwner();
+  const forMe = notesForMe();
+  const mine = notesMyOwn();
+  const team = notesTeamPublic();
+  const pinnedForMe = forMe.filter(n=>n.pinned).length;
+
+  const noteCard = (n) => {
+    const a = userById(n.authorId);
+    const target = n.targetUserId ? userById(n.targetUserId) : null;
+    const visLabel = n.visibility==='direct' ? (target ? `to ${target.name}` : 'direct')
+                    : n.visibility==='public' ? 'team public'
+                    : 'private';
+    const visClass = n.visibility;
+    return `
+    <div class="note-card ${visClass}${n.pinned?' pinned':''}">
+      <div class="note-head">
+        <div class="avatar">${initials(a.name)}</div>
+        <div>
+          <div class="note-author">${esc(a.name)}</div>
+          <div style="font-size:10.5px;color:var(--text-muted)">${esc(a.role)}</div>
+        </div>
+        <div class="note-meta">${fmtDate(n.createdAt)}</div>
+      </div>
+      <div class="note-title">${esc(n.title)}</div>
+      <div class="note-body">${esc(n.content)}</div>
+      <div class="note-foot">
+        <span class="tag ${n.visibility==='public'?'green':n.visibility==='private'?'gold':''}">${visLabel}</span>
+        ${n.authorId===currentUserId() ? `<button class="btn btn-ghost" style="margin-left:auto;padding:6px 12px;font-size:11px" onclick="deleteNote('${n.id}')">Delete</button>` : ''}
+      </div>
+    </div>`;
+  };
+
+  const lists = {
+    forme: forMe,
+    mine: mine,
+    team: team,
+  };
+  const active = lists[notesTab];
+  const emptyMsg = {
+    forme: 'No direct notes yet. When leadership shares guidance with you, it appears here.',
+    mine: 'You have not written any notes yet. Create one with the button above.',
+    team: 'No public team notes yet.',
+  }[notesTab];
+
+  $('#section-notes').innerHTML = `
+    <div class="grid grid-4" style="margin-bottom:24px">
+      <div class="kpi"><div class="kpi-label">For me</div><div class="kpi-value">${forMe.length}</div><div class="kpi-meta">${pinnedForMe} pinned</div></div>
+      <div class="kpi"><div class="kpi-label">My notes</div><div class="kpi-value">${mine.length}</div><div class="kpi-meta">${mine.filter(n=>n.visibility==='private').length} private</div></div>
+      <div class="kpi"><div class="kpi-label">Team public</div><div class="kpi-value">${team.length}</div><div class="kpi-meta">visible to everyone</div></div>
+      <div class="kpi"><div class="kpi-label">Authors</div><div class="kpi-value">${new Set(state.notes.map(n=>n.authorId)).size}</div><div class="kpi-meta">people sharing</div></div>
+    </div>
+
+    <div class="section-head">
+      <div>
+        <h2>Notes</h2>
+        <div style="font-size:12.5px;color:var(--text-muted);margin-top:3px">Private, public and direct notes across the team</div>
+      </div>
+      <div class="tabs">
+        <div class="tab ${notesTab==='forme'?'active':''}" onclick="switchNotesTab('forme')">For me <span style="opacity:0.6">(${forMe.length})</span></div>
+        <div class="tab ${notesTab==='mine'?'active':''}" onclick="switchNotesTab('mine')">My notes <span style="opacity:0.6">(${mine.length})</span></div>
+        <div class="tab ${notesTab==='team'?'active':''}" onclick="switchNotesTab('team')">Team <span style="opacity:0.6">(${team.length})</span></div>
+      </div>
+    </div>
+
+    <div class="grid grid-2">
+      ${active.length ? active.map(noteCard).join('') : `<div class="card" style="grid-column:1/-1"><div class="empty">${emptyMsg}</div></div>`}
+    </div>
+  `;
+
+  // badge
+  const badge = $('#notesBadge');
+  if(forMe.length){ badge.style.display='inline-block'; badge.textContent=forMe.length; }
+  else { badge.style.display='none'; }
+}
+function switchNotesTab(t){ notesTab = t; renderNotes(); }
+async function deleteNote(id){
+  const { error } = await sb.from('eta_notes').delete().eq('id', id);
+  if(error){ toast('Could not delete', error.message); return; }
+  state.notes = state.notes.filter(n=>n.id!==id);
+  renderNotes();
+  toast('Note deleted','Removed from your notes');
+}
+
+// ===== TEAM =====
+function renderTeam(){
+  if(!isOwner()){
+    $('#section-team').innerHTML = `<div class="card"><div class="empty">Only the Owner can manage the team. Switch user from the topbar to see this view.</div></div>`;
+    return;
+  }
+  const PERM_OPTIONS = ['dashboard','events','tasks','crm','notes'];
+  const rows = state.users.map(u=>{
+    const theirs = state.tasks.filter(t=>t.assigneeId===u.id);
+    const doneCount = theirs.filter(t=>t.done).length;
+    const overdue = theirs.filter(t=>!t.done && new Date(t.due) < new Date()).length;
+    const pct = theirs.length ? Math.round(doneCount/theirs.length*100) : 0;
+    const isO = u.role==='Owner';
+    const perms = isO ? '<span class="tag">Full access</span>' :
+      PERM_OPTIONS.map(p=>{
+        const has = u.permissions.includes(p);
+        return `<span class="tag ${has?'green':'red'}" style="cursor:pointer" onclick="togglePerm('${u.id}','${p}')">${has?'':'—'} ${p}</span>`;
+      }).join(' ');
+    return `
+    <tr>
+      <td>
+        <div class="contact-cell">
+          <div class="avatar">${initials(u.name)}</div>
+          <div class="info">
+            <div class="name">${esc(u.name)}</div>
+            <div class="email">${esc(u.email)}</div>
+          </div>
+        </div>
+      </td>
+      <td>${isO ? esc(u.role) : `<input class="input" style="padding:6px 10px;font-size:12px;max-width:140px" value="${esc(u.role)}" onblur="updateUserRole('${u.id}', this.value.trim() || 'Member')"/>`}</td>
+      <td style="min-width:280px">${perms}</td>
+      <td style="min-width:180px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="progress-bar" style="min-width:90px"><div class="progress-fill" style="width:${pct}%"></div></div>
+          <span style="font-size:11.5px;color:var(--text-muted)">${doneCount}/${theirs.length}</span>
+        </div>
+      </td>
+      <td>${overdue>0?`<span class="tag red">${overdue} overdue</span>`:`<span class="tag green">on track</span>`}</td>
+      <td>
+        <button class="btn btn-ghost" style="padding:6px 12px;font-size:11px" onclick="writeNoteTo('${u.id}')">${isO?'Note':'Write note'}</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  $('#section-team').innerHTML = `
+    <div class="grid grid-4" style="margin-bottom:24px">
+      <div class="kpi"><div class="kpi-label">Team size</div><div class="kpi-value">${state.users.length}</div><div class="kpi-meta">active members</div></div>
+      <div class="kpi"><div class="kpi-label">Tasks assigned</div><div class="kpi-value">${state.tasks.length}</div><div class="kpi-meta">${state.tasks.filter(t=>!t.done).length} open</div></div>
+      <div class="kpi"><div class="kpi-label">Completion</div><div class="kpi-value">${state.tasks.length?Math.round(state.tasks.filter(t=>t.done).length/state.tasks.length*100):0}%</div><div class="kpi-meta">across the team</div></div>
+      <div class="kpi"><div class="kpi-label">Direct notes</div><div class="kpi-value">${state.notes.filter(n=>n.visibility==='direct').length}</div><div class="kpi-meta">leadership to team</div></div>
+    </div>
+
+    <div class="card">
+      <div class="section-head">
+        <div><div class="card-title">Team members</div><div class="card-sub">Monitor progress, grant section access, and leave direct notes</div></div>
+        <button class="btn btn-primary" onclick="openNewTeamMemberModal()">Add team member</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="table">
+          <thead>
+            <tr><th>Member</th><th>Role</th><th>Permissions</th><th>Progress</th><th>Status</th><th></th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <div style="margin-top:14px;font-size:11.5px;color:var(--text-muted)">Tip: click any permission tag to toggle access. Use the topbar user switcher to preview the app as that team member.</div>
+    </div>
+  `;
+}
+
+async function togglePerm(uid, perm){
+  const u = userById(uid);
+  if(!u || u.role==='Owner') return;
+  const nextPerms = u.permissions.includes(perm)
+    ? u.permissions.filter(p => p !== perm)
+    : [...u.permissions, perm];
+  const { error } = await sb.from('eta_users').update({ permissions: nextPerms }).eq('id', uid);
+  if(error){ toast('Could not update', error.message); return; }
+  u.permissions = nextPerms;
+  renderTeam();
+  toast('Permission updated', `${u.name}: ${perm} ${u.permissions.includes(perm)?'granted':'removed'}`);
+}
+
+function writeNoteTo(uid){
+  openNewNoteModal(uid);
+}
+
+async function toggleTask(id){
+  const t = state.tasks.find(x => x.id === id);
+  if(!t) return;
+  const next = !t.done;
+  const { error } = await sb.from('eta_tasks').update({ done: next }).eq('id', id);
+  if(error){ toast('Could not update task', error.message); return; }
+  t.done = next;
+  renderTasks();
+  renderDashboard();
+  toast(next?'Task completed':'Task reopened', t.title);
+}
+
+// ===== CRM =====
+function renderCrm(){
+  const rows = state.members.map(m=>{
+    const tierClass = m.tier==='Platinum'?'':m.tier==='Gold'?'gold':'blue';
+    const statusClass = m.status==='Active'?'green':'gold';
+    return `
+    <tr>
+      <td>
+        <div class="contact-cell">
+          <div class="avatar">${initials(m.name)}</div>
+          <div class="info">
+            <div class="name">${esc(m.name)}</div>
+            <div class="email">${esc(m.email)}</div>
+          </div>
+        </div>
+      </td>
+      <td>${esc(m.role)}</td>
+      <td>${esc(m.chapter)}</td>
+      <td><span class="tag ${tierClass}">${m.tier}</span></td>
+      <td><span class="tag ${statusClass}">${m.status}</span></td>
+      <td style="color:var(--text-muted)">${fmtDate(m.joined)}</td>
+    </tr>`;
+  }).join('');
+
+  const counts = {
+    Investor: state.members.filter(m=>m.role==='Investor').length,
+    Founder: state.members.filter(m=>m.role==='Founder').length,
+    Searcher: state.members.filter(m=>m.role==='Searcher').length,
+    Mentor: state.members.filter(m=>m.role==='Mentor').length,
+  };
+
+  $('#section-crm').innerHTML = `
+    <div class="grid grid-4" style="margin-bottom:24px">
+      <div class="kpi"><div class="kpi-label">Investors</div><div class="kpi-value">${counts.Investor}</div><div class="kpi-meta">LPs &amp; sponsors</div></div>
+      <div class="kpi"><div class="kpi-label">Founders</div><div class="kpi-value">${counts.Founder}</div><div class="kpi-meta">operator cohort</div></div>
+      <div class="kpi"><div class="kpi-label">Searchers</div><div class="kpi-value">${counts.Searcher}</div><div class="kpi-meta">active programmes</div></div>
+      <div class="kpi"><div class="kpi-label">Mentors</div><div class="kpi-value">${counts.Mentor}</div><div class="kpi-meta">senior advisors</div></div>
+    </div>
+
+    <div class="card">
+      <div class="section-head">
+        <div><div class="card-title">Members directory</div><div class="card-sub">${state.members.length} members across the Cambridge ETA community</div></div>
+        <div class="tabs"><div class="tab active">All</div><div class="tab">Active</div><div class="tab">Pending</div></div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="table">
+          <thead>
+            <tr><th>Member</th><th>Role</th><th>College</th><th>Tier</th><th>Status</th><th>Joined</th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+// ===== MODALS (Add flows) =====
+function openNewEventModal(){
+  openModal(`
+    <h3>Create new event</h3>
+    <div class="modal-sub">Add an event to the Cambridge ETA calendar.</div>
+    <div class="field"><label>Title</label><input class="input" id="f_title" placeholder="e.g. Spring Investor Drinks"/></div>
+    <div class="grid grid-2" style="gap:12px">
+      <div class="field"><label>Date</label><input class="input" id="f_date" type="date" value="2026-05-01"/></div>
+      <div class="field"><label>Time</label><input class="input" id="f_time" type="time" value="18:30"/></div>
+    </div>
+    <div class="field"><label>Venue</label><input class="input" id="f_venue" placeholder="e.g. Jesus College, Upper Hall"/></div>
+    <div class="field"><label>Description</label><textarea class="input" id="f_desc" rows="3"></textarea></div>
+    <div class="grid grid-2" style="gap:12px">
+      <div class="field"><label>Capacity</label><input class="input" id="f_cap" type="number" value="60"/></div>
+      <div class="field"><label>Status</label><select class="input" id="f_stat"><option>Open</option><option>Nearly Full</option><option>Draft</option></select></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEvent()">Create event</button>
+    </div>
+  `);
+}
+async function saveEvent(){
+  const title = $('#f_title').value.trim();
+  if(!title){ toast('Missing title','Please give the event a name'); return; }
+  const payload = {
+    title,
+    event_date: $('#f_date').value,
+    event_time: $('#f_time').value,
+    venue: $('#f_venue').value || null,
+    description: $('#f_desc').value || null,
+    capacity: parseInt($('#f_cap').value,10) || 50,
+    attendees: 0,
+    status: $('#f_stat').value,
+    created_by: currentUserId(),
+  };
+  const { data, error } = await sb.from('eta_events').insert(payload).select().single();
+  if(error){ toast('Could not save', error.message); return; }
+  state.events.push(mapEvent(data));
+  closeModal();
+  renderEvents(); renderDashboard();
+  toast('Event created', title);
+}
+
+function openNewTaskModal(){
+  const today = new Date().toISOString().slice(0,10);
+  const assigneeOptions = state.users.map(u =>
+    `<option value="${u.id}" ${u.id===currentUserId()?'selected':''}>${esc(u.name)} · ${esc(u.role)}</option>`
+  ).join('');
+  openModal(`
+    <h3>New task</h3>
+    <div class="modal-sub">Track something the club needs to get done.</div>
+    <div class="field"><label>Task</label><input class="input" id="t_title"/></div>
+    <div class="grid grid-2" style="gap:12px">
+      <div class="field"><label>Due</label><input class="input" id="t_due" type="date" value="${today}"/></div>
+      <div class="field"><label>Priority</label><select class="input" id="t_prio"><option>High</option><option selected>Medium</option><option>Low</option></select></div>
+    </div>
+    <div class="field"><label>Assign to</label><select class="input" id="t_assignee" ${isOwner()?'':'disabled'}>${assigneeOptions}</select></div>
+    <div class="field"><label>Project</label><input class="input" id="t_proj" placeholder="e.g. Annual Summit"/></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTask()">Add task</button>
+    </div>
+  `);
+}
+async function saveTask(){
+  const title = $('#t_title').value.trim();
+  if(!title){ toast('Missing title','Please describe the task'); return; }
+  const payload = {
+    title,
+    due_date: $('#t_due').value || null,
+    priority: $('#t_prio').value,
+    assignee_id: $('#t_assignee').value || currentUserId(),
+    project: $('#t_proj').value || null,
+    done: false,
+    created_by: currentUserId(),
+  };
+  const { data, error } = await sb.from('eta_tasks').insert(payload).select().single();
+  if(error){ toast('Could not save', error.message); return; }
+  state.tasks.push(mapTask(data));
+  closeModal(); renderTasks(); renderDashboard();
+  toast('Task added', title);
+}
+
+function openNewMemberModal(){
+  openModal(`
+    <h3>Add member</h3>
+    <div class="modal-sub">Invite a new member to the Cambridge ETA club.</div>
+    <div class="field"><label>Full name</label><input class="input" id="m_name"/></div>
+    <div class="field"><label>Email</label><input class="input" id="m_email" type="email"/></div>
+    <div class="grid grid-2" style="gap:12px">
+      <div class="field"><label>Role</label><select class="input" id="m_role"><option>Investor</option><option>Founder</option><option>Searcher</option><option>Mentor</option><option>Advisor</option></select></div>
+      <div class="field"><label>College</label><input class="input" id="m_college" placeholder="e.g. Jesus College"/></div>
+    </div>
+    <div class="grid grid-2" style="gap:12px">
+      <div class="field"><label>Tier</label><select class="input" id="m_tier"><option>Platinum</option><option selected>Gold</option><option>Silver</option></select></div>
+      <div class="field"><label>Status</label><select class="input" id="m_stat"><option>Active</option><option>Pending</option></select></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveMember()">Add member</button>
+    </div>
+  `);
+}
+async function saveMember(){
+  const name = $('#m_name').value.trim();
+  if(!name){ toast('Missing name','Enter the member\'s full name'); return; }
+  const payload = {
+    name,
+    email: $('#m_email').value || null,
+    role: $('#m_role').value,
+    chapter: $('#m_college').value || null,
+    tier: $('#m_tier').value,
+    status: $('#m_stat').value,
+    created_by: currentUserId(),
+  };
+  const { data, error } = await sb.from('eta_members').insert(payload).select().single();
+  if(error){ toast('Could not save', error.message); return; }
+  state.members.push(mapMember(data));
+  closeModal(); renderCrm(); renderDashboard();
+  toast('Member added', name);
+}
+
+// ===== NOTES MODAL =====
+function openNewNoteModal(prefillTargetId){
+  const owner = isOwner();
+  const visibilityOptions = owner
+    ? '<option value="direct">Direct to a team member</option><option value="public">Public (whole team)</option><option value="private">Private (just me)</option>'
+    : '<option value="private">Private (just me)</option><option value="public">Public (whole team)</option>';
+  const targetOptions = state.users.filter(u=>u.id!==currentUserId()).map(u=>`<option value="${u.id}" ${prefillTargetId===u.id?'selected':''}>${esc(u.name)} · ${esc(u.role)}</option>`).join('');
+  openModal(`
+    <h3>New note</h3>
+    <div class="modal-sub">Capture a thought, guidance or briefing.</div>
+    <div class="field"><label>Visibility</label><select class="input" id="n_vis" onchange="updateNoteVisibility()">${visibilityOptions}</select></div>
+    <div class="field" id="n_target_field" style="${owner?'':'display:none'}"><label>Direct to</label><select class="input" id="n_target">${targetOptions}</select></div>
+    <div class="field"><label>Title</label><input class="input" id="n_title" placeholder="e.g. Budget review priorities"/></div>
+    <div class="field"><label>Content</label><textarea class="input" id="n_content" rows="5" placeholder="Write your note..."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNote()">Save note</button>
+    </div>
+  `);
+  updateNoteVisibility();
+}
+function updateNoteVisibility(){
+  const v = $('#n_vis').value;
+  $('#n_target_field').style.display = v==='direct' ? 'block' : 'none';
+}
+async function saveNote(){
+  const title = $('#n_title').value.trim();
+  const content = $('#n_content').value.trim();
+  const vis = $('#n_vis').value;
+  if(!title || !content){ toast('Missing fields','Please add a title and content'); return; }
+  const target = vis==='direct' ? $('#n_target').value : null;
+  const payload = {
+    author_id: currentUserId(),
+    target_user_id: target,
+    visibility: vis,
+    title,
+    content,
+    pinned: false,
+  };
+  const { data, error } = await sb.from('eta_notes').insert(payload).select().single();
+  if(error){ toast('Could not save', error.message); return; }
+  state.notes.unshift(mapNote(data));
+  closeModal();
+  if(vis==='direct') notesTab = 'mine';  // author always sees it in "My notes"
+  else if(vis==='private') notesTab = 'mine';
+  else notesTab = 'team';
+  renderNotes(); renderDashboard();
+  toast('Note saved', vis==='direct' ? `Sent to ${userName(target)}` : vis==='public' ? 'Visible to the whole team' : 'Visible only to you');
+}
+
+// ===== TEAM MEMBER MODAL =====
+function openNewTeamMemberModal(){
+  openModal(`
+    <h3>Add team member</h3>
+    <div class="modal-sub">Add someone to the internal operations team. You can flip their permissions afterwards from the Team table.</div>
+    <div class="field"><label>Full name</label><input class="input" id="tm_name" placeholder="e.g. Priya Raghavan"/></div>
+    <div class="field"><label>Email</label><input class="input" id="tm_email" type="email" placeholder="priya@cambridge-eta.co.uk"/></div>
+    <div class="field"><label>Role</label><input class="input" id="tm_role" placeholder="e.g. Events Lead"/></div>
+    <div class="field"><label>Permissions</label>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px">
+        ${['dashboard','events','tasks','crm','notes'].map(p=>`
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;cursor:pointer">
+            <input type="checkbox" class="tm_perm" value="${p}" ${p==='dashboard'||p==='tasks'||p==='notes'?'checked':''}/>${p}
+          </label>
+        `).join('')}
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTeamMember()">Add member</button>
+    </div>
+  `);
+}
+async function saveTeamMember(){
+  const name = ($('#tm_name').value || '').trim();
+  if(!name){ toast('Missing name','Enter the team member\'s name'); return; }
+  const perms = Array.from(document.querySelectorAll('.tm_perm')).filter(c=>c.checked).map(c=>c.value);
+  const email = $('#tm_email').value || (name.toLowerCase().replace(/\s+/g,'.')+'@cambridge-eta.co.uk');
+  const payload = {
+    email,
+    name,
+    role: $('#tm_role').value || 'Team Member',
+    permissions: perms,
+  };
+  const { data, error } = await sb.from('eta_users').insert(payload).select().single();
+  if(error){ toast('Could not save', error.message); return; }
+  state.users.push(mapUser(data));
+  closeModal();
+  renderTeam();
+  renderUserMenu();
+  renderDashboard();
+  toast('Team member added', name);
+}
+async function updateUserRole(uid, nextRole){
+  const { error } = await sb.from('eta_users').update({ role: nextRole }).eq('id', uid);
+  if(error){ toast('Could not update', error.message); return; }
+  const u = userById(uid);
+  if(u) u.role = nextRole;
+  renderTeam();
+  toast('Role updated', `${u?u.name:'User'} is now ${nextRole}`);
+}
+
+// ===== THEME =====
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme', state.theme);
+  const show = (id, on) => { const el = document.getElementById(id); if(el) el.style.display = on ? 'block' : 'none'; };
+  show('themeIconDark',  state.theme==='dark');
+  show('themeIconLight', state.theme==='light');
+}
+function toggleTheme(){
+  state.theme = state.theme==='dark' ? 'light' : 'dark';
+  localStorage.setItem('eta-theme', state.theme);
+  applyTheme();
+  if(state.profile) toast('Theme switched', `Now using ${state.theme} mode`);
+}
+
+// ===== USER MENU =====
+function renderUserMenu(){
+  const me = currentUser();
+  if(!me) return;
+  $('#chipAvatar').textContent = initials(me.name);
+  $('#chipName').textContent = me.name;
+  $('#chipRole').textContent = me.role;
+  const menu = $('#userMenu');
+  menu.innerHTML = `
+    <div style="padding:14px 12px 10px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border)">
+      <div class="avatar">${initials(me.name)}</div>
+      <div style="min-width:0;flex:1">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">${esc(me.name)}</div>
+        <div style="font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(me.email||'')}</div>
+      </div>
+    </div>
+    <div style="padding:10px 12px;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;font-weight:600">Role</div>
+    <div style="padding:0 12px 10px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <span class="tag">${esc(me.role)}</span>
+      <span style="font-size:10.5px;color:var(--text-muted)">${(me.permissions||[]).join(' · ') || 'No access'}</span>
+    </div>
+    <div class="user-menu-item" onclick="resetLocalData()" style="border-top:1px solid var(--border);margin-top:6px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+      <div class="info"><div class="name">Reset all data</div><div class="role">Wipe local storage</div></div>
+    </div>
+  `;
+}
+function toggleUserMenu(e){
+  if(e) e.stopPropagation();
+  $('#userMenu').classList.toggle('open');
+}
+
+function resetLocalData(){
+  if(!confirm('This will permanently delete all events, tasks, members and notes stored in this browser. Continue?')) return;
+  localStorage.removeItem(LOCAL_DATA_KEY);
+  window.location.reload();
+}
+document.addEventListener('click', (e)=>{
+  const sw = document.getElementById('userSwitcher');
+  if(sw && !sw.contains(e.target)) $('#userMenu').classList.remove('open');
+});
+
+// ===== PERMISSIONS: sidebar visibility =====
+function applyPermissions(){
+  const owner = isOwner();
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    const nav = n.dataset.nav;
+    const ownerOnly = n.hasAttribute('data-owner-only');
+    // Team is owner-only; Notes and Dashboard always available if authed
+    const allowed = (nav === 'team' ? owner : (canAccess(nav) || nav === 'dashboard'));
+    n.style.display = allowed ? '' : 'none';
+  });
+}
+
+// ===== ROUTER =====
+const SECTION_CONFIG = {
+  dashboard: {title:'Dashboard',    subtitle:'Your club at a glance',                  btn:'New Event',  action: openNewEventModal},
+  events:    {title:'Events',       subtitle:'Calendar, planning & capacity',          btn:'New Event',  action: openNewEventModal},
+  tasks:     {title:'Tasks',        subtitle:'What you are working on',                btn:'New Task',   action: openNewTaskModal},
+  crm:       {title:'Members CRM',  subtitle:'Directory of the Cambridge ETA community', btn:'Add Member', action: openNewMemberModal},
+  notes:     {title:'Notes',        subtitle:'Private, public & direct notes',         btn:'New Note',   action: ()=>openNewNoteModal()},
+  team:      {title:'Team',         subtitle:'Manage permissions and monitor progress',btn:'Add Member', action: openNewTeamMemberModal},
+};
+
+function switchSection(name){
+  if(!canAccess(name)){ toast('No access', `You do not have permission to view ${name}`); return; }
+  if(name==='team' && !isOwner()){ toast('Owner only','Only the Owner can manage the team'); return; }
+  state.section = name;
+  $$('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.nav===name));
+  $$('.section').forEach(s=>s.classList.toggle('active', s.id===`section-${name}`));
+  const cfg = SECTION_CONFIG[name];
+  $('#pageTitle').textContent = cfg.title;
+  $('#pageSubtitle').textContent = cfg.subtitle;
+  $('#primaryBtnLabel').textContent = cfg.btn;
+  $('#primaryBtn').onclick = cfg.action;
+  // re-render for freshness
+  if(name==='dashboard') renderDashboard();
+  if(name==='events') renderEvents();
+  if(name==='tasks') renderTasks();
+  if(name==='crm') renderCrm();
+  if(name==='notes') renderNotes();
+  if(name==='team') renderTeam();
+}
+
+$$('.nav-item').forEach(n=>n.addEventListener('click',()=>switchSection(n.dataset.nav)));
+{
+  const tt = document.getElementById('themeToggle');
+  if(tt) tt.addEventListener('click', toggleTheme);
+  const aib = document.getElementById('aiBtn');
+  if(aib) aib.addEventListener('click', openAiDrawer);
+  const aii = document.getElementById('aiInput');
+  if(aii){
+    aii.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter' && !e.shiftKey){
+        e.preventDefault();
+        sendAiMessage();
+      }
+    });
+    // auto-grow
+    aii.addEventListener('input', () => {
+      aii.style.height = 'auto';
+      aii.style.height = Math.min(140, aii.scrollHeight) + 'px';
+    });
+  }
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape') closeAiDrawer();
+  });
+}
+
+// ===== DATA LOADING (local storage) =====
+async function loadAll(){
+  const [users, events, tasks, members, notes] = await Promise.all([
+    sb.from('eta_users').select('*').order('created_at', {ascending:true}),
+    sb.from('eta_events').select('*').order('event_date', {ascending:true}),
+    sb.from('eta_tasks').select('*').order('due_date', {ascending:true, nullsFirst:false}),
+    sb.from('eta_members').select('*').order('created_at', {ascending:false}),
+    sb.from('eta_notes').select('*').order('created_at', {ascending:false}),
+  ]);
+  state.users   = (users.data   || []).map(mapUser);
+  state.events  = (events.data  || []).map(mapEvent);
+  state.tasks   = (tasks.data   || []).map(mapTask);
+  state.members = (members.data || []).map(mapMember);
+  state.notes   = (notes.data   || []).map(mapNote);
+  // Hardcoded local Owner. Seeded by _loadLocal() on first run.
+  state.profile = state.users.find(u => u.id === LOCAL_OWNER_ID) || state.users[0] || null;
+}
+
+async function bootApp(){
+  try { await loadAll(); } catch(e){ console.error('loadAll failed:', e); }
+  renderUserMenu();
+  applyPermissions();
+  renderDashboard();
+  renderEvents();
+  renderTasks();
+  renderCrm();
+  renderNotes();
+  renderTeam();
+  const target = canAccess(state.section) ? state.section : 'dashboard';
+  switchSection(target);
+}
+
+
+// ============================================================
+// ===== AI ASSISTANT (Claude tool-use via browser API) =======
+// ============================================================
+
+const AI_MODEL = 'claude-sonnet-4-5';  // Change to 'claude-opus-4-5' for Opus, or any current Anthropic model ID
+const AI_STORAGE_KEY = 'eta-ai-key';
+const aiState = {
+  history: [],   // Claude messages format
+  busy: false,
+};
+
+const AI_TOOLS = [
+  {
+    name: 'list_team',
+    description: 'List all app users (the operational team running the club platform), with their emails, roles and current permissions. Use this if you need to look up who to assign something to.',
+    input_schema: { type: 'object', properties: {} }
+  },
+  {
+    name: 'create_task',
+    description: 'Create a task and optionally assign it to a team member by email. If the user names someone, look up the matching email from the team list in the system prompt.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        title:          { type: 'string', description: 'Short task description' },
+        assignee_email: { type: 'string', description: 'Email of the team member to assign to. Optional; defaults to the current user.' },
+        due_date:       { type: 'string', description: 'ISO date YYYY-MM-DD. Optional.' },
+        priority:       { type: 'string', enum: ['High','Medium','Low'], description: 'Defaults to Medium if not specified' },
+        project:        { type: 'string', description: 'Project or event the task belongs to. Optional.' }
+      },
+      required: ['title']
+    }
+  },
+  {
+    name: 'create_event',
+    description: 'Schedule an event on the club calendar.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        title:       { type: 'string' },
+        date:        { type: 'string', description: 'ISO date YYYY-MM-DD' },
+        time:        { type: 'string', description: '24h HH:MM' },
+        venue:       { type: 'string' },
+        description: { type: 'string' },
+        capacity:    { type: 'integer' }
+      },
+      required: ['title','date']
+    }
+  },
+  {
+    name: 'add_club_member',
+    description: 'Add someone to the Cambridge ETA club members directory (an actual club member, not an operational team user).',
+    input_schema: {
+      type: 'object',
+      properties: {
+        name:    { type: 'string' },
+        email:   { type: 'string' },
+        role:    { type: 'string', description: 'e.g. Investor, Founder, Searcher, Mentor' },
+        chapter: { type: 'string', description: 'Cambridge college, e.g. Jesus College' },
+        tier:    { type: 'string', enum: ['Platinum','Gold','Silver'] },
+        status:  { type: 'string', enum: ['Active','Pending'] }
+      },
+      required: ['name']
+    }
+  },
+  {
+    name: 'write_note',
+    description: 'Write a note. visibility=private is only visible to you, public is visible to the whole team, direct must include target_email.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        title:        { type: 'string' },
+        content:      { type: 'string' },
+        visibility:   { type: 'string', enum: ['private','public','direct'] },
+        target_email: { type: 'string', description: 'Required when visibility is "direct"' }
+      },
+      required: ['title','content','visibility']
+    }
+  },
+  {
+    name: 'update_team_member',
+    description: 'Update a team member\'s role and/or permissions. Owner-only. Permissions are a subset of [dashboard, events, tasks, crm, notes].',
+    input_schema: {
+      type: 'object',
+      properties: {
+        target_email: { type: 'string' },
+        new_role:     { type: 'string', description: 'New role label' },
+        permissions:  { type: 'array', items: { type: 'string' }, description: 'New full permission list (replaces existing)' }
+      },
+      required: ['target_email']
+    }
+  }
+];
+
+function aiSystemPrompt(){
+  const today = new Date().toISOString().slice(0,10);
+  const me = currentUser();
+  const team = state.users.map(u =>
+    `- ${u.name} <${u.email}> · role=${u.role} · permissions=[${(u.permissions||[]).join(', ')}]`
+  ).join('\n');
+  const ownerNote = isOwner()
+    ? 'The current user is the Owner, so you may call update_team_member.'
+    : 'The current user is NOT the Owner. Do not call update_team_member.';
+  return `You are the AI assistant for the Cambridge ETA Club Management Platform.
+
+You help ${me.name} (${me.role}) run the club by creating events, tasks, notes, members, and updating team settings through the tools provided.
+
+Today is ${today}.
+${ownerNote}
+
+Current operational team (app users):
+${team || '(only the current user so far)'}
+
+Rules:
+- When the user asks for something, pick the right tool and call it directly. Don't narrate the steps.
+- Resolve people by name to their email from the team list above. If ambiguous, ask a single short clarifying question.
+- For relative dates (tomorrow, Friday, next week, "in two weeks"), compute the concrete YYYY-MM-DD.
+- If a required field is missing and you can't reasonably infer it, ask one concise question.
+- After a tool succeeds, confirm briefly in one sentence. No bullet lists, no restating everything.
+- Never invent people, emails, colleges or dates. If you don't know, ask.
+- Be confident and concise — this is a management tool, not casual chat.`;
+}
+
+async function callClaude(apiKey, messages){
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: AI_MODEL,
+      max_tokens: 1024,
+      system: aiSystemPrompt(),
+      tools: AI_TOOLS,
+      messages,
+    })
+  });
+  if(!res.ok){
+    const text = await res.text();
+    throw new Error(`Claude API ${res.status}: ${text.slice(0,200)}`);
+  }
+  return await res.json();
+}
+
+// ===== TOOL IMPLEMENTATIONS =====
+function aiUserByEmail(email){
+  if(!email) return null;
+  return state.users.find(u => (u.email || '').toLowerCase() === email.toLowerCase());
+}
+
+async function toolCreateTask(input){
+  const assignee = input.assignee_email ? aiUserByEmail(input.assignee_email) : currentUser();
+  if(input.assignee_email && !assignee) return { error: `No team member with email ${input.assignee_email}.` };
+  const payload = {
+    title: input.title,
+    due_date: input.due_date || null,
+    priority: input.priority || 'Medium',
+    assignee_id: assignee ? assignee.id : currentUserId(),
+    project: input.project || null,
+    done: false,
+    created_by: currentUserId(),
+  };
+  const { data, error } = await sb.from('eta_tasks').insert(payload).select().single();
+  if(error) return { error: error.message };
+  state.tasks.push(mapTask(data));
+  renderTasks(); renderDashboard();
+  return { ok: `Created task "${input.title}" assigned to ${assignee ? assignee.name : 'you'}.` };
+}
+
+async function toolCreateEvent(input){
+  const payload = {
+    title: input.title,
+    event_date: input.date,
+    event_time: input.time || null,
+    venue: input.venue || null,
+    description: input.description || null,
+    capacity: input.capacity || 50,
+    attendees: 0,
+    status: 'Open',
+    created_by: currentUserId(),
+  };
+  const { data, error } = await sb.from('eta_events').insert(payload).select().single();
+  if(error) return { error: error.message };
+  state.events.push(mapEvent(data));
+  renderEvents(); renderDashboard();
+  return { ok: `Scheduled "${input.title}" for ${input.date}${input.time?' at '+input.time:''}.` };
+}
+
+async function toolAddClubMember(input){
+  const payload = {
+    name: input.name,
+    email: input.email || null,
+    role: input.role || null,
+    chapter: input.chapter || null,
+    tier: input.tier || 'Silver',
+    status: input.status || 'Active',
+    created_by: currentUserId(),
+  };
+  const { data, error } = await sb.from('eta_members').insert(payload).select().single();
+  if(error) return { error: error.message };
+  state.members.push(mapMember(data));
+  renderCrm(); renderDashboard();
+  return { ok: `Added ${input.name} to the members directory.` };
+}
+
+async function toolWriteNote(input){
+  let target = null;
+  if(input.visibility === 'direct'){
+    if(!input.target_email) return { error: 'Direct notes require target_email.' };
+    target = aiUserByEmail(input.target_email);
+    if(!target) return { error: `No team member with email ${input.target_email}.` };
+  }
+  const payload = {
+    author_id: currentUserId(),
+    target_user_id: target ? target.id : null,
+    visibility: input.visibility,
+    title: input.title,
+    content: input.content,
+    pinned: false,
+  };
+  const { data, error } = await sb.from('eta_notes').insert(payload).select().single();
+  if(error) return { error: error.message };
+  state.notes.unshift(mapNote(data));
+  renderNotes(); renderDashboard();
+  const audience = input.visibility === 'direct' ? `to ${target.name}` :
+                   input.visibility === 'public' ? 'to the whole team' :
+                   'as a private note';
+  return { ok: `Saved "${input.title}" ${audience}.` };
+}
+
+async function toolUpdateTeamMember(input){
+  if(!isOwner()) return { error: 'Only the Owner can update team members.' };
+  const target = aiUserByEmail(input.target_email);
+  if(!target) return { error: `No team member with email ${input.target_email}.` };
+  const patch = {};
+  if(input.new_role) patch.role = input.new_role;
+  if(Array.isArray(input.permissions)) patch.permissions = input.permissions;
+  if(!Object.keys(patch).length) return { error: 'Nothing to update.' };
+  const { error } = await sb.from('eta_users').update(patch).eq('id', target.id);
+  if(error) return { error: error.message };
+  Object.assign(target, patch);
+  renderTeam();
+  const bits = [];
+  if(patch.role) bits.push(`role → ${patch.role}`);
+  if(patch.permissions) bits.push(`permissions → [${patch.permissions.join(', ')}]`);
+  return { ok: `Updated ${target.name}: ${bits.join(', ')}.` };
+}
+
+function toolListTeam(){
+  const rows = state.users.map(u =>
+    `${u.name} <${u.email}> · ${u.role} · [${(u.permissions||[]).join(', ')}]`
+  );
+  return { ok: rows.join('\n') };
+}
+
+async function executeTool(name, input){
+  try {
+    switch(name){
+      case 'create_task':        return await toolCreateTask(input);
+      case 'create_event':       return await toolCreateEvent(input);
+      case 'add_club_member':    return await toolAddClubMember(input);
+      case 'write_note':         return await toolWriteNote(input);
+      case 'update_team_member': return await toolUpdateTeamMember(input);
+      case 'list_team':          return toolListTeam();
+      default:                   return { error: `Unknown tool ${name}` };
+    }
+  } catch(e){
+    return { error: e.message || String(e) };
+  }
+}
+
+// ===== CHAT UI =====
+function openAiDrawer(){
+  const key = localStorage.getItem(AI_STORAGE_KEY);
+  $('#aiDrawer').classList.add('open');
+  $('#aiDrawer').setAttribute('aria-hidden','false');
+  $('#aiDrawerBack').classList.add('open');
+  if(!key){
+    renderAiSetup();
+  } else if(aiState.history.length === 0){
+    renderAiIntro();
+  }
+  setTimeout(() => { const i = document.getElementById('aiInput'); if(i) i.focus(); }, 320);
+}
+function closeAiDrawer(){
+  $('#aiDrawer').classList.remove('open');
+  $('#aiDrawer').setAttribute('aria-hidden','true');
+  $('#aiDrawerBack').classList.remove('open');
+}
+function renderAiSetup(){
+  const container = $('#aiMessages');
+  container.innerHTML = `
+    <div class="ai-setup">
+      <h4>Connect the AI assistant</h4>
+      <p>The assistant uses your own Anthropic API key, stored only on this device. Get one free at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>.</p>
+      <input class="input" id="aiKeyInput" type="password" placeholder="sk-ant-..."/>
+      <button class="btn btn-primary" style="width:100%" onclick="saveAiKey()">Save key</button>
+    </div>
+  `;
+  $('#aiSuggestions').innerHTML = '';
+}
+function saveAiKey(){
+  const key = $('#aiKeyInput').value.trim();
+  if(!key.startsWith('sk-ant-')){ toast('Invalid key','Anthropic keys start with sk-ant-'); return; }
+  localStorage.setItem(AI_STORAGE_KEY, key);
+  aiState.history = [];
+  renderAiIntro();
+  toast('AI connected','You can now chat with the assistant');
+}
+function renderAiIntro(){
+  const me = currentUser();
+  const container = $('#aiMessages');
+  container.innerHTML = '';
+  addAiMsg('assistant', `Hi ${me ? me.name.split(' ')[0] : 'there'} — tell me what you'd like to add and I'll take care of it. For example:`);
+  const suggestions = isOwner()
+    ? ['Add a task for Priya to confirm speakers by Friday', 'Schedule a fireside at Trinity next Tuesday 7pm', 'Write a public note: AGM is April 30', 'Make Marcus the Finance Lead with events + tasks']
+    : ['Add a task for me to draft the newsletter by Friday', 'Write a private note about follow-ups', 'Schedule a meeting prep session tomorrow at 9am'];
+  $('#aiSuggestions').innerHTML = suggestions.map(s => `<div class="ai-suggestion" onclick="useSuggestion(this)">${esc(s)}</div>`).join('');
+}
+function useSuggestion(el){
+  $('#aiInput').value = el.textContent;
+  $('#aiInput').focus();
+}
+function addAiMsg(role, text, toolChip){
+  const container = $('#aiMessages');
+  const wrap = document.createElement('div');
+  wrap.className = `ai-msg ${role}`;
+  const initialsHtml = role === 'user'
+    ? `<div class="avatar">${initials((currentUser()||{name:'You'}).name)}</div>`
+    : `<div class="avatar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.09 5.26L20 8l-4.5 3.5L17 18l-5-3-5 3 1.5-6.5L4 8l5.91-.74L12 2z"/></svg></div>`;
+  wrap.innerHTML = `${initialsHtml}<div class="bubble">${esc(text)}${toolChip || ''}</div>`;
+  container.appendChild(wrap);
+  container.scrollTop = container.scrollHeight;
+  return wrap;
+}
+function addAiTyping(){
+  const container = $('#aiMessages');
+  const wrap = document.createElement('div');
+  wrap.className = 'ai-msg assistant';
+  wrap.id = '__ai_typing__';
+  wrap.innerHTML = `<div class="avatar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.09 5.26L20 8l-4.5 3.5L17 18l-5-3-5 3 1.5-6.5L4 8l5.91-.74L12 2z"/></svg></div><div class="bubble"><div class="ai-typing"><span></span><span></span><span></span></div></div>`;
+  container.appendChild(wrap);
+  container.scrollTop = container.scrollHeight;
+}
+function removeAiTyping(){
+  const t = document.getElementById('__ai_typing__');
+  if(t) t.remove();
+}
+
+async function sendAiMessage(){
+  if(aiState.busy) return;
+  const input = $('#aiInput');
+  const text = input.value.trim();
+  if(!text) return;
+  const key = localStorage.getItem(AI_STORAGE_KEY);
+  if(!key){ renderAiSetup(); return; }
+  input.value = '';
+  $('#aiSuggestions').innerHTML = '';
+  addAiMsg('user', text);
+  aiState.history.push({ role: 'user', content: [{ type: 'text', text }] });
+  aiState.busy = true;
+  $('#aiSend').disabled = true;
+  addAiTyping();
+
+  try {
+    let iterations = 0;
+    while(iterations < 6){
+      iterations++;
+      const response = await callClaude(key, aiState.history);
+      removeAiTyping();
+      const assistantContent = response.content || [];
+      aiState.history.push({ role: 'assistant', content: assistantContent });
+
+      // Emit any natural-language text blocks
+      for(const block of assistantContent){
+        if(block.type === 'text' && block.text.trim()){
+          addAiMsg('assistant', block.text.trim());
+        }
+      }
+
+      if(response.stop_reason !== 'tool_use') break;
+
+      // Execute all tool_use blocks and send results back
+      const toolResults = [];
+      for(const block of assistantContent){
+        if(block.type !== 'tool_use') continue;
+        const result = await executeTool(block.name, block.input || {});
+        const chipHtml = result.error
+          ? `<div class="ai-tool-chip err">⚠ ${esc(block.name)}: ${esc(result.error)}</div>`
+          : `<div class="ai-tool-chip">✓ ${esc(block.name)}</div>`;
+        // Show a chip under the last assistant bubble
+        const lastBubble = $('#aiMessages').querySelector('.ai-msg.assistant:last-child .bubble');
+        if(lastBubble){
+          const span = document.createElement('div');
+          span.innerHTML = chipHtml;
+          lastBubble.appendChild(span.firstChild);
+        } else {
+          addAiMsg('assistant', '', chipHtml);
+        }
+        toolResults.push({
+          type: 'tool_result',
+          tool_use_id: block.id,
+          content: result.error ? `ERROR: ${result.error}` : `OK: ${result.ok}`,
+          is_error: !!result.error,
+        });
+      }
+      aiState.history.push({ role: 'user', content: toolResults });
+      addAiTyping();
+    }
+  } catch(e){
+    removeAiTyping();
+    addAiMsg('assistant', `Sorry — I ran into an error: ${e.message || e}`);
+  }
+
+  aiState.busy = false;
+  $('#aiSend').disabled = false;
+}
+
+// ===== BOOT =====
+applyTheme();
+bootApp();
+</script>
+</body>
+</html>
